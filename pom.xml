@@ -4,13 +4,17 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.webotech</groupId>
   <artifactId>state-machine</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <properties>
     <java.version>21</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <log4j2.version>2.20.0</log4j2.version>
+    <maven-dependency-plugin.version>3.6.1</maven-dependency-plugin.version>
+    <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
+    <maven-enforcer-plugin.version>3.4.1</maven-enforcer-plugin.version>
+    <maven-jar-plugin.version>3.4.0</maven-jar-plugin.version>
+    <log4j2.version>2.23.1</log4j2.version>
   </properties>
 
   <dependencies>
@@ -20,18 +24,13 @@
       <version>${log4j2.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-core</artifactId>
-      <version>${log4j2.version}</version>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
       <version>5.10.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
+
   <build>
     <plugins>
       <plugin>
@@ -42,7 +41,88 @@
           <target>${java.version}</target>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>${maven-dependency-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>analyze</id>
+            <goals>
+              <goal>analyze-only</goal>
+            </goals>
+            <configuration>
+              <failOnWarning>true</failOnWarning>
+              <ignoreNonCompile>true</ignoreNonCompile>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
+        <version>${versions-maven-plugin.version}</version>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>display-dependency-updates</goal>
+              <goal>display-plugin-updates</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>${maven-enforcer-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>enforce-versions</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireMavenVersion>
+                  <version>3.6.3</version>
+                </requireMavenVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>${maven-jar-plugin.version}</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Version>${project.version}</Version>
+              <Built-By>Webotech</Built-By>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>with-log4j-impl</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>log4j-core</artifactId>
+          <version>${log4j2.version}</version>
+          <scope>runtime</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 </project>
 
