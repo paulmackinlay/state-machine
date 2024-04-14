@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.webotech</groupId>
   <artifactId>state-machine</artifactId>
-  <version>0.0.2-SNAPSHOT</version>
+  <version>0.0.3-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <properties>
@@ -14,6 +14,7 @@
     <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
     <maven-enforcer-plugin.version>3.4.1</maven-enforcer-plugin.version>
     <maven-jar-plugin.version>3.4.0</maven-jar-plugin.version>
+    <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     <log4j2.version>2.23.1</log4j2.version>
   </properties>
 
@@ -36,6 +37,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven-compiler-plugin.version}</version>
         <configuration>
           <source>${java.version}</source>
           <target>${java.version}</target>
@@ -125,4 +127,3 @@
     </profile>
   </profiles>
 </project>
-
