@@ -1,2 +1,2 @@
-# state-machine
+# javastatemachine
 A core java state machine
