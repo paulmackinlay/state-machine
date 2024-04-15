@@ -4,7 +4,9 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-//TODO test this
+/**
+ * Simple (and naive) object pool - stores objects in unbound thread-safe {@link Queue}s
+ */
 public class ObjectPool {
 
   private static final Queue<AtomicBoolean> atomicBooleanPool = new ConcurrentLinkedQueue<>();
