@@ -1,4 +1,4 @@
-package com.webotech.statemachine.service;
+package com.webotech.statemachine.servicetemp;
 
 public interface Component<C extends AbstractAppContext<C>> {
 

@@ -1,4 +1,4 @@
-package com.webotech.statemachine.service;
+package com.webotech.statemachine.servicetemp;
 
 public class TestApp extends AbstractAppService<TestAppContext> {
 
