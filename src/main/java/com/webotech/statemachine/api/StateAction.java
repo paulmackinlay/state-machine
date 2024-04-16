@@ -6,7 +6,7 @@ package com.webotech.statemachine.api;
 public interface StateAction<T> {
 
   /**
-   * This is called when this {@link StateAction} fires.
+   * This is called when this {@link StateAction} os executed.
    */
   void execute(StateMachine<T> stateMachine);
 

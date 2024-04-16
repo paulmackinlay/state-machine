@@ -47,13 +47,31 @@ public interface StateMachine<T> {
    */
   StateMachine<T> itTransitionsTo(State<T> state);
 
+  /**
+   * Starts the {@link StateMachine}
+   */
   void start();
 
+  /**
+   * Fires an event
+   */
   void fire(StateEvent stateEvent);
 
+  /**
+   * Retrieves the current state
+   */
   State<T> getCurrentState();
 
+  /**
+   * Retrieves the context of the {@link StateMachine}
+   */
   T getContext();
 
+  /**
+   * Sets a {@link StateMachineListener} for the state machine. The {@link StateMachine} only
+   * accepts a single {@link StateMachineListener} so if multiple subsystems need to be
+   * independently notified of {@link State} transitions, the supplied {@link StateMachineListener}
+   * is responsible for fanning out notifications.
+   */
   void setStateMachineListener(StateMachineListener<T> stateMachineListener);
 }
