@@ -26,7 +26,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   private static final String end = "END";
   private static final String uninitialised = "UNINITIALISED";
   private static final String immediate = "immediate";
-  private static final StateEvent immediateEvent = new ReplicaStateEvent(immediate);
+  private static final StateEvent immediateEvent = new NamedStateEvent(immediate);
   private final Supplier<AtomicBoolean> atomicBooleanSupplier;
   private final Consumer<AtomicBoolean> atomicBooleanConsumer;
   private final State<T> noState;
@@ -44,9 +44,9 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
       Consumer<AtomicBoolean> atomicBooleanConsumer) {
     this.states = new HashMap<>();
     this.inflightEvents = new ConcurrentHashMap<>();
-    this.endState = new ReplicaState<>(end) {
+    this.endState = new NamedState<>(end) {
     };
-    this.noState = new ReplicaState<>(uninitialised) {
+    this.noState = new NamedState<>(uninitialised) {
     };
     this.context = context;
     this.atomicBooleanSupplier = atomicBooleanSupplier;
@@ -221,7 +221,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
     private T context;
     private Supplier<AtomicBoolean> atomicBooleanSupplier;
     private Consumer<AtomicBoolean> atomicBooleanConsumer;
-    
+
     public Builder<T> setContext(T context) {
       this.context = context;
       return this;

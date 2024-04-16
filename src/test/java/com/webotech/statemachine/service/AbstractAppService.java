@@ -1,4 +1,4 @@
-package com.webotech.statemachine.servicetemp;
+package com.webotech.statemachine.service;
 
 import static com.webotech.statemachine.LifecycleStateMachineFactory.completeEvt;
 import static com.webotech.statemachine.LifecycleStateMachineFactory.errorEvt;

@@ -9,16 +9,15 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
- * Each instance with the same name is a replica, so they are equal()
+ * A {@link State}, each instance with the same name is are {@link #equals(Object)}
  */
-//TODO Rename this to NamedState
-public class ReplicaState<T> implements State<T> {
+public class NamedState<T> implements State<T> {
 
   private final String name;
   private final List<StateAction<T>> entryActions;
   private final List<StateAction<T>> exitActions;
 
-  public ReplicaState(String name) {
+  public NamedState(String name) {
     this.name = name;
     this.entryActions = new ArrayList<>();
     this.exitActions = new ArrayList<>();
@@ -52,33 +51,19 @@ public class ReplicaState<T> implements State<T> {
   }
 
   @Override
-  public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((this.name == null) ? 0 : this.name.hashCode());
-    return result;
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    NamedState<?> that = (NamedState<?>) o;
+    return Objects.equals(name, that.name);
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    ReplicaState<?> other = (ReplicaState<?>) obj;
-    if (this.name == null) {
-      if (other.name != null) {
-        return false;
-      }
-    } else if (!this.name.equals(other.name)) {
-      return false;
-    }
-    return true;
+  public int hashCode() {
+    return Objects.hashCode(name);
   }
-
 }

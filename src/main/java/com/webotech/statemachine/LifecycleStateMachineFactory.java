@@ -11,10 +11,10 @@ import com.webotech.statemachine.api.StateMachineListener;
  */
 public final class LifecycleStateMachineFactory {
 
-  public static final StateEvent startEvt = new ReplicaStateEvent("start");
-  public static final StateEvent completeEvt = new ReplicaStateEvent("complete");
-  public static final StateEvent stopEvt = new ReplicaStateEvent("stop");
-  public static final StateEvent errorEvt = new ReplicaStateEvent("error");
+  public static final StateEvent startEvt = new NamedStateEvent("start");
+  public static final StateEvent completeEvt = new NamedStateEvent("complete");
+  public static final StateEvent stopEvt = new NamedStateEvent("stop");
+  public static final StateEvent errorEvt = new NamedStateEvent("error");
 
   public static final String UNINITIALISED = "UNINITIALISED";
   public static final String STARTING = "STARTING";
@@ -77,7 +77,7 @@ public final class LifecycleStateMachineFactory {
 
   @SafeVarargs
   private static <T> State<T> newState(String name, StateAction<T>... entryActions) {
-    ReplicaState<T> state = new ReplicaState<>(name);
+    NamedState<T> state = new NamedState<>(name);
     state.appendEntryActions(entryActions);
     return state;
   }
