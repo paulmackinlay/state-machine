@@ -17,16 +17,16 @@ import org.apache.logging.log4j.Logger;
 
 public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
 
+  //TODO review all logging
   private static final Logger logger = LogManager.getLogger(GeneralPurposeStateMachine.class);
   private static final String LOG_alreadyBeingProcessed = "] ignored due to event already being processed.";
   private static final String LOG_ignoring = "]. Ignoring.";
-  private static final String LOG_receivedInState = "] recieved in state [";
+  private static final String LOG_receivedInState = "] received in state [";
   private static final String LOG_notMappedFor = "] not mapped for [";
   private static final String LOG_stateEvent = "StateEvent [";
-  private static final String end = "END";
-  private static final String uninitialised = "UNINITIALISED";
-  private static final String immediate = "immediate";
-  private static final StateEvent immediateEvent = new NamedStateEvent(immediate);
+  private static final String end = "_END_";
+  private static final String uninitialised = "_UNINITIALISED_";
+  private static final StateEvent immediateEvent = new NamedStateEvent("_immediate_");
   private final Supplier<AtomicBoolean> atomicBooleanSupplier;
   private final Consumer<AtomicBoolean> atomicBooleanConsumer;
   private final State<T> noState;
@@ -44,10 +44,8 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
       Consumer<AtomicBoolean> atomicBooleanConsumer) {
     this.states = new HashMap<>();
     this.inflightEvents = new ConcurrentHashMap<>();
-    this.endState = new NamedState<>(end) {
-    };
-    this.noState = new NamedState<>(uninitialised) {
-    };
+    this.endState = new NamedState<>(end);
+    this.noState = new NamedState<>(uninitialised);
     this.context = context;
     this.atomicBooleanSupplier = atomicBooleanSupplier;
     this.atomicBooleanConsumer = atomicBooleanConsumer;
@@ -56,6 +54,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   @SuppressWarnings("hiding")
   @Override
   public StateMachine<T> initialSate(State<T> initState) {
+    //TODO check it isn't named like an internal name (end or uninitialised)
     initStateDefined(false);
     this.initState = initState;
     this.states.put(this.initState, new HashMap<>());
@@ -65,6 +64,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
 
   @Override
   public StateMachine<T> when(State<T> state) {
+    //TODO check it isn't named like an internal name (end or uninitialised)
     initStateDefined(true);
     whenStateDefined(false);
     this.states.putIfAbsent(state, new HashMap<>());
@@ -74,6 +74,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
 
   @Override
   public StateMachine<T> receives(StateEvent stateEvent) {
+    //TODO check it isn't named like an internal event (immediate)
     initStateDefined(true);
     whenStateDefined(true);
     this.receiveAction = stateEvent;
@@ -99,6 +100,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
 
   @Override
   public StateMachine<T> itTransitionsTo(State<T> state) {
+    //TODO check it isn't named like an internal name (end or uninitialised)
     initStateDefined(true);
     whenStateDefined(true);
     eventNotMapped();
@@ -244,7 +246,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
           atomicBooleanConsumer = atomicBooleanPool;
         }
       }
-      return new GeneralPurposeStateMachine<T>(context, atomicBooleanSupplier,
+      return new GeneralPurposeStateMachine<>(context, atomicBooleanSupplier,
           atomicBooleanConsumer);
     }
   }
