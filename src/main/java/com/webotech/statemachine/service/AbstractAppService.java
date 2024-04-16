@@ -41,7 +41,8 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
     this.logger = LogManager.getLogger(
         AbstractAppService.class); // Do this here so that logging can be re-initialised statically by concrete class
     this.appLatch = new CountDownLatch(1);
-    this.appStateMachine = new GeneralPurposeStateMachine<>(appContext);
+    this.appStateMachine = (new GeneralPurposeStateMachine.Builder<C>().setContext(
+        appContext)).build();
     this.appOperator = new ServiceOperator<>(this.appStateMachine, appContext.getAppName());
     this.appContext = appContext;
     configureAppStateMachine();

@@ -4,12 +4,14 @@ import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
-import com.webotech.statemachine.util.ObjectPool;
+import com.webotech.statemachine.util.AtomicBooleanPool;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -25,6 +27,8 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   private static final String uninitialised = "UNINITIALISED";
   private static final String immediate = "immediate";
   private static final StateEvent immediateEvent = new ReplicaStateEvent(immediate);
+  private final Supplier<AtomicBoolean> atomicBooleanSupplier;
+  private final Consumer<AtomicBoolean> atomicBooleanConsumer;
   private final State<T> noState;
   private final State<T> endState;
   private final Map<State<T>, Map<StateEvent, State<T>>> states;
@@ -36,7 +40,8 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   private StateEvent receiveAction;
   private State<T> currentState;
 
-  public GeneralPurposeStateMachine(T context) {
+  private GeneralPurposeStateMachine(T context, Supplier<AtomicBoolean> atomicBooleanSupplier,
+      Consumer<AtomicBoolean> atomicBooleanConsumer) {
     this.states = new HashMap<>();
     this.inflightEvents = new ConcurrentHashMap<>();
     this.endState = new ReplicaState<>(end) {
@@ -44,6 +49,8 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
     this.noState = new ReplicaState<>(uninitialised) {
     };
     this.context = context;
+    this.atomicBooleanSupplier = atomicBooleanSupplier;
+    this.atomicBooleanConsumer = atomicBooleanConsumer;
   }
 
   @SuppressWarnings("hiding")
@@ -179,14 +186,14 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
           this.currentState.getName(), LOG_ignoring);
       return;
     }
-    if (this.inflightEvents.computeIfAbsent(stateEvent, k -> ObjectPool.take(AtomicBoolean.class))
+    if (this.inflightEvents.computeIfAbsent(stateEvent, k -> this.atomicBooleanSupplier.get())
         .compareAndSet(false, true)) {
       State<T> fromState = this.currentState;
       fireTransitionLogging(false, fromState, stateEvent, toState);
       this.currentState.onExit(this);
       this.currentState = toState;
       this.currentState.onEntry(this);
-      ObjectPool.give(this.inflightEvents.remove(stateEvent));
+      this.atomicBooleanConsumer.accept(this.inflightEvents.remove(stateEvent));
       fireTransitionLogging(true, fromState, stateEvent, toState);
     } else {
       logger.info(LOG_stateEvent, stateEvent.getName(), LOG_receivedInState,
@@ -207,6 +214,39 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   @Override
   public void setStateMachineListener(StateMachineListener<T> stateMachineListener) {
     this.stateMachineListener = stateMachineListener;
+  }
+
+  public static class Builder<T> {
+
+    private T context;
+    private Supplier<AtomicBoolean> atomicBooleanSupplier;
+    private Consumer<AtomicBoolean> atomicBooleanConsumer;
+    
+    public Builder<T> setContext(T context) {
+      this.context = context;
+      return this;
+    }
+
+    public Builder<T> withAtomicBooleanPool(Supplier<AtomicBoolean> atomicBooleanSupplier,
+        Consumer<AtomicBoolean> atomicBooleanConsumer) {
+      this.atomicBooleanSupplier = atomicBooleanSupplier;
+      this.atomicBooleanConsumer = atomicBooleanConsumer;
+      return this;
+    }
+
+    public GeneralPurposeStateMachine<T> build() {
+      if (atomicBooleanSupplier == null || atomicBooleanConsumer == null) {
+        AtomicBooleanPool atomicBooleanPool = new AtomicBooleanPool();
+        if (atomicBooleanSupplier == null) {
+          atomicBooleanSupplier = atomicBooleanPool;
+        }
+        if (atomicBooleanConsumer == null) {
+          atomicBooleanConsumer = atomicBooleanPool;
+        }
+      }
+      return new GeneralPurposeStateMachine<T>(context, atomicBooleanSupplier,
+          atomicBooleanConsumer);
+    }
   }
 
 }
