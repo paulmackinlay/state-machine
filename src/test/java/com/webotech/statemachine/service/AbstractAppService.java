@@ -5,10 +5,10 @@ import static com.webotech.statemachine.LifecycleStateMachineFactory.errorEvt;
 import static com.webotech.statemachine.LifecycleStateMachineFactory.startEvt;
 import static com.webotech.statemachine.LifecycleStateMachineFactory.stopEvt;
 
+import com.webotech.statemachine.EventManager;
 import com.webotech.statemachine.GeneralPurposeStateMachine;
 import com.webotech.statemachine.HandleExceptionAction;
 import com.webotech.statemachine.LifecycleStateMachineFactory;
-import com.webotech.statemachine.ServiceOperator;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
@@ -33,7 +33,7 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
   private final Logger logger;
   private final StateMachine<C> appStateMachine;
   private final CountDownLatch appLatch;
-  private final ServiceOperator<C> appOperator;
+  private final EventManager<C> appOperator;
   private final C appContext;
   private State<C> stopped;
 
@@ -43,7 +43,7 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
     this.appLatch = new CountDownLatch(1);
     this.appStateMachine = (new GeneralPurposeStateMachine.Builder<C>().setContext(
         appContext)).build();
-    this.appOperator = new ServiceOperator<>(this.appStateMachine, appContext.getAppName());
+    this.appOperator = new EventManager<>(this.appStateMachine, appContext.getAppName());
     this.appContext = appContext;
     configureAppStateMachine();
   }
