@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 
 public class LoggingStateMachineListener<T> implements StateMachineListener<T> {
 
+  //TODO review logging - put log statements into it's own class
   private static final String starting_transition = "Starting transition ";
   private static final String transitioned_to = "Transitioned to ";
   private static final Logger logger = LogManager.getLogger(LoggingStateMachineListener.class);

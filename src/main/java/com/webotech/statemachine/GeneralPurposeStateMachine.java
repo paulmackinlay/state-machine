@@ -17,35 +17,35 @@ import org.apache.logging.log4j.Logger;
 
 public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
 
-  //TODO review all logging
+  //TODO put log statements into it's own class - see LoggingStateMachineListener
   private static final Logger logger = LogManager.getLogger(GeneralPurposeStateMachine.class);
-  private static final String LOG_alreadyBeingProcessed = "] ignored due to event already being processed.";
-  private static final String LOG_ignoring = "]. Ignoring.";
-  private static final String LOG_receivedInState = "] received in state [";
-  private static final String LOG_notMappedFor = "] not mapped for [";
-  private static final String LOG_stateEvent = "StateEvent [";
-  private static final String end = "_END_";
-  private static final String uninitialised = "_UNINITIALISED_";
+  public static final String LOG_EVENT_NOT_MAPPED = "StateEvent [{}] not mapped for state [{}], ignoring";
+  public static final String LOG_EVENT_BEING_PROCESSED = "StateEvent [{}] received in state [{}] already being processed";
+  private static final String END = "_END_";
+  private static final String UNINITIALISED = "_UNINITIALISED_";
   private static final StateEvent immediateEvent = new NamedStateEvent("_immediate_");
   private final Supplier<AtomicBoolean> atomicBooleanSupplier;
   private final Consumer<AtomicBoolean> atomicBooleanConsumer;
+
+  //TODO make these static (internal states)
   private final State<T> noState;
   private final State<T> endState;
+
   private final Map<State<T>, Map<StateEvent, State<T>>> states;
   private final ConcurrentMap<StateEvent, AtomicBoolean> inflightEvents;
   private final T context;
   private StateMachineListener<T> stateMachineListener;
   private State<T> initState;
   private State<T> whenState;
-  private StateEvent receiveAction;
+  private StateEvent receiveEvent;
   private State<T> currentState;
 
   private GeneralPurposeStateMachine(T context, Supplier<AtomicBoolean> atomicBooleanSupplier,
       Consumer<AtomicBoolean> atomicBooleanConsumer) {
     this.states = new HashMap<>();
     this.inflightEvents = new ConcurrentHashMap<>();
-    this.endState = new NamedState<>(end);
-    this.noState = new NamedState<>(uninitialised);
+    this.endState = new NamedState<>(END);
+    this.noState = new NamedState<>(UNINITIALISED);
     this.context = context;
     this.atomicBooleanSupplier = atomicBooleanSupplier;
     this.atomicBooleanConsumer = atomicBooleanConsumer;
@@ -55,7 +55,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   @Override
   public StateMachine<T> initialSate(State<T> initState) {
     //TODO check it isn't named like an internal name (end or uninitialised)
-    initStateDefined(false);
+    assertInitStateDefined(false);
     this.initState = initState;
     this.states.put(this.initState, new HashMap<>());
     when(initState);
@@ -65,8 +65,8 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   @Override
   public StateMachine<T> when(State<T> state) {
     //TODO check it isn't named like an internal name (end or uninitialised)
-    initStateDefined(true);
-    whenStateDefined(false);
+    assertInitStateDefined(true);
+    assertWhenStateDefined(false);
     this.states.putIfAbsent(state, new HashMap<>());
     this.whenState = state;
     return this;
@@ -75,72 +75,76 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   @Override
   public StateMachine<T> receives(StateEvent stateEvent) {
     //TODO check it isn't named like an internal event (immediate)
-    initStateDefined(true);
-    whenStateDefined(true);
-    this.receiveAction = stateEvent;
-    this.states.get(this.whenState).put(this.receiveAction, null);
+    assertInitStateDefined(true);
+    assertWhenStateDefined(true);
+    this.receiveEvent = stateEvent;
+    this.states.get(this.whenState).put(this.receiveEvent, null);
     return this;
   }
 
   @Override
   public StateMachine<T> itEnds() {
-    initStateDefined(true);
-    whenStateDefined(true);
-    if (this.receiveAction == null) {
-      noMappingsExistAtEnd();
+    assertInitStateDefined(true);
+    assertWhenStateDefined(true);
+    if (this.receiveEvent == null) {
+      assertNoMappingsExistAtEnd();
       this.states.get(this.whenState).put(immediateEvent, this.endState);
     } else {
-      eventNotMapped();
-      this.states.get(this.whenState).put(this.receiveAction, this.endState);
+      assertEventNotMapped();
+      this.states.get(this.whenState).put(this.receiveEvent, this.endState);
     }
     this.whenState = null;
-    this.receiveAction = null;
+    this.receiveEvent = null;
     return this;
   }
 
   @Override
   public StateMachine<T> itTransitionsTo(State<T> state) {
     //TODO check it isn't named like an internal name (end or uninitialised)
-    initStateDefined(true);
-    whenStateDefined(true);
-    eventNotMapped();
-    this.states.get(this.whenState).put(this.receiveAction, state);
+    assertInitStateDefined(true);
+    assertWhenStateDefined(true);
+    assertEventNotMapped();
+    this.states.get(this.whenState).put(this.receiveEvent, state);
     this.whenState = null;
-    this.receiveAction = null;
+    this.receiveEvent = null;
     return this;
   }
 
-  private void eventNotMapped() {
-    State<T> toState = this.states.get(this.whenState).get(this.receiveAction);
+  private void assertEventNotMapped() {
+    State<T> toState = this.states.get(this.whenState).get(this.receiveEvent);
     if (toState != null) {
       throw new IllegalStateException(
-          "State " + this.whenState.getName() + " already has a transition when event "
-              + this.receiveAction.getName() + "happens, it transitions to " + toState);
+          "State [" + this.whenState.getName() + "] already transitions to State [" + toState
+              + "] when StateEvent [" + this.receiveEvent.getName() + "] is received.");
     }
   }
 
-  private void noMappingsExistAtEnd() {
+  private void assertNoMappingsExistAtEnd() {
     if (!this.states.get(this.whenState).isEmpty()) {
       throw new IllegalStateException(
-          "It is not possible to immediately end in state " + this.whenState.getName()
-              + " when transitions already exist: " + this.states.get(this.whenState));
+          //TODO improve this messge
+          "It is not possible to immediately end in State [" + this.whenState.getName()
+              + "] when transitions already exist: " + this.states.get(this.whenState) + ".");
     }
   }
 
-  private void whenStateDefined(boolean exists) {
+  //TODO a better name for this method is needed
+  private void assertWhenStateDefined(boolean exists) {
     if (exists && this.whenState == null) {
-      throw new IllegalStateException("A 'when' state has to be defined first");
+      //TODO improve this message
+      throw new IllegalStateException("A 'when' state has to be defined first.");
     } else if (!exists && this.whenState != null) {
       throw new IllegalStateException(
-          "An action on [" + this.whenState.getName() + "] has to be defined first");
+          "A StateEvent for State [" + this.whenState.getName() + "] has to be defined first.");
     }
   }
 
-  private void initStateDefined(boolean exists) {
+  private void assertInitStateDefined(boolean exists) {
     if (exists && this.initState == null) {
-      throw new IllegalStateException("Initial state has to be defined first");
+      throw new IllegalStateException("An initial State has to be defined first.");
     } else if (!exists && this.initState != null) {
-      throw new IllegalStateException("Initial state already exists: " + this.initState.getName());
+      throw new IllegalStateException(
+          "An initial State [" + this.initState.getName() + "] already exists.");
     }
   }
 
@@ -166,11 +170,11 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
 
   @Override
   public void start() {
-    initStateDefined(true);
-    whenStateDefined(false);
+    assertInitStateDefined(true);
+    assertWhenStateDefined(false);
     if (this.states.isEmpty()) {
       throw new IllegalStateException(
-          "State machine cannot be started as there are no transitions defined.");
+          "State machine cannot be started with no defined transitions.");
     }
     this.initState.onEntry(this);
     this.currentState = this.initState;
@@ -184,8 +188,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
     }
     State<T> toState = this.states.get(this.currentState).get(stateEvent);
     if (toState == null) {
-      logger.info(LOG_stateEvent, stateEvent.getName(), LOG_notMappedFor,
-          this.currentState.getName(), LOG_ignoring);
+      logger.info(LOG_EVENT_NOT_MAPPED, stateEvent.getName(), this.currentState.getName());
       return;
     }
     if (this.inflightEvents.computeIfAbsent(stateEvent, k -> this.atomicBooleanSupplier.get())
@@ -198,8 +201,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
       this.atomicBooleanConsumer.accept(this.inflightEvents.remove(stateEvent));
       fireTransitionLogging(true, fromState, stateEvent, toState);
     } else {
-      logger.info(LOG_stateEvent, stateEvent.getName(), LOG_receivedInState,
-          this.currentState.getName(), LOG_alreadyBeingProcessed);
+      logger.info(LOG_EVENT_BEING_PROCESSED, stateEvent.getName(), this.currentState.getName());
     }
   }
 
