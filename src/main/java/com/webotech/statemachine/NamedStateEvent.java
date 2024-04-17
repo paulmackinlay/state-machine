@@ -3,6 +3,8 @@ package com.webotech.statemachine;
 import com.webotech.statemachine.api.StateEvent;
 import java.util.Objects;
 
+//TODO review this
+
 /**
  * A {@link StateEvent}, each instance with the same name is are {@link #equals(Object)}
  */

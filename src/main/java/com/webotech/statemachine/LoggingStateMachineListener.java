@@ -6,6 +6,7 @@ import com.webotech.statemachine.api.StateMachineListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+//TODO review this
 public class LoggingStateMachineListener<T> implements StateMachineListener<T> {
 
   private static final Logger logger = LogManager.getLogger(LoggingStateMachineListener.class);

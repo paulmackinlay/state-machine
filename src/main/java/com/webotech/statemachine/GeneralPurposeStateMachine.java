@@ -16,6 +16,7 @@ import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+//TODO test this
 public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
 
   private static final Logger logger = LogManager.getLogger(GeneralPurposeStateMachine.class);

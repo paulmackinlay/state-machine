@@ -6,8 +6,10 @@ import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
 
+//TODO review this
+
 /**
- * Useful for a {@link StateMachine} that back an app.
+ * Useful for a {@link StateMachine} that backs an app.
  */
 public final class LifecycleStateMachineFactory {
 

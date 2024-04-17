@@ -5,6 +5,7 @@ import com.webotech.statemachine.api.StateMachine;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+//TODO review this
 public class HandleExceptionAction<T> implements StateAction<T> {
 
   private final Consumer<StateMachine<T>> actionHandler;

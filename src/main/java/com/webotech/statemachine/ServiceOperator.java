@@ -8,6 +8,7 @@ import java.util.concurrent.Executors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+//TODO review this
 public class ServiceOperator<T> {
 
   private static final Logger logger = LogManager.getLogger(ServiceOperator.class);

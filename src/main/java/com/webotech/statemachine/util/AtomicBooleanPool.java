@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+//TODO test this
 public class AtomicBooleanPool implements Supplier<AtomicBoolean>, Consumer<AtomicBoolean> {
 
   @Override
