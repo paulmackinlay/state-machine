@@ -19,24 +19,21 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
 
   //TODO put log statements into it's own class - see LoggingStateMachineListener
   private static final Logger logger = LogManager.getLogger(GeneralPurposeStateMachine.class);
-  public static final String LOG_EVENT_NOT_MAPPED = "StateEvent [{}] not mapped for state [{}], ignoring";
-  public static final String LOG_EVENT_BEING_PROCESSED = "StateEvent [{}] received in state [{}] already being processed";
-  private static final String END = "_END_";
-  private static final String UNINITIALISED = "_UNINITIALISED_";
+  private static final String LOG_EVENT_NOT_MAPPED = "StateEvent [{}] not mapped for state [{}], ignoring";
+  private static final String LOG_EVENT_BEING_PROCESSED = "StateEvent [{}] received in state [{}] already being processed";
+  private static final String RESERVED_STATE_NAME_END = "_END_";
+  private static final String RESERVED_STATE_NAME_UNINITIALISED = "_UNINITIALISED_";
   private static final StateEvent immediateEvent = new NamedStateEvent("_immediate_");
   private final Supplier<AtomicBoolean> atomicBooleanSupplier;
   private final Consumer<AtomicBoolean> atomicBooleanConsumer;
-
-  //TODO make these static (internal states)
   private final State<T> noState;
   private final State<T> endState;
-
   private final Map<State<T>, Map<StateEvent, State<T>>> states;
   private final ConcurrentMap<StateEvent, AtomicBoolean> inflightEvents;
   private final T context;
   private StateMachineListener<T> stateMachineListener;
   private State<T> initState;
-  private State<T> whenState;
+  private State<T> markedState;
   private StateEvent receiveEvent;
   private State<T> currentState;
 
@@ -44,8 +41,8 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
       Consumer<AtomicBoolean> atomicBooleanConsumer) {
     this.states = new HashMap<>();
     this.inflightEvents = new ConcurrentHashMap<>();
-    this.endState = new NamedState<>(END);
-    this.noState = new NamedState<>(UNINITIALISED);
+    this.endState = new NamedState<>(RESERVED_STATE_NAME_END);
+    this.noState = new NamedState<>(RESERVED_STATE_NAME_UNINITIALISED);
     this.context = context;
     this.atomicBooleanSupplier = atomicBooleanSupplier;
     this.atomicBooleanConsumer = atomicBooleanConsumer;
@@ -66,9 +63,9 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   public StateMachine<T> when(State<T> state) {
     //TODO check it isn't named like an internal name (end or uninitialised)
     assertInitStateDefined(true);
-    assertWhenStateDefined(false);
+    assertMarkedStateDefined(false);
     this.states.putIfAbsent(state, new HashMap<>());
-    this.whenState = state;
+    this.markedState = state;
     return this;
   }
 
@@ -76,24 +73,24 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   public StateMachine<T> receives(StateEvent stateEvent) {
     //TODO check it isn't named like an internal event (immediate)
     assertInitStateDefined(true);
-    assertWhenStateDefined(true);
+    assertMarkedStateDefined(true);
     this.receiveEvent = stateEvent;
-    this.states.get(this.whenState).put(this.receiveEvent, null);
+    this.states.get(this.markedState).put(this.receiveEvent, null);
     return this;
   }
 
   @Override
   public StateMachine<T> itEnds() {
     assertInitStateDefined(true);
-    assertWhenStateDefined(true);
+    assertMarkedStateDefined(true);
     if (this.receiveEvent == null) {
       assertNoMappingsExistAtEnd();
-      this.states.get(this.whenState).put(immediateEvent, this.endState);
+      this.states.get(this.markedState).put(immediateEvent, this.endState);
     } else {
       assertEventNotMapped();
-      this.states.get(this.whenState).put(this.receiveEvent, this.endState);
+      this.states.get(this.markedState).put(this.receiveEvent, this.endState);
     }
-    this.whenState = null;
+    this.markedState = null;
     this.receiveEvent = null;
     return this;
   }
@@ -102,40 +99,38 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   public StateMachine<T> itTransitionsTo(State<T> state) {
     //TODO check it isn't named like an internal name (end or uninitialised)
     assertInitStateDefined(true);
-    assertWhenStateDefined(true);
+    assertMarkedStateDefined(true);
     assertEventNotMapped();
-    this.states.get(this.whenState).put(this.receiveEvent, state);
-    this.whenState = null;
+    this.states.get(this.markedState).put(this.receiveEvent, state);
+    this.markedState = null;
     this.receiveEvent = null;
     return this;
   }
 
   private void assertEventNotMapped() {
-    State<T> toState = this.states.get(this.whenState).get(this.receiveEvent);
+    State<T> toState = this.states.get(this.markedState).get(this.receiveEvent);
     if (toState != null) {
       throw new IllegalStateException(
-          "State [" + this.whenState.getName() + "] already transitions to State [" + toState
+          "State [" + this.markedState.getName() + "] already transitions to State [" + toState
               + "] when StateEvent [" + this.receiveEvent.getName() + "] is received.");
     }
   }
 
   private void assertNoMappingsExistAtEnd() {
-    if (!this.states.get(this.whenState).isEmpty()) {
+    if (!this.states.get(this.markedState).isEmpty()) {
       throw new IllegalStateException(
-          //TODO improve this messge
-          "It is not possible to immediately end in State [" + this.whenState.getName()
-              + "] when transitions already exist: " + this.states.get(this.whenState) + ".");
+          "It is not possible to immediately end in State [" + this.markedState.getName()
+              + "] since transitions for the State exist: " + this.states.get(this.markedState)
+              + ".");
     }
   }
 
-  //TODO a better name for this method is needed
-  private void assertWhenStateDefined(boolean exists) {
-    if (exists && this.whenState == null) {
-      //TODO improve this message
-      throw new IllegalStateException("A 'when' state has to be defined first.");
-    } else if (!exists && this.whenState != null) {
+  private void assertMarkedStateDefined(boolean exists) {
+    if (exists && this.markedState == null) {
+      throw new IllegalStateException("A state has to be marked to be configured using when().");
+    } else if (!exists && this.markedState != null) {
       throw new IllegalStateException(
-          "A StateEvent for State [" + this.whenState.getName() + "] has to be defined first.");
+          "A StateEvent for State [" + this.markedState.getName() + "] has to be defined first.");
     }
   }
 
@@ -171,7 +166,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   @Override
   public void start() {
     assertInitStateDefined(true);
-    assertWhenStateDefined(false);
+    assertMarkedStateDefined(false);
     if (this.states.isEmpty()) {
       throw new IllegalStateException(
           "State machine cannot be started with no defined transitions.");

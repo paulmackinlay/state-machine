@@ -21,7 +21,7 @@ public interface StateMachine<T> {
   StateMachine<T> initialSate(State<T> initState);
 
   /**
-   * A configuration method: used to specify a {@link State} that is being configured. It is
+   * A configuration method: used to mark a {@link State} as the next one to be configured. It is
    * generally followed by {@link #receives(StateEvent)}.
    */
   StateMachine<T> when(State<T> state);
