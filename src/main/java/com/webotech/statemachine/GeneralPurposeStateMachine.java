@@ -6,6 +6,7 @@ import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
 import com.webotech.statemachine.util.AtomicBooleanPool;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -23,6 +24,8 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   private static final String LOG_EVENT_BEING_PROCESSED = "StateEvent [{}] received in state [{}] already being processed";
   private static final String RESERVED_STATE_NAME_END = "_END_";
   private static final String RESERVED_STATE_NAME_UNINITIALISED = "_UNINITIALISED_";
+  private static final List<String> reservedStateNames = List.of(RESERVED_STATE_NAME_UNINITIALISED,
+      RESERVED_STATE_NAME_END);
   private static final StateEvent immediateEvent = new NamedStateEvent("_immediate_");
   private final Supplier<AtomicBoolean> atomicBooleanSupplier;
   private final Consumer<AtomicBoolean> atomicBooleanConsumer;
@@ -51,7 +54,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   @SuppressWarnings("hiding")
   @Override
   public StateMachine<T> initialSate(State<T> initState) {
-    //TODO check it isn't named like an internal name (end or uninitialised)
+    assertNotReservedState(initState);
     assertInitStateDefined(false);
     this.initState = initState;
     this.states.put(this.initState, new HashMap<>());
@@ -61,7 +64,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
 
   @Override
   public StateMachine<T> when(State<T> state) {
-    //TODO check it isn't named like an internal name (end or uninitialised)
+    assertNotReservedState(state);
     assertInitStateDefined(true);
     assertMarkedStateDefined(false);
     this.states.putIfAbsent(state, new HashMap<>());
@@ -71,7 +74,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
 
   @Override
   public StateMachine<T> receives(StateEvent stateEvent) {
-    //TODO check it isn't named like an internal event (immediate)
+    assertNotReservedStateEvent(stateEvent);
     assertInitStateDefined(true);
     assertMarkedStateDefined(true);
     this.receiveEvent = stateEvent;
@@ -97,7 +100,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
 
   @Override
   public StateMachine<T> itTransitionsTo(State<T> state) {
-    //TODO check it isn't named like an internal name (end or uninitialised)
+    assertNotReservedState(state);
     assertInitStateDefined(true);
     assertMarkedStateDefined(true);
     assertEventNotMapped();
@@ -105,6 +108,20 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
     this.markedState = null;
     this.receiveEvent = null;
     return this;
+  }
+
+  private void assertNotReservedState(State<T> state) {
+    if (reservedStateNames.stream().anyMatch(r -> r.equals(state.getName()))) {
+      throw new IllegalStateException(
+          "Invalid state [" + state.getName() + "] is using a reserved name.");
+    }
+  }
+
+  private void assertNotReservedStateEvent(StateEvent stateEvent) {
+    if (immediateEvent.getName().equals(stateEvent.getName())) {
+      throw new IllegalStateException(
+          "Invalid StateEvent [" + stateEvent.getName() + "] is using a reserved name.");
+    }
   }
 
   private void assertEventNotMapped() {
