@@ -18,7 +18,6 @@ import org.apache.logging.log4j.Logger;
 
 public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
 
-  //TODO put log statements into it's own class - see LoggingStateMachineListener
   private static final Logger logger = LogManager.getLogger(GeneralPurposeStateMachine.class);
   private static final String LOG_EVENT_NOT_MAPPED = "StateEvent [{}] not mapped for state [{}], ignoring";
   private static final String LOG_EVENT_BEING_PROCESSED = "StateEvent [{}] received in state [{}] already being processed";

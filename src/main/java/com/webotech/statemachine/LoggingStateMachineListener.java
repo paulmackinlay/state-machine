@@ -8,13 +8,11 @@ import org.apache.logging.log4j.Logger;
 
 public class LoggingStateMachineListener<T> implements StateMachineListener<T> {
 
-  //TODO review logging - put log statements into it's own class
-  private static final String starting_transition = "Starting transition ";
-  private static final String transitioned_to = "Transitioned to ";
   private static final Logger logger = LogManager.getLogger(LoggingStateMachineListener.class);
-  private static final String equals = " = ";
-  private static final String plus = " + ";
-  private static final String colon = ": ";
+  private static final String LOG_STARTING_TRANSITION_NAMED = "Starting {} transition: {} + {} = {}";
+  private static final String LOG_STARTING_TRANSITION = "Starting transition: {} + {} = {}";
+  private static final String LOG_TRANSITIONED_NAMED = "{} transitioned to {}";
+  private static final String LOG_TRANSITIONED = "Transitioned to {}";
   private final StateMachineListener<T> stateMachineListener;
   private final String name;
 
@@ -22,6 +20,9 @@ public class LoggingStateMachineListener<T> implements StateMachineListener<T> {
     this(null, null);
   }
 
+  /**
+   * @param name - is an additional name for logging, it may be the name of a state machine
+   */
   public LoggingStateMachineListener(String name) {
     this(null, name);
   }
@@ -51,16 +52,16 @@ public class LoggingStateMachineListener<T> implements StateMachineListener<T> {
       State<T> newState) {
     if (this.name != null && !this.name.isEmpty()) {
       if (isComplete) {
-        logger.info(transitioned_to, newState.getName());
+        logger.info(LOG_TRANSITIONED_NAMED, this.name, newState.getName());
       } else {
-        logger.info(starting_transition, this.name, colon, oldState.getName(), plus,
-            event.getName(), equals, newState.getName());
+        logger.info(LOG_STARTING_TRANSITION_NAMED, this.name, oldState.getName(), event.getName(),
+            newState.getName());
       }
     } else {
       if (isComplete) {
-        logger.info(transitioned_to, newState.getName());
+        logger.info(LOG_TRANSITIONED, newState.getName());
       } else {
-        logger.info(starting_transition, oldState.getName(), plus, event.getName(), equals,
+        logger.info(LOG_STARTING_TRANSITION, oldState.getName(), event.getName(),
             newState.getName());
       }
     }
