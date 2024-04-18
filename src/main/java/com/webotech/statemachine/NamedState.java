@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 /**
  * A {@link State}, each instance with the same name is are {@link #equals(Object)}
  */
-public class NamedState<T> implements State<T> {
+public final class NamedState<T> implements State<T> {
 
   private final String name;
   private final List<StateAction<T>> entryActions;

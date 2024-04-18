@@ -5,8 +5,14 @@ import com.webotech.statemachine.api.StateMachine;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-//TODO review this
-public class HandleExceptionAction<T> implements StateAction<T> {
+/**
+ * <p>A {@link StateAction} that routes logic handling to a {@link Consumer} and routes any
+ * resultant {@link Exception}s to a separate {@link BiConsumer}, so that business logic and
+ * exceptional logic can be implemented separately.</p>
+ * <p>This is useful if you want to handle exceptional logic in the same way for all
+ * {@link StateAction}s in the {@link StateMachine}</p>
+ */
+public final class HandleExceptionAction<T> implements StateAction<T> {
 
   private final Consumer<StateMachine<T>> actionHandler;
   private final BiConsumer<StateMachine<T>, Exception> exceptionHandler;
