@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-//TODO review this
-
 /**
  * A {@link State}, each instance with the same name is are {@link #equals(Object)}
  */
