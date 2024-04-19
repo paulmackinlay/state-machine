@@ -74,4 +74,14 @@ public interface StateMachine<T> {
    * is responsible for fanning out notifications.
    */
   void setStateMachineListener(StateMachineListener<T> stateMachineListener);
+
+  /**
+   * @return true if the {@link StateMachine} has been started.
+   */
+  boolean isStarted();
+
+  /**
+   * @return true when the {@link StateMachine} has reached an ended state.
+   */
+  boolean isEnded();
 }

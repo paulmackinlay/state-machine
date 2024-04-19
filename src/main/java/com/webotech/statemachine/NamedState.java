@@ -6,6 +6,7 @@ import com.webotech.statemachine.api.StateMachine;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.stream.Stream;
 
 /**
@@ -65,5 +66,11 @@ public final class NamedState<T> implements State<T> {
   @Override
   public int hashCode() {
     return Objects.hashCode(name);
+  }
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", NamedState.class.getSimpleName() + "[", "]")
+        .add(name).toString();
   }
 }

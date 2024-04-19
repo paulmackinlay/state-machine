@@ -2,6 +2,7 @@ package com.webotech.statemachine;
 
 import com.webotech.statemachine.api.StateEvent;
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /**
  * A {@link StateEvent}, each instance with the same name is are {@link #equals(Object)}
@@ -34,5 +35,11 @@ public final class NamedStateEvent implements StateEvent {
   @Override
   public int hashCode() {
     return Objects.hashCode(name);
+  }
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", NamedStateEvent.class.getSimpleName() + "[", "]")
+        .add(name).toString();
   }
 }

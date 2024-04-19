@@ -8,6 +8,7 @@ import com.webotech.statemachine.util.AtomicBooleanPool;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -16,7 +17,6 @@ import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-//TODO test this
 public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
 
   private static final Logger logger = LogManager.getLogger(GeneralPurposeStateMachine.class);
@@ -37,7 +37,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   private StateMachineListener<T> stateMachineListener;
   private State<T> initState;
   private State<T> markedState;
-  private StateEvent receiveEvent;
+  private StateEvent markedEvent;
   private State<T> currentState;
 
   private GeneralPurposeStateMachine(T context, Supplier<AtomicBoolean> atomicBooleanSupplier,
@@ -77,8 +77,8 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
     assertNotReservedStateEvent(stateEvent);
     assertInitStateDefined(true);
     assertMarkedStateDefined(true);
-    this.receiveEvent = stateEvent;
-    this.states.get(this.markedState).put(this.receiveEvent, null);
+    this.markedEvent = stateEvent;
+    this.states.get(this.markedState).put(this.markedEvent, null);
     return this;
   }
 
@@ -86,15 +86,15 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   public StateMachine<T> itEnds() {
     assertInitStateDefined(true);
     assertMarkedStateDefined(true);
-    if (this.receiveEvent == null) {
+    if (this.markedEvent == null) {
       assertNoMappingsExistAtEnd();
       this.states.get(this.markedState).put(immediateEvent, this.endState);
     } else {
       assertEventNotMapped();
-      this.states.get(this.markedState).put(this.receiveEvent, this.endState);
+      this.states.get(this.markedState).put(this.markedEvent, this.endState);
     }
     this.markedState = null;
-    this.receiveEvent = null;
+    this.markedEvent = null;
     return this;
   }
 
@@ -104,9 +104,9 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
     assertInitStateDefined(true);
     assertMarkedStateDefined(true);
     assertEventNotMapped();
-    this.states.get(this.markedState).put(this.receiveEvent, state);
+    this.states.get(this.markedState).put(this.markedEvent, state);
     this.markedState = null;
-    this.receiveEvent = null;
+    this.markedEvent = null;
     return this;
   }
 
@@ -125,11 +125,11 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   }
 
   private void assertEventNotMapped() {
-    State<T> toState = this.states.get(this.markedState).get(this.receiveEvent);
+    State<T> toState = this.states.get(this.markedState).get(this.markedEvent);
     if (toState != null) {
       throw new IllegalStateException(
           "State [" + this.markedState.getName() + "] already transitions to State [" + toState
-              + "] when StateEvent [" + this.receiveEvent.getName() + "] is received.");
+              + "] when StateEvent [" + this.markedEvent.getName() + "] is received.");
     }
   }
 
@@ -160,8 +160,8 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
     }
   }
 
-  private void fireTransitionLogging(boolean isComplete, State<T> fromState, StateEvent stateEvent,
-      State<T> toState) {
+  private void notifyStateMachineListener(boolean isComplete, State<T> fromState,
+      StateEvent stateEvent, State<T> toState) {
     if (this.stateMachineListener != null) {
       if (fromState == null) {
         fromState = this.noState;
@@ -183,13 +183,32 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   @Override
   public void start() {
     assertInitStateDefined(true);
-    assertMarkedStateDefined(false);
     if (this.states.isEmpty()) {
       throw new IllegalStateException(
           "State machine cannot be started with no defined transitions.");
     }
+    for (Entry<State<T>, Map<StateEvent, State<T>>> entry : this.states.entrySet()) {
+      State<T> key = entry.getKey();
+      for (Entry<StateEvent, State<T>> entry1 : entry.getValue().entrySet()) {
+        if (entry1.getValue() == null) {
+          throw new IllegalStateException(
+              "State " + key.getName() + " dose not transition when a " + entry1.getKey().getName()
+                  + " event is received");
+        }
+      }
+    }
     this.initState.onEntry(this);
     this.currentState = this.initState;
+  }
+
+  @Override
+  public boolean isStarted() {
+    return this.currentState != null && !this.currentState.equals(noState);
+  }
+
+  @Override
+  public boolean isEnded() {
+    return this.currentState != null && this.currentState.equals(endState);
   }
 
   @Override
@@ -200,18 +219,19 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
     }
     State<T> toState = this.states.get(this.currentState).get(stateEvent);
     if (toState == null) {
+      //TODO allow this to be optionally handled by the calling client
       logger.info(LOG_EVENT_NOT_MAPPED, stateEvent.getName(), this.currentState.getName());
       return;
     }
     if (this.inflightEvents.computeIfAbsent(stateEvent, k -> this.atomicBooleanSupplier.get())
         .compareAndSet(false, true)) {
       State<T> fromState = this.currentState;
-      fireTransitionLogging(false, fromState, stateEvent, toState);
+      notifyStateMachineListener(false, fromState, stateEvent, toState);
       this.currentState.onExit(this);
       this.currentState = toState;
       this.currentState.onEntry(this);
       this.atomicBooleanConsumer.accept(this.inflightEvents.remove(stateEvent));
-      fireTransitionLogging(true, fromState, stateEvent, toState);
+      notifyStateMachineListener(true, fromState, stateEvent, toState);
     } else {
       logger.info(LOG_EVENT_BEING_PROCESSED, stateEvent.getName(), this.currentState.getName());
     }
