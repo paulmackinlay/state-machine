@@ -47,6 +47,11 @@ public interface StateMachine<T> {
    */
   StateMachine<T> itTransitionsTo(State<T> state);
 
+  /*
+  TODO add a itDoesNotTransition() - where effectively no StateActions are fired - what impact will
+   this have on the StateMachineListener?
+   */
+
   /**
    * Starts the {@link StateMachine}
    */
@@ -84,4 +89,6 @@ public interface StateMachine<T> {
    * @return true when the {@link StateMachine} has reached an ended state.
    */
   boolean isEnded();
+
+  //TODO should there be a setUnmappedEventHandler(BiConsumer<StateEvent, StateMachine<T>) method?
 }

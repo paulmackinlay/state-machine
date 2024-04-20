@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.webotech.statemachine.GeneralPurposeStateMachine.Builder;
+import com.webotech.statemachine.GenericStateMachine.Builder;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
@@ -22,7 +22,7 @@ import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class GeneralPurposeStateMachineTest {
+class GenericStateMachineTest {
 
   public static final State<Void> state1 = new NamedState<>("STATE-1");
   public static final State<Void> state2 = new NamedState<>("STATE-2");
@@ -31,14 +31,14 @@ class GeneralPurposeStateMachineTest {
   public static final StateEvent event1 = new NamedStateEvent("event-1");
   public static final StateEvent event2 = new NamedStateEvent("event-2");
   public static final StateEvent eventReserved = new NamedStateEvent("_immediate_");
-  private GeneralPurposeStateMachine<Void> stateMachine;
-  private GeneralPurposeStateMachine<List<String>> txtStateMachine;
+  private GenericStateMachine<Void> stateMachine;
+  private GenericStateMachine<List<String>> txtStateMachine;
 
   @BeforeEach
   void setup() {
-    Builder<Void> builder = new GeneralPurposeStateMachine.Builder<>();
+    Builder<Void> builder = new GenericStateMachine.Builder<>();
     stateMachine = builder.build();
-    txtStateMachine = new GeneralPurposeStateMachine.Builder<List<String>>().setContext(
+    txtStateMachine = new GenericStateMachine.Builder<List<String>>().setContext(
         new ArrayList<>()).build();
   }
 
@@ -154,13 +154,13 @@ class GeneralPurposeStateMachineTest {
 
   @Test
   void shouldBuildWithNoContext() {
-    StateMachine<Void> noContextStateMachine = (new GeneralPurposeStateMachine.Builder<Void>()).build();
+    StateMachine<Void> noContextStateMachine = (new GenericStateMachine.Builder<Void>()).build();
     assertNull(noContextStateMachine.getContext());
   }
 
   @Test
   void shouldBuildWithImmutableContext() {
-    StateMachine<String> stringContextStateMachine = (new GeneralPurposeStateMachine.Builder<String>().setContext(
+    StateMachine<String> stringContextStateMachine = (new GenericStateMachine.Builder<String>().setContext(
         "my-context")).build();
     assertEquals("my-context", stringContextStateMachine.getContext());
   }
@@ -169,7 +169,7 @@ class GeneralPurposeStateMachineTest {
   void shouldBuildWithUnmappedEventHandler() {
     BiConsumer<StateEvent, StateMachine<Void>> unmappedEventHandler = (ev, sm) -> {
     };
-    Builder<Void> builder = new GeneralPurposeStateMachine.Builder<Void>().setUnmappedEventHandler(
+    Builder<Void> builder = new GenericStateMachine.Builder<Void>().setUnmappedEventHandler(
         unmappedEventHandler);
     assertSame(unmappedEventHandler, builder.getUnmappedEventHandler());
   }
@@ -179,7 +179,7 @@ class GeneralPurposeStateMachineTest {
     Supplier<AtomicBoolean> poolSupplier = AtomicBoolean::new;
     Consumer<AtomicBoolean> poolConsumer = a -> {
     };
-    Builder<Void> builder = new GeneralPurposeStateMachine.Builder<Void>().withAtomicBooleanPool(
+    Builder<Void> builder = new GenericStateMachine.Builder<Void>().withAtomicBooleanPool(
         poolSupplier, poolConsumer);
     assertSame(poolSupplier, builder.getAtomicBooleanSupplier());
     assertSame(poolConsumer, builder.getAtomicBooleanConsumer());
@@ -188,7 +188,7 @@ class GeneralPurposeStateMachineTest {
   @Test
   void shouldBuildWithMutableContext() {
     Object obj = new Object();
-    StateMachine<Object> objContextStateMachine = (new GeneralPurposeStateMachine.Builder<>().setContext(
+    StateMachine<Object> objContextStateMachine = (new GenericStateMachine.Builder<>().setContext(
         obj)).build();
     assertSame(obj, objContextStateMachine.getContext());
   }

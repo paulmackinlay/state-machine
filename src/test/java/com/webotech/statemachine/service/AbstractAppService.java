@@ -6,7 +6,7 @@ import static com.webotech.statemachine.LifecycleStateMachineFactory.startEvt;
 import static com.webotech.statemachine.LifecycleStateMachineFactory.stopEvt;
 
 import com.webotech.statemachine.EventManager;
-import com.webotech.statemachine.GeneralPurposeStateMachine;
+import com.webotech.statemachine.GenericStateMachine;
 import com.webotech.statemachine.HandleExceptionAction;
 import com.webotech.statemachine.LifecycleStateMachineFactory;
 import com.webotech.statemachine.api.State;
@@ -41,7 +41,7 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
     this.logger = LogManager.getLogger(
         AbstractAppService.class); // Do this here so that logging can be re-initialised statically by concrete class
     this.appLatch = new CountDownLatch(1);
-    this.appStateMachine = (new GeneralPurposeStateMachine.Builder<C>().setContext(
+    this.appStateMachine = (new GenericStateMachine.Builder<C>().setContext(
         appContext)).build();
     this.appOperator = new EventManager<>(this.appStateMachine, appContext.getAppName());
     this.appContext = appContext;

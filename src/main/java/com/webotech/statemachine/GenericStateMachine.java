@@ -18,10 +18,9 @@ import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-//TODO - rename to GenericStateMachine
-public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
+public class GenericStateMachine<T> implements StateMachine<T> {
 
-  private static final Logger logger = LogManager.getLogger(GeneralPurposeStateMachine.class);
+  private static final Logger logger = LogManager.getLogger(GenericStateMachine.class);
   private static final String LOG_EVENT_NOT_MAPPED = "StateEvent [{}] not mapped for state [{}], ignoring";
   private static final String LOG_EVENT_BEING_PROCESSED = "StateEvent [{}] received in state [{}] already being processed";
   private static final String RESERVED_STATE_NAME_END = "_END_";
@@ -43,7 +42,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   private StateEvent markedEvent;
   private State<T> currentState;
 
-  private GeneralPurposeStateMachine(T context, Supplier<AtomicBoolean> atomicBooleanSupplier,
+  private GenericStateMachine(T context, Supplier<AtomicBoolean> atomicBooleanSupplier,
       Consumer<AtomicBoolean> atomicBooleanConsumer,
       BiConsumer<StateEvent, StateMachine<T>> unmappedEventHandler) {
     this.states = new HashMap<>();
@@ -307,7 +306,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
       return atomicBooleanConsumer;
     }
 
-    public GeneralPurposeStateMachine<T> build() {
+    public GenericStateMachine<T> build() {
       if (atomicBooleanSupplier == null || atomicBooleanConsumer == null) {
         AtomicBooleanPool atomicBooleanPool = new AtomicBooleanPool();
         if (atomicBooleanSupplier == null) {
@@ -321,7 +320,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
         unmappedEventHandler = (ev, sm) -> logger.info(LOG_EVENT_NOT_MAPPED, ev.getName(),
             sm.getCurrentState().getName());
       }
-      return new GeneralPurposeStateMachine<>(context, atomicBooleanSupplier, atomicBooleanConsumer,
+      return new GenericStateMachine<>(context, atomicBooleanSupplier, atomicBooleanConsumer,
           unmappedEventHandler);
     }
   }
