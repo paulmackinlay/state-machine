@@ -6,9 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.webotech.statemachine.GenericStateMachine.Builder;
 import com.webotech.statemachine.api.State;
+import com.webotech.statemachine.api.StateAction;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
@@ -132,6 +135,24 @@ class GenericStateMachineTest {
   @Test
   void shouldNotEndAnUnconfiguredStateMachine() {
     assertThrows(IllegalStateException.class, () -> stateMachine.itEnds());
+  }
+
+  @Test
+  void shouldHandleEventThatDoesNotTransition() {
+    StateAction<Void> stateAction = mock(StateAction.class);
+    state1.appendExitActions(stateAction);
+    stateMachine.initialSate(state1).receives(event1).itDoesNotTransition();
+    stateMachine.start();
+    stateMachine.fire(event1);
+    verifyNoInteractions(stateAction);
+  }
+
+  @Test
+  void shouldNotAllowReservedStateNames() {
+    for (String name : GenericStateMachine.reservedStateNames) {
+      State<Void> reservedState = new NamedState<>(name);
+      assertThrows(IllegalStateException.class, () -> stateMachine.initialSate(reservedState));
+    }
   }
 
   @Test

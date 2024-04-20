@@ -25,14 +25,16 @@ public class GenericStateMachine<T> implements StateMachine<T> {
   private static final String LOG_EVENT_BEING_PROCESSED = "StateEvent [{}] received in state [{}] already being processed";
   private static final String RESERVED_STATE_NAME_END = "_END_";
   private static final String RESERVED_STATE_NAME_UNINITIALISED = "_UNINITIALISED_";
-  private static final List<String> reservedStateNames = List.of(RESERVED_STATE_NAME_UNINITIALISED,
-      RESERVED_STATE_NAME_END);
+  private static final String RESERVED_STATE_NAME_NOOP = "_NOOP_";
+  static final List<String> reservedStateNames = List.of(RESERVED_STATE_NAME_UNINITIALISED,
+      RESERVED_STATE_NAME_END, RESERVED_STATE_NAME_NOOP);
   private static final StateEvent immediateEvent = new NamedStateEvent("_immediate_");
   private final Supplier<AtomicBoolean> atomicBooleanSupplier;
   private final Consumer<AtomicBoolean> atomicBooleanConsumer;
   private final BiConsumer<StateEvent, StateMachine<T>> unmappedEventHandler;
   private final State<T> noState;
   private final State<T> endState;
+  private final State<T> noopState;
   private final Map<State<T>, Map<StateEvent, State<T>>> states;
   private final ConcurrentMap<StateEvent, AtomicBoolean> inflightEvents;
   private final T context;
@@ -49,6 +51,7 @@ public class GenericStateMachine<T> implements StateMachine<T> {
     this.inflightEvents = new ConcurrentHashMap<>();
     this.endState = new NamedState<>(RESERVED_STATE_NAME_END);
     this.noState = new NamedState<>(RESERVED_STATE_NAME_UNINITIALISED);
+    this.noopState = new NamedState<>(RESERVED_STATE_NAME_NOOP);
     this.context = context;
     this.atomicBooleanSupplier = atomicBooleanSupplier;
     this.atomicBooleanConsumer = atomicBooleanConsumer;
@@ -116,11 +119,11 @@ public class GenericStateMachine<T> implements StateMachine<T> {
 
   @Override
   public StateMachine<T> itDoesNotTransition() {
-    /*
-    TODO add a itDoesNotTransition() - where effectively no StateActions are fired - what impact
-     will this have on the StateMachineListener?
-   */
-    throw new UnsupportedOperationException("TODO");
+    assertInitStateDefined(true);
+    assertMarkedStateDefined(true);
+    assertEventNotMapped();
+    this.states.get(this.markedState).put(this.markedEvent, this.noopState);
+    return this;
   }
 
   private void assertNotReservedState(State<T> state) {
@@ -233,6 +236,12 @@ public class GenericStateMachine<T> implements StateMachine<T> {
     State<T> toState = this.states.get(this.currentState).get(stateEvent);
     if (toState == null) {
       this.unmappedEventHandler.accept(stateEvent, this);
+      return;
+    }
+    if (this.noopState.equals(toState)) {
+      // No transition but notify the listener so can tell a StateEvent was processed
+      notifyStateMachineListener(false, this.currentState, stateEvent, toState);
+      notifyStateMachineListener(true, this.currentState, stateEvent, toState);
       return;
     }
     if (this.inflightEvents.computeIfAbsent(stateEvent, k -> this.atomicBooleanSupplier.get())
