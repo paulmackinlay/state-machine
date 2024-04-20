@@ -43,14 +43,15 @@ public interface StateMachine<T> {
 
   /**
    * A configuration method: used to specify the subsequent {@link State} that the
-   * {@link StateMachine} will transition to.
+   * {@link StateMachine} will transition to. Generally called after {@link #receives(StateEvent)}.
    */
   StateMachine<T> itTransitionsTo(State<T> state);
-
-  /*
-  TODO add a itDoesNotTransition() - where effectively no StateActions are fired - what impact will
-   this have on the StateMachineListener?
+  
+  /**
+   * A configuration method: used to specify that the {@link StateMachine} does not change state and
+   * no {@link StateAction} are executed. Generally called after {@link #receives(StateEvent)}.
    */
+  StateMachine<T> itDoesNotTransition();
 
   /**
    * Starts the {@link StateMachine}

@@ -114,6 +114,15 @@ public class GenericStateMachine<T> implements StateMachine<T> {
     return this;
   }
 
+  @Override
+  public StateMachine<T> itDoesNotTransition() {
+    /*
+    TODO add a itDoesNotTransition() - where effectively no StateActions are fired - what impact
+     will this have on the StateMachineListener?
+   */
+    throw new UnsupportedOperationException("TODO");
+  }
+
   private void assertNotReservedState(State<T> state) {
     if (reservedStateNames.stream().anyMatch(r -> r.equals(state.getName()))) {
       throw new IllegalStateException(
