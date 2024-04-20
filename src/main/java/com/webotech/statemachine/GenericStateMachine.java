@@ -268,6 +268,14 @@ public class GenericStateMachine<T> implements StateMachine<T> {
     return this.context;
   }
 
+  /**
+   * Note for this implementation when a {@link State} has been configured with
+   * {@link #itDoesNotTransition()}, the 'to state' name in
+   * {@link StateMachineListener#onStateChangeBegin(State, StateEvent, State)} and
+   * {@link StateMachineListener#onStateChangeEnd(State, StateEvent, State)} will be _NOOP_. This
+   * indicates that no operation occurred and so no state transition took place. The
+   * {@link StateMachine} current state will actually be the same as the 'from state'.
+   */
   @Override
   public void setStateMachineListener(StateMachineListener<T> stateMachineListener) {
     this.stateMachineListener = stateMachineListener;
