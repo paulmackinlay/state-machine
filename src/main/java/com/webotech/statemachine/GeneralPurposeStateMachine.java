@@ -12,11 +12,13 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+//TODO - rename to GenericStateMachine
 public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
 
   private static final Logger logger = LogManager.getLogger(GeneralPurposeStateMachine.class);
@@ -29,6 +31,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   private static final StateEvent immediateEvent = new NamedStateEvent("_immediate_");
   private final Supplier<AtomicBoolean> atomicBooleanSupplier;
   private final Consumer<AtomicBoolean> atomicBooleanConsumer;
+  private final BiConsumer<StateEvent, StateMachine<T>> unmappedEventHandler;
   private final State<T> noState;
   private final State<T> endState;
   private final Map<State<T>, Map<StateEvent, State<T>>> states;
@@ -41,7 +44,8 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
   private State<T> currentState;
 
   private GeneralPurposeStateMachine(T context, Supplier<AtomicBoolean> atomicBooleanSupplier,
-      Consumer<AtomicBoolean> atomicBooleanConsumer) {
+      Consumer<AtomicBoolean> atomicBooleanConsumer,
+      BiConsumer<StateEvent, StateMachine<T>> unmappedEventHandler) {
     this.states = new HashMap<>();
     this.inflightEvents = new ConcurrentHashMap<>();
     this.endState = new NamedState<>(RESERVED_STATE_NAME_END);
@@ -49,6 +53,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
     this.context = context;
     this.atomicBooleanSupplier = atomicBooleanSupplier;
     this.atomicBooleanConsumer = atomicBooleanConsumer;
+    this.unmappedEventHandler = unmappedEventHandler;
   }
 
   @SuppressWarnings("hiding")
@@ -219,8 +224,7 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
     }
     State<T> toState = this.states.get(this.currentState).get(stateEvent);
     if (toState == null) {
-      //TODO allow this to be optionally handled by the calling client
-      logger.info(LOG_EVENT_NOT_MAPPED, stateEvent.getName(), this.currentState.getName());
+      this.unmappedEventHandler.accept(stateEvent, this);
       return;
     }
     if (this.inflightEvents.computeIfAbsent(stateEvent, k -> this.atomicBooleanSupplier.get())
@@ -257,17 +261,50 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
     private T context;
     private Supplier<AtomicBoolean> atomicBooleanSupplier;
     private Consumer<AtomicBoolean> atomicBooleanConsumer;
+    private BiConsumer<StateEvent, StateMachine<T>> unmappedEventHandler;
 
     public Builder<T> setContext(T context) {
       this.context = context;
       return this;
     }
 
+    /**
+     * Allows an object pool of {@link AtomicBoolean}s to be set. The pool implementation must be
+     * comprised of a {@link Supplier}  and a {@link Consumer}. It is expected that the
+     * implementation of these provide the logic where objects are taken from and given to the pool.
+     *
+     * @param atomicBooleanSupplier supplies {@link AtomicBoolean}s (take from pool)
+     * @param atomicBooleanConsumer consumes {@link AtomicBoolean}s (give to pool)
+     */
     public Builder<T> withAtomicBooleanPool(Supplier<AtomicBoolean> atomicBooleanSupplier,
         Consumer<AtomicBoolean> atomicBooleanConsumer) {
       this.atomicBooleanSupplier = atomicBooleanSupplier;
       this.atomicBooleanConsumer = atomicBooleanConsumer;
       return this;
+    }
+
+    /**
+     * When the {@link StateMachine} receives a {@link StateEvent} that is not mapped for the
+     * current state, by default this is logged but setting the handler here allows you to override
+     * the behaviour. This handler is called with the {@link StateEvent} that was received and a
+     * reference to the {@link StateMachine}.
+     */
+    public Builder<T> setUnmappedEventHandler(
+        BiConsumer<StateEvent, StateMachine<T>> unmappedEventHandler) {
+      this.unmappedEventHandler = unmappedEventHandler;
+      return this;
+    }
+
+    BiConsumer<StateEvent, StateMachine<T>> getUnmappedEventHandler() {
+      return this.unmappedEventHandler;
+    }
+
+    Supplier<AtomicBoolean> getAtomicBooleanSupplier() {
+      return atomicBooleanSupplier;
+    }
+
+    Consumer<AtomicBoolean> getAtomicBooleanConsumer() {
+      return atomicBooleanConsumer;
     }
 
     public GeneralPurposeStateMachine<T> build() {
@@ -280,8 +317,12 @@ public class GeneralPurposeStateMachine<T> implements StateMachine<T> {
           atomicBooleanConsumer = atomicBooleanPool;
         }
       }
-      return new GeneralPurposeStateMachine<>(context, atomicBooleanSupplier,
-          atomicBooleanConsumer);
+      if (unmappedEventHandler == null) {
+        unmappedEventHandler = (ev, sm) -> logger.info(LOG_EVENT_NOT_MAPPED, ev.getName(),
+            sm.getCurrentState().getName());
+      }
+      return new GeneralPurposeStateMachine<>(context, atomicBooleanSupplier, atomicBooleanConsumer,
+          unmappedEventHandler);
     }
   }
 

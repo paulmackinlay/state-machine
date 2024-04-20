@@ -15,6 +15,10 @@ import com.webotech.statemachine.api.StateMachineListener;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -159,6 +163,26 @@ class GeneralPurposeStateMachineTest {
     StateMachine<String> stringContextStateMachine = (new GeneralPurposeStateMachine.Builder<String>().setContext(
         "my-context")).build();
     assertEquals("my-context", stringContextStateMachine.getContext());
+  }
+
+  @Test
+  void shouldBuildWithUnmappedEventHandler() {
+    BiConsumer<StateEvent, StateMachine<Void>> unmappedEventHandler = (ev, sm) -> {
+    };
+    Builder<Void> builder = new GeneralPurposeStateMachine.Builder<Void>().setUnmappedEventHandler(
+        unmappedEventHandler);
+    assertSame(unmappedEventHandler, builder.getUnmappedEventHandler());
+  }
+
+  @Test
+  void shouldBuildWithPool() {
+    Supplier<AtomicBoolean> poolSupplier = AtomicBoolean::new;
+    Consumer<AtomicBoolean> poolConsumer = a -> {
+    };
+    Builder<Void> builder = new GeneralPurposeStateMachine.Builder<Void>().withAtomicBooleanPool(
+        poolSupplier, poolConsumer);
+    assertSame(poolSupplier, builder.getAtomicBooleanSupplier());
+    assertSame(poolConsumer, builder.getAtomicBooleanConsumer());
   }
 
   @Test
