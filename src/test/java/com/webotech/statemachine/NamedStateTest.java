@@ -13,8 +13,8 @@ import org.junit.jupiter.api.Test;
 
 class NamedStateTest {
 
-  private State<Void> state;
-  private StateMachine<Void> stateMachine;
+  private State<Void, Void> state;
+  private StateMachine<Void, Void> stateMachine;
 
   @BeforeEach
   void setup() {
@@ -25,10 +25,10 @@ class NamedStateTest {
   @SuppressWarnings("unchecked")
   @Test
   void shouldHaveNameBasedEquality() {
-    State<Void> state1 = new NamedState<>("state");
+    State<Void, Void> state1 = new NamedState<>("state");
     state1.appendEntryActions(Object::notify);
-    State<Void> state2 = new NamedState<>("state");
-    State<Void> state3 = new NamedState<>("other state");
+    State<Void, Void> state2 = new NamedState<>("state");
+    State<Void, Void> state3 = new NamedState<>("other state");
     assertEquals(state1, state2);
     assertNotEquals(state1, state3);
   }
@@ -38,8 +38,8 @@ class NamedStateTest {
   void shouldFireNonNullActions() {
     AtomicInteger entryInteger = new AtomicInteger();
     AtomicInteger exitInteger = new AtomicInteger();
-    StateAction<Void> entryAction = sm -> entryInteger.incrementAndGet();
-    StateAction<Void> exitAction = sm -> exitInteger.incrementAndGet();
+    StateAction<Void, Void> entryAction = sm -> entryInteger.incrementAndGet();
+    StateAction<Void, Void> exitAction = sm -> exitInteger.incrementAndGet();
     state.appendEntryActions(entryAction, null, entryAction);
     state.appendExitActions(exitAction, null, exitAction, exitAction);
     assertEquals(0, entryInteger.get());

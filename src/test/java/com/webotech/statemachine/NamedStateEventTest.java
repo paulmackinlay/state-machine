@@ -9,10 +9,19 @@ import org.junit.jupiter.api.Test;
 class NamedStateEventTest {
 
   @Test
+  void shouldStoreNonFinalPayload() {
+    StateEvent<String> event = new NamedStateEvent<>("event");
+    event.setPayload("payload 1");
+    assertEquals("payload 1", event.getPayload());
+    event.setPayload("payload 2");
+    assertEquals("payload 2", event.getPayload());
+  }
+
+  @Test
   void shouldHaveNameBasedEquality() {
-    StateEvent event1 = new NamedStateEvent("event");
-    StateEvent event2 = new NamedStateEvent("event");
-    StateEvent event3 = new NamedStateEvent("other event");
+    StateEvent<Void> event1 = new NamedStateEvent<>("event");
+    StateEvent<Void> event2 = new NamedStateEvent<>("event");
+    StateEvent<Void> event3 = new NamedStateEvent<>("other event");
     assertEquals(event1, event2);
     assertNotEquals(event1, event3);
   }

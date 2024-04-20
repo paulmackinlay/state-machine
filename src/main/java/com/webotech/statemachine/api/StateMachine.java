@@ -12,26 +12,26 @@ package com.webotech.statemachine.api;
  * when(STOPPED).itEnds();
  * </pre>
  */
-public interface StateMachine<T> {
+public interface StateMachine<T, S> {
 
   /**
    * A configuration method: specifies what the initial state is when the {@link StateMachine} is
    * {@link #start()}ed.
    */
-  StateMachine<T> initialSate(State<T> initState);
+  StateMachine<T, S> initialSate(State<T, S> initState);
 
   /**
    * A configuration method: used to mark a {@link State} as the next one to be configured. It is
    * generally followed by {@link #receives(StateEvent)}.
    */
-  StateMachine<T> when(State<T> state);
+  StateMachine<T, S> when(State<T, S> state);
 
   /**
    * A configuration method: used to define a {@link StateEvent} that will be received by the
    * state that is currently being configured (see {@link #when(State)}). Generally it is followed
    * by {@link #itTransitionsTo(State)} or {@link #itEnds()}.
    */
-  StateMachine<T> receives(StateEvent stateEvent);
+  StateMachine<T, S> receives(StateEvent<S> stateEvent);
 
   //TODO this should be more intuitive like StateMachine<T> itEndsInState(State<T> state)
 
@@ -39,19 +39,19 @@ public interface StateMachine<T> {
    * A configuration method: used to specify when a state machine ends. When it ends it reaches a
    * state that can no longer process {@link StateEvent}s or transition to a new {@link State}.
    */
-  StateMachine<T> itEnds();
+  StateMachine<T, S> itEnds();
 
   /**
    * A configuration method: used to specify the subsequent {@link State} that the
    * {@link StateMachine} will transition to. Generally called after {@link #receives(StateEvent)}.
    */
-  StateMachine<T> itTransitionsTo(State<T> state);
-  
+  StateMachine<T, S> itTransitionsTo(State<T, S> state);
+
   /**
    * A configuration method: used to specify that the {@link StateMachine} does not change state and
    * no {@link StateAction} are executed. Generally called after {@link #receives(StateEvent)}.
    */
-  StateMachine<T> itDoesNotTransition();
+  StateMachine<T, S> itDoesNotTransition();
 
   /**
    * Starts the {@link StateMachine}
@@ -61,12 +61,12 @@ public interface StateMachine<T> {
   /**
    * Fires an event
    */
-  void fire(StateEvent stateEvent);
+  void fire(StateEvent<S> stateEvent);
 
   /**
    * Retrieves the current state
    */
-  State<T> getCurrentState();
+  State<T, S> getCurrentState();
 
   /**
    * Retrieves the context of the {@link StateMachine}
@@ -79,7 +79,7 @@ public interface StateMachine<T> {
    * independently notified of {@link State} transitions, the supplied {@link StateMachineListener}
    * is responsible for fanning out notifications.
    */
-  void setStateMachineListener(StateMachineListener<T> stateMachineListener);
+  void setStateMachineListener(StateMachineListener<T, S> stateMachineListener);
 
   /**
    * @return true if the {@link StateMachine} has been started.

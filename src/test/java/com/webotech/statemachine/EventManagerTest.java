@@ -14,8 +14,8 @@ import org.mockito.ArgumentCaptor;
 
 class EventManagerTest {
 
-  private EventManager<Void> eventManager;
-  private StateMachine<Void> stateMachine;
+  private EventManager<Void, Void> eventManager;
+  private StateMachine<Void, Void> stateMachine;
   private ExecutorService executorService;
 
   @BeforeEach
@@ -27,7 +27,7 @@ class EventManagerTest {
 
   @Test
   void shouldFireEventAsync() {
-    StateEvent event = new NamedStateEvent("event");
+    StateEvent<Void> event = new NamedStateEvent<>("event");
     this.eventManager.fireAsync(event);
     ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
     verify(executorService, times(1)).execute(any(Runnable.class));
@@ -38,7 +38,7 @@ class EventManagerTest {
 
   @Test
   void shouldFireEventBound() {
-    StateEvent event = new NamedStateEvent("event");
+    StateEvent<Void> event = new NamedStateEvent<>("event");
     this.eventManager.fireBound(event);
     verify(stateMachine, times(1)).fire(event);
   }

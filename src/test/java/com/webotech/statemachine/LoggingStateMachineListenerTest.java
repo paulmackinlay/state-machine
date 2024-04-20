@@ -12,11 +12,11 @@ import org.junit.jupiter.api.Test;
 class LoggingStateMachineListenerTest {
 
   private static final String NAME = LoggingStateMachineListenerTest.class.getSimpleName();
-  private static final State<Void> fromState = new NamedState<>("STATE-1");
-  private static final State<Void> toState = new NamedState<>("STATE-2");
-  private static final StateEvent event = new NamedStateEvent("an-event");
-  private LoggingStateMachineListener<Void> loggingListener;
-  private LoggingStateMachineListener<Void> namedLoggingListener;
+  private static final State<Void, Void> fromState = new NamedState<>("STATE-1");
+  private static final State<Void, Void> toState = new NamedState<>("STATE-2");
+  private static final StateEvent<Void> event = new NamedStateEvent<>("an-event");
+  private LoggingStateMachineListener<Void, Void> loggingListener;
+  private LoggingStateMachineListener<Void, Void> namedLoggingListener;
 
   @BeforeEach
   void setup() {

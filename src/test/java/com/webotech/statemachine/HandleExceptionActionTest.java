@@ -14,9 +14,9 @@ import org.junit.jupiter.api.Test;
 
 class HandleExceptionActionTest {
 
-  private HandleExceptionAction<Void> action;
-  private Consumer<StateMachine<Void>> actionHandler;
-  private BiConsumer<StateMachine<Void>, Exception> exceptionHandler;
+  private HandleExceptionAction<Void, Void> action;
+  private Consumer<StateMachine<Void, Void>> actionHandler;
+  private BiConsumer<StateMachine<Void, Void>, Exception> exceptionHandler;
 
   @BeforeEach
   void setup() {
@@ -27,7 +27,7 @@ class HandleExceptionActionTest {
 
   @Test
   void shouldHandleBizLogic() {
-    StateMachine<Void> stateMachine = mock(StateMachine.class);
+    StateMachine<Void, Void> stateMachine = mock(StateMachine.class);
     action.execute(stateMachine);
     verify(actionHandler, times(1)).accept(stateMachine);
     verifyNoInteractions(exceptionHandler);
@@ -35,7 +35,7 @@ class HandleExceptionActionTest {
 
   @Test
   void shouldHandleExceptionLogic() {
-    StateMachine<Void> stateMachine = mock(StateMachine.class);
+    StateMachine<Void, Void> stateMachine = mock(StateMachine.class);
     IllegalStateException excp = new IllegalStateException("test induced");
     doThrow(excp).when(actionHandler).accept(stateMachine);
     action.execute(stateMachine);

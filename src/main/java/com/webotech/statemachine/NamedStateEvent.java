@@ -7,17 +7,29 @@ import java.util.StringJoiner;
 /**
  * A {@link StateEvent}, each instance with the same name is are {@link #equals(Object)}
  */
-public final class NamedStateEvent implements StateEvent {
+public final class NamedStateEvent<S> implements StateEvent<S> {
 
   private final String name;
+  private S payload;
 
   public NamedStateEvent(String name) {
     this.name = name;
+    this.payload = null;
   }
 
   @Override
   public String getName() {
     return this.name;
+  }
+
+  @Override
+  public S getPayload() {
+    return payload;
+  }
+
+  @Override
+  public void setPayload(S payload) {
+    this.payload = payload;
   }
 
   @Override

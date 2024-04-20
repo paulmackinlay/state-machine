@@ -15,10 +15,10 @@ import org.junit.jupiter.api.Test;
 
 class MultiConsumerStateMachineListenerTest {
 
-  private static final State<Void> fromState = new NamedState<>("fromState");
-  private static final State<Void> toState = new NamedState<>("toState");
-  private static final StateEvent event = new NamedStateEvent("event");
-  private MultiConsumerStateMachineListener<Void> multiConsumerStateMachineListener;
+  private static final State<Void, Void> fromState = new NamedState<>("fromState");
+  private static final State<Void, Void> toState = new NamedState<>("toState");
+  private static final StateEvent<Void> event = new NamedStateEvent<>("event");
+  private MultiConsumerStateMachineListener<Void, Void> multiConsumerStateMachineListener;
 
   @BeforeEach
   void setup() {
@@ -29,7 +29,7 @@ class MultiConsumerStateMachineListenerTest {
   void shouldPassThroughToSingleListener() {
     List<Object> beginData = new ArrayList<>();
     List<Object> endData = new ArrayList<>();
-    StateMachineListener<Void> listener = new TestStateMachineListener(beginData, endData);
+    StateMachineListener<Void, Void> listener = new TestStateMachineListener(beginData, endData);
     assertTrue(multiConsumerStateMachineListener.add(listener));
     assertTrue(beginData.isEmpty());
     multiConsumerStateMachineListener.onStateChangeBegin(fromState, event, toState);
@@ -43,10 +43,10 @@ class MultiConsumerStateMachineListenerTest {
   void shouldPassThroughToMultipleListeners() {
     List<Object> beginData1 = new ArrayList<>();
     List<Object> endData1 = new ArrayList<>();
-    StateMachineListener<Void> listener1 = new TestStateMachineListener(beginData1, endData1);
+    StateMachineListener<Void, Void> listener1 = new TestStateMachineListener(beginData1, endData1);
     List<Object> beginData2 = new ArrayList<>();
     List<Object> endData2 = new ArrayList<>();
-    StateMachineListener<Void> listener2 = new TestStateMachineListener(beginData2, endData2);
+    StateMachineListener<Void, Void> listener2 = new TestStateMachineListener(beginData2, endData2);
     assertTrue(multiConsumerStateMachineListener.add(listener1));
     assertTrue(multiConsumerStateMachineListener.add(listener2));
     assertTrue(beginData1.isEmpty());
@@ -65,7 +65,7 @@ class MultiConsumerStateMachineListenerTest {
   void shouldStopUpdateOnRemove() {
     List<Object> beginData = new ArrayList<>();
     List<Object> endData = new ArrayList<>();
-    StateMachineListener<Void> listener = new TestStateMachineListener(beginData, endData);
+    StateMachineListener<Void, Void> listener = new TestStateMachineListener(beginData, endData);
     assertTrue(multiConsumerStateMachineListener.add(listener));
     multiConsumerStateMachineListener.onStateChangeBegin(fromState, event, toState);
     assertCallbackData(beginData, 1);
@@ -78,7 +78,7 @@ class MultiConsumerStateMachineListenerTest {
   void shouldAddRemoveConsumerOnce() {
     List<Object> beginData = new ArrayList<>();
     List<Object> endData = new ArrayList<>();
-    StateMachineListener<Void> listener = new TestStateMachineListener(beginData, endData);
+    StateMachineListener<Void, Void> listener = new TestStateMachineListener(beginData, endData);
     assertTrue(multiConsumerStateMachineListener.add(listener));
     assertFalse(multiConsumerStateMachineListener.add(listener));
     multiConsumerStateMachineListener.onStateChangeBegin(fromState, event, toState);
@@ -98,7 +98,7 @@ class MultiConsumerStateMachineListenerTest {
     }
   }
 
-  private static class TestStateMachineListener implements StateMachineListener<Void> {
+  private static class TestStateMachineListener implements StateMachineListener<Void, Void> {
 
     private final List<Object> beginData;
     private final List<Object> endData;
@@ -109,14 +109,16 @@ class MultiConsumerStateMachineListenerTest {
     }
 
     @Override
-    public void onStateChangeBegin(State<Void> fromState, StateEvent event, State<Void> toState) {
+    public void onStateChangeBegin(State<Void, Void> fromState, StateEvent<Void> event,
+        State<Void, Void> toState) {
       beginData.add(fromState);
       beginData.add(event);
       beginData.add(toState);
     }
 
     @Override
-    public void onStateChangeEnd(State<Void> fromState, StateEvent event, State<Void> toState) {
+    public void onStateChangeEnd(State<Void, Void> fromState, StateEvent<Void> event,
+        State<Void, Void> toState) {
       endData.add(fromState);
       endData.add(event);
       endData.add(toState);

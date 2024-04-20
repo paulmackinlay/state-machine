@@ -12,19 +12,19 @@ import java.util.function.Consumer;
  * <p>This is useful if you want to handle exceptional logic in the same way for all
  * {@link StateAction}s in the {@link StateMachine}</p>
  */
-public final class HandleExceptionAction<T> implements StateAction<T> {
+public final class HandleExceptionAction<T, S> implements StateAction<T, S> {
 
-  private final Consumer<StateMachine<T>> actionHandler;
-  private final BiConsumer<StateMachine<T>, Exception> exceptionHandler;
+  private final Consumer<StateMachine<T, S>> actionHandler;
+  private final BiConsumer<StateMachine<T, S>, Exception> exceptionHandler;
 
-  public HandleExceptionAction(Consumer<StateMachine<T>> actionHandler,
-      BiConsumer<StateMachine<T>, Exception> exceptionHandler) {
+  public HandleExceptionAction(Consumer<StateMachine<T, S>> actionHandler,
+      BiConsumer<StateMachine<T, S>, Exception> exceptionHandler) {
     this.actionHandler = actionHandler;
     this.exceptionHandler = exceptionHandler;
   }
 
   @Override
-  public void execute(StateMachine<T> stateMachine) {
+  public void execute(StateMachine<T, S> stateMachine) {
     try {
       this.actionHandler.accept(stateMachine);
     } catch (Exception e) {

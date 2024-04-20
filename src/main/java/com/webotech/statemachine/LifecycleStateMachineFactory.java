@@ -13,10 +13,10 @@ import com.webotech.statemachine.api.StateMachineListener;
  */
 public final class LifecycleStateMachineFactory {
 
-  public static final StateEvent startEvt = new NamedStateEvent("start");
-  public static final StateEvent completeEvt = new NamedStateEvent("complete");
-  public static final StateEvent stopEvt = new NamedStateEvent("stop");
-  public static final StateEvent errorEvt = new NamedStateEvent("error");
+  public static final StateEvent<Void> startEvt = new NamedStateEvent<>("start");
+  public static final StateEvent<Void> completeEvt = new NamedStateEvent<>("complete");
+  public static final StateEvent<Void> stopEvt = new NamedStateEvent<>("stop");
+  public static final StateEvent<Void> errorEvt = new NamedStateEvent<>("error");
 
   public static final String UNINITIALISED = "UNINITIALISED";
   public static final String STARTING = "STARTING";
@@ -31,33 +31,33 @@ public final class LifecycleStateMachineFactory {
   }
 
   @SafeVarargs
-  public static <T> State<T> newUnitialisedState(StateAction<T>... entryActions) {
+  public static <T> State<T, Void> newUnitialisedState(StateAction<T, Void>... entryActions) {
     return newState(UNINITIALISED, entryActions);
   }
 
   @SafeVarargs
-  public static <T> State<T> newStartingState(StateAction<T>... entryActions) {
+  public static <T> State<T, Void> newStartingState(StateAction<T, Void>... entryActions) {
     return newState(STARTING, entryActions);
   }
 
   @SafeVarargs
-  public static <T> State<T> newStartedState(StateAction<T>... entryActions) {
+  public static <T> State<T, Void> newStartedState(StateAction<T, Void>... entryActions) {
     return newState(STARTED, entryActions);
   }
 
   @SafeVarargs
-  public static <T> State<T> newStoppingState(StateAction<T>... entryActions) {
+  public static <T> State<T, Void> newStoppingState(StateAction<T, Void>... entryActions) {
     return newState(STOPPING, entryActions);
   }
 
   @SafeVarargs
-  public static <T> State<T> newStoppedState(StateAction<T>... entryActions) {
+  public static <T> State<T, Void> newStoppedState(StateAction<T, Void>... entryActions) {
     return newState(STOPPED, entryActions);
   }
 
-  public static <T> void configureAppStateMachine(StateMachine<T> stateMachine,
-      State<T> uninitialised, State<T> starting,
-      State<T> started, State<T> stopping, State<T> stopped) {
+  public static <T> void configureAppStateMachine(StateMachine<T, Void> stateMachine,
+      State<T, Void> uninitialised, State<T, Void> starting,
+      State<T, Void> started, State<T, Void> stopping, State<T, Void> stopped) {
     stateMachine.initialSate(uninitialised).receives(startEvt).itTransitionsTo(starting);
     stateMachine.when(starting).receives(completeEvt).itTransitionsTo(started);
     stateMachine.when(starting).receives(errorEvt).itTransitionsTo(stopped);
@@ -70,7 +70,7 @@ public final class LifecycleStateMachineFactory {
   }
 
   @SuppressWarnings("unchecked")
-  public static <T> StateMachineListener<T> stateMachineLogger() {
+  public static <T, S> StateMachineListener<T, S> stateMachineLogger() {
     if (loggingStateMachineListener == null) {
       loggingStateMachineListener = new LoggingStateMachineListener<>();
     }
@@ -78,8 +78,8 @@ public final class LifecycleStateMachineFactory {
   }
 
   @SafeVarargs
-  private static <T> State<T> newState(String name, StateAction<T>... entryActions) {
-    NamedState<T> state = new NamedState<>(name);
+  private static <T, S> State<T, S> newState(String name, StateAction<T, S>... entryActions) {
+    NamedState<T, S> state = new NamedState<>(name);
     state.appendEntryActions(entryActions);
     return state;
   }

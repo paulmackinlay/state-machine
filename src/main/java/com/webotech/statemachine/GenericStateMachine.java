@@ -18,7 +18,7 @@ import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class GenericStateMachine<T> implements StateMachine<T> {
+public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
   private static final Logger logger = LogManager.getLogger(GenericStateMachine.class);
   private static final String LOG_EVENT_NOT_MAPPED = "StateEvent [{}] not mapped for state [{}], ignoring";
@@ -26,29 +26,31 @@ public class GenericStateMachine<T> implements StateMachine<T> {
   private static final String RESERVED_STATE_NAME_END = "_END_";
   private static final String RESERVED_STATE_NAME_UNINITIALISED = "_UNINITIALISED_";
   private static final String RESERVED_STATE_NAME_NOOP = "_NOOP_";
+  private static final String RESERVED_STATE_EVENT_NAME_IMMEDIATE = "_immediate_";
   static final List<String> reservedStateNames = List.of(RESERVED_STATE_NAME_UNINITIALISED,
       RESERVED_STATE_NAME_END, RESERVED_STATE_NAME_NOOP);
-  private static final StateEvent immediateEvent = new NamedStateEvent("_immediate_");
+  private final StateEvent<S> immediateEvent;
   private final Supplier<AtomicBoolean> atomicBooleanSupplier;
   private final Consumer<AtomicBoolean> atomicBooleanConsumer;
-  private final BiConsumer<StateEvent, StateMachine<T>> unmappedEventHandler;
-  private final State<T> noState;
-  private final State<T> endState;
-  private final State<T> noopState;
-  private final Map<State<T>, Map<StateEvent, State<T>>> states;
-  private final ConcurrentMap<StateEvent, AtomicBoolean> inflightEvents;
+  private final BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
+  private final State<T, S> noState;
+  private final State<T, S> endState;
+  private final State<T, S> noopState;
+  private final Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states;
+  private final ConcurrentMap<StateEvent<S>, AtomicBoolean> inflightEvents;
   private final T context;
-  private StateMachineListener<T> stateMachineListener;
-  private State<T> initState;
-  private State<T> markedState;
-  private StateEvent markedEvent;
-  private State<T> currentState;
+  private StateMachineListener<T, S> stateMachineListener;
+  private State<T, S> initState;
+  private State<T, S> markedState;
+  private StateEvent<S> markedEvent;
+  private State<T, S> currentState;
 
   private GenericStateMachine(T context, Supplier<AtomicBoolean> atomicBooleanSupplier,
       Consumer<AtomicBoolean> atomicBooleanConsumer,
-      BiConsumer<StateEvent, StateMachine<T>> unmappedEventHandler) {
+      BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
     this.states = new HashMap<>();
     this.inflightEvents = new ConcurrentHashMap<>();
+    this.immediateEvent = new NamedStateEvent<>(RESERVED_STATE_EVENT_NAME_IMMEDIATE);
     this.endState = new NamedState<>(RESERVED_STATE_NAME_END);
     this.noState = new NamedState<>(RESERVED_STATE_NAME_UNINITIALISED);
     this.noopState = new NamedState<>(RESERVED_STATE_NAME_NOOP);
@@ -60,7 +62,7 @@ public class GenericStateMachine<T> implements StateMachine<T> {
 
   @SuppressWarnings("hiding")
   @Override
-  public StateMachine<T> initialSate(State<T> initState) {
+  public StateMachine<T, S> initialSate(State<T, S> initState) {
     assertNotReservedState(initState);
     assertInitStateDefined(false);
     this.initState = initState;
@@ -70,7 +72,7 @@ public class GenericStateMachine<T> implements StateMachine<T> {
   }
 
   @Override
-  public StateMachine<T> when(State<T> state) {
+  public StateMachine<T, S> when(State<T, S> state) {
     assertNotReservedState(state);
     assertInitStateDefined(true);
     assertMarkedStateDefined(false);
@@ -80,7 +82,7 @@ public class GenericStateMachine<T> implements StateMachine<T> {
   }
 
   @Override
-  public StateMachine<T> receives(StateEvent stateEvent) {
+  public StateMachine<T, S> receives(StateEvent<S> stateEvent) {
     assertNotReservedStateEvent(stateEvent);
     assertInitStateDefined(true);
     assertMarkedStateDefined(true);
@@ -90,7 +92,7 @@ public class GenericStateMachine<T> implements StateMachine<T> {
   }
 
   @Override
-  public StateMachine<T> itEnds() {
+  public StateMachine<T, S> itEnds() {
     assertInitStateDefined(true);
     assertMarkedStateDefined(true);
     if (this.markedEvent == null) {
@@ -106,7 +108,7 @@ public class GenericStateMachine<T> implements StateMachine<T> {
   }
 
   @Override
-  public StateMachine<T> itTransitionsTo(State<T> state) {
+  public StateMachine<T, S> itTransitionsTo(State<T, S> state) {
     assertNotReservedState(state);
     assertInitStateDefined(true);
     assertMarkedStateDefined(true);
@@ -118,7 +120,7 @@ public class GenericStateMachine<T> implements StateMachine<T> {
   }
 
   @Override
-  public StateMachine<T> itDoesNotTransition() {
+  public StateMachine<T, S> itDoesNotTransition() {
     assertInitStateDefined(true);
     assertMarkedStateDefined(true);
     assertEventNotMapped();
@@ -126,14 +128,14 @@ public class GenericStateMachine<T> implements StateMachine<T> {
     return this;
   }
 
-  private void assertNotReservedState(State<T> state) {
+  private void assertNotReservedState(State<T, S> state) {
     if (reservedStateNames.stream().anyMatch(r -> r.equals(state.getName()))) {
       throw new IllegalStateException(
           "Invalid state [" + state.getName() + "] is using a reserved name.");
     }
   }
 
-  private void assertNotReservedStateEvent(StateEvent stateEvent) {
+  private void assertNotReservedStateEvent(StateEvent<S> stateEvent) {
     if (immediateEvent.getName().equals(stateEvent.getName())) {
       throw new IllegalStateException(
           "Invalid StateEvent [" + stateEvent.getName() + "] is using a reserved name.");
@@ -141,7 +143,7 @@ public class GenericStateMachine<T> implements StateMachine<T> {
   }
 
   private void assertEventNotMapped() {
-    State<T> toState = this.states.get(this.markedState).get(this.markedEvent);
+    State<T, S> toState = this.states.get(this.markedState).get(this.markedEvent);
     if (toState != null) {
       throw new IllegalStateException(
           "State [" + this.markedState.getName() + "] already transitions to State [" + toState
@@ -176,8 +178,8 @@ public class GenericStateMachine<T> implements StateMachine<T> {
     }
   }
 
-  private void notifyStateMachineListener(boolean isComplete, State<T> fromState,
-      StateEvent stateEvent, State<T> toState) {
+  private void notifyStateMachineListener(boolean isComplete, State<T, S> fromState,
+      StateEvent<S> stateEvent, State<T, S> toState) {
     if (this.stateMachineListener != null) {
       if (fromState == null) {
         fromState = this.noState;
@@ -186,7 +188,7 @@ public class GenericStateMachine<T> implements StateMachine<T> {
         toState = this.noState;
       }
       if (stateEvent == null) {
-        stateEvent = immediateEvent;
+        stateEvent = this.immediateEvent;
       }
       if (isComplete) {
         this.stateMachineListener.onStateChangeEnd(fromState, stateEvent, toState);
@@ -203,9 +205,9 @@ public class GenericStateMachine<T> implements StateMachine<T> {
       throw new IllegalStateException(
           "State machine cannot be started with no defined transitions.");
     }
-    for (Entry<State<T>, Map<StateEvent, State<T>>> entry : this.states.entrySet()) {
-      State<T> key = entry.getKey();
-      for (Entry<StateEvent, State<T>> entry1 : entry.getValue().entrySet()) {
+    for (Entry<State<T, S>, Map<StateEvent<S>, State<T, S>>> entry : this.states.entrySet()) {
+      State<T, S> key = entry.getKey();
+      for (Entry<StateEvent<S>, State<T, S>> entry1 : entry.getValue().entrySet()) {
         if (entry1.getValue() == null) {
           throw new IllegalStateException(
               "State " + key.getName() + " dose not transition when a " + entry1.getKey().getName()
@@ -228,12 +230,12 @@ public class GenericStateMachine<T> implements StateMachine<T> {
   }
 
   @Override
-  public void fire(StateEvent stateEvent) {
+  public void fire(StateEvent<S> stateEvent) {
     if (this.currentState == null) {
       throw new IllegalStateException(
           "The current state is null, did you start the state machine?");
     }
-    State<T> toState = this.states.get(this.currentState).get(stateEvent);
+    State<T, S> toState = this.states.get(this.currentState).get(stateEvent);
     if (toState == null) {
       this.unmappedEventHandler.accept(stateEvent, this);
       return;
@@ -246,7 +248,7 @@ public class GenericStateMachine<T> implements StateMachine<T> {
     }
     if (this.inflightEvents.computeIfAbsent(stateEvent, k -> this.atomicBooleanSupplier.get())
         .compareAndSet(false, true)) {
-      State<T> fromState = this.currentState;
+      State<T, S> fromState = this.currentState;
       notifyStateMachineListener(false, fromState, stateEvent, toState);
       this.currentState.onExit(this);
       this.currentState = toState;
@@ -259,7 +261,7 @@ public class GenericStateMachine<T> implements StateMachine<T> {
   }
 
   @Override
-  public State<T> getCurrentState() {
+  public State<T, S> getCurrentState() {
     return this.currentState;
   }
 
@@ -277,18 +279,18 @@ public class GenericStateMachine<T> implements StateMachine<T> {
    * {@link StateMachine} current state will actually be the same as the 'from state'.
    */
   @Override
-  public void setStateMachineListener(StateMachineListener<T> stateMachineListener) {
+  public void setStateMachineListener(StateMachineListener<T, S> stateMachineListener) {
     this.stateMachineListener = stateMachineListener;
   }
 
-  public static class Builder<T> {
+  public static class Builder<T, S> {
 
     private T context;
     private Supplier<AtomicBoolean> atomicBooleanSupplier;
     private Consumer<AtomicBoolean> atomicBooleanConsumer;
-    private BiConsumer<StateEvent, StateMachine<T>> unmappedEventHandler;
+    private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
 
-    public Builder<T> setContext(T context) {
+    public Builder<T, S> setContext(T context) {
       this.context = context;
       return this;
     }
@@ -301,7 +303,7 @@ public class GenericStateMachine<T> implements StateMachine<T> {
      * @param atomicBooleanSupplier supplies {@link AtomicBoolean}s (take from pool)
      * @param atomicBooleanConsumer consumes {@link AtomicBoolean}s (give to pool)
      */
-    public Builder<T> withAtomicBooleanPool(Supplier<AtomicBoolean> atomicBooleanSupplier,
+    public Builder<T, S> withAtomicBooleanPool(Supplier<AtomicBoolean> atomicBooleanSupplier,
         Consumer<AtomicBoolean> atomicBooleanConsumer) {
       this.atomicBooleanSupplier = atomicBooleanSupplier;
       this.atomicBooleanConsumer = atomicBooleanConsumer;
@@ -314,13 +316,13 @@ public class GenericStateMachine<T> implements StateMachine<T> {
      * the behaviour. This handler is called with the {@link StateEvent} that was received and a
      * reference to the {@link StateMachine}.
      */
-    public Builder<T> setUnmappedEventHandler(
-        BiConsumer<StateEvent, StateMachine<T>> unmappedEventHandler) {
+    public Builder<T, S> setUnmappedEventHandler(
+        BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
       this.unmappedEventHandler = unmappedEventHandler;
       return this;
     }
 
-    BiConsumer<StateEvent, StateMachine<T>> getUnmappedEventHandler() {
+    BiConsumer<StateEvent<S>, StateMachine<T, S>> getUnmappedEventHandler() {
       return this.unmappedEventHandler;
     }
 
@@ -332,7 +334,7 @@ public class GenericStateMachine<T> implements StateMachine<T> {
       return atomicBooleanConsumer;
     }
 
-    public GenericStateMachine<T> build() {
+    public GenericStateMachine<T, S> build() {
       if (atomicBooleanSupplier == null || atomicBooleanConsumer == null) {
         AtomicBooleanPool atomicBooleanPool = new AtomicBooleanPool();
         if (atomicBooleanSupplier == null) {

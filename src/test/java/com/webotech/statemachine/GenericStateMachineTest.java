@@ -27,21 +27,21 @@ import org.junit.jupiter.api.Test;
 
 class GenericStateMachineTest {
 
-  public static final State<Void> state1 = new NamedState<>("STATE-1");
-  public static final State<Void> state2 = new NamedState<>("STATE-2");
-  public static final State<Void> stateReserved1 = new NamedState<>("_UNINITIALISED_");
-  public static final State<Void> stateReserved2 = new NamedState<>("_END_");
-  public static final StateEvent event1 = new NamedStateEvent("event-1");
-  public static final StateEvent event2 = new NamedStateEvent("event-2");
-  public static final StateEvent eventReserved = new NamedStateEvent("_immediate_");
-  private GenericStateMachine<Void> stateMachine;
-  private GenericStateMachine<List<String>> txtStateMachine;
+  public static final State<Void, Void> state1 = new NamedState<>("STATE-1");
+  public static final State<Void, Void> state2 = new NamedState<>("STATE-2");
+  public static final State<Void, Void> stateReserved1 = new NamedState<>("_UNINITIALISED_");
+  public static final State<Void, Void> stateReserved2 = new NamedState<>("_END_");
+  public static final StateEvent<Void> event1 = new NamedStateEvent<>("event-1");
+  public static final StateEvent<Void> event2 = new NamedStateEvent<>("event-2");
+  public static final StateEvent<Void> eventReserved = new NamedStateEvent<>("_immediate_");
+  private GenericStateMachine<Void, Void> stateMachine;
+  private GenericStateMachine<List<String>, Void> txtStateMachine;
 
   @BeforeEach
   void setup() {
-    Builder<Void> builder = new GenericStateMachine.Builder<>();
+    Builder<Void, Void> builder = new GenericStateMachine.Builder<>();
     stateMachine = builder.build();
-    txtStateMachine = new GenericStateMachine.Builder<List<String>>().setContext(
+    txtStateMachine = new GenericStateMachine.Builder<List<String>, Void>().setContext(
         new ArrayList<>()).build();
   }
 
@@ -59,16 +59,18 @@ class GenericStateMachineTest {
   void shouldNotifyListener() {
     List<Object> stateData = new ArrayList<>();
     stateMachine.initialSate(state1).receives(event1).itEnds();
-    stateMachine.setStateMachineListener(new StateMachineListener<Void>() {
+    stateMachine.setStateMachineListener(new StateMachineListener<Void, Void>() {
       @Override
-      public void onStateChangeBegin(State<Void> fromState, StateEvent event, State<Void> toState) {
+      public void onStateChangeBegin(State<Void, Void> fromState, StateEvent<Void> event,
+          State<Void, Void> toState) {
         stateData.add(fromState);
         stateData.add(event);
         stateData.add(toState);
       }
 
       @Override
-      public void onStateChangeEnd(State<Void> fromState, StateEvent event, State<Void> toState) {
+      public void onStateChangeEnd(State<Void, Void> fromState, StateEvent<Void> event,
+          State<Void, Void> toState) {
         stateData.add(fromState);
         stateData.add(event);
         stateData.add(toState);
@@ -76,14 +78,14 @@ class GenericStateMachineTest {
     });
     stateMachine.start();
     stateMachine.fire(event1);
-    assertEquals(List.of(state1, event1, new NamedState<Void>("_END_"),
-        state1, event1, new NamedState<Void>("_END_")), stateData);
+    assertEquals(List.of(state1, event1, new NamedState<Void, Void>("_END_"),
+        state1, event1, new NamedState<Void, Void>("_END_")), stateData);
     assertTrue(stateMachine.isEnded());
   }
 
   @Test
   void shouldMaintainOrderOrEntryAndExitActions() {
-    State<List<String>> one = new NamedState<>("one");
+    State<List<String>, Void> one = new NamedState<>("one");
     one.appendEntryActions(sm -> sm.getContext().add("1.1 entered"),
         sm -> sm.getContext().add("1.2 entered"));
     one.appendExitActions(sm -> sm.getContext().add("1.1 exited"),
@@ -98,8 +100,8 @@ class GenericStateMachineTest {
 
   @Test
   void shouldEnsureContextIsConsistent() {
-    State<List<String>> one = new NamedState<>("one");
-    State<List<String>> two = new NamedState<>("two");
+    State<List<String>, Void> one = new NamedState<>("one");
+    State<List<String>, Void> two = new NamedState<>("two");
     one.appendEntryActions(sm -> sm.getContext().add("1 entered"));
     two.appendEntryActions(sm -> sm.getContext().add("2 entered"));
     two.appendExitActions(sm -> sm.getContext().add("ending"));
@@ -139,7 +141,7 @@ class GenericStateMachineTest {
 
   @Test
   void shouldHandleEventThatDoesNotTransition() {
-    StateAction<Void> stateAction = mock(StateAction.class);
+    StateAction<Void, Void> stateAction = mock(StateAction.class);
     state1.appendExitActions(stateAction);
     stateMachine.initialSate(state1).receives(event1).itDoesNotTransition();
     stateMachine.start();
@@ -150,7 +152,7 @@ class GenericStateMachineTest {
   @Test
   void shouldNotAllowReservedStateNames() {
     for (String name : GenericStateMachine.reservedStateNames) {
-      State<Void> reservedState = new NamedState<>(name);
+      State<Void, Void> reservedState = new NamedState<>(name);
       assertThrows(IllegalStateException.class, () -> stateMachine.initialSate(reservedState));
     }
   }
@@ -175,22 +177,22 @@ class GenericStateMachineTest {
 
   @Test
   void shouldBuildWithNoContext() {
-    StateMachine<Void> noContextStateMachine = (new GenericStateMachine.Builder<Void>()).build();
+    StateMachine<Void, Void> noContextStateMachine = (new GenericStateMachine.Builder<Void, Void>()).build();
     assertNull(noContextStateMachine.getContext());
   }
 
   @Test
   void shouldBuildWithImmutableContext() {
-    StateMachine<String> stringContextStateMachine = (new GenericStateMachine.Builder<String>().setContext(
+    StateMachine<String, Void> stringContextStateMachine = (new GenericStateMachine.Builder<String, Void>().setContext(
         "my-context")).build();
     assertEquals("my-context", stringContextStateMachine.getContext());
   }
 
   @Test
   void shouldBuildWithUnmappedEventHandler() {
-    BiConsumer<StateEvent, StateMachine<Void>> unmappedEventHandler = (ev, sm) -> {
+    BiConsumer<StateEvent<Void>, StateMachine<Void, Void>> unmappedEventHandler = (ev, sm) -> {
     };
-    Builder<Void> builder = new GenericStateMachine.Builder<Void>().setUnmappedEventHandler(
+    Builder<Void, Void> builder = new GenericStateMachine.Builder<Void, Void>().setUnmappedEventHandler(
         unmappedEventHandler);
     assertSame(unmappedEventHandler, builder.getUnmappedEventHandler());
   }
@@ -200,7 +202,7 @@ class GenericStateMachineTest {
     Supplier<AtomicBoolean> poolSupplier = AtomicBoolean::new;
     Consumer<AtomicBoolean> poolConsumer = a -> {
     };
-    Builder<Void> builder = new GenericStateMachine.Builder<Void>().withAtomicBooleanPool(
+    Builder<Void, Void> builder = new GenericStateMachine.Builder<Void, Void>().withAtomicBooleanPool(
         poolSupplier, poolConsumer);
     assertSame(poolSupplier, builder.getAtomicBooleanSupplier());
     assertSame(poolConsumer, builder.getAtomicBooleanConsumer());
@@ -209,7 +211,7 @@ class GenericStateMachineTest {
   @Test
   void shouldBuildWithMutableContext() {
     Object obj = new Object();
-    StateMachine<Object> objContextStateMachine = (new GenericStateMachine.Builder<>().setContext(
+    StateMachine<Object, Void> objContextStateMachine = (new GenericStateMachine.Builder<Object, Void>().setContext(
         obj)).build();
     assertSame(obj, objContextStateMachine.getContext());
   }
