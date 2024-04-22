@@ -1,5 +1,7 @@
 package com.webotech.statemachine.api;
 
+import java.util.function.BiConsumer;
+
 /**
  * <p>This is the API for the state machine. It made up from methods that are used to configure it
  * before it is started and service methods that are used while the state machine is running.</p>
@@ -32,8 +34,6 @@ public interface StateMachine<T, S> {
    * by {@link #itTransitionsTo(State)} or {@link #itEnds()}.
    */
   StateMachine<T, S> receives(StateEvent<S> stateEvent);
-
-  //TODO this should be more intuitive like StateMachine<T> itEndsInState(State<T> state)
 
   /**
    * A configuration method: used to specify when a state machine ends. When it ends it reaches a
@@ -82,6 +82,12 @@ public interface StateMachine<T, S> {
   void setStateMachineListener(StateMachineListener<T, S> stateMachineListener);
 
   /**
+   * Sets a handler that will be called when a {@link State} receives a {@link StateEvent} that has
+   * not been mapped.
+   */
+  void setUnmappedEventHandler(BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler);
+
+  /**
    * @return true if the {@link StateMachine} has been started.
    */
   boolean isStarted();
@@ -90,6 +96,4 @@ public interface StateMachine<T, S> {
    * @return true when the {@link StateMachine} has reached an ended state.
    */
   boolean isEnded();
-
-  //TODO should there be a setUnmappedEventHandler(BiConsumer<StateEvent, StateMachine<T>) method?
 }

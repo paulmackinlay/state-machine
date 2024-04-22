@@ -32,7 +32,6 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
   private final StateEvent<S> immediateEvent;
   private final Supplier<AtomicBoolean> atomicBooleanSupplier;
   private final Consumer<AtomicBoolean> atomicBooleanConsumer;
-  private final BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
   private final State<T, S> noState;
   private final State<T, S> endState;
   private final State<T, S> noopState;
@@ -40,6 +39,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
   private final ConcurrentMap<StateEvent<S>, AtomicBoolean> inflightEvents;
   private final T context;
   private StateMachineListener<T, S> stateMachineListener;
+  private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
   private State<T, S> initState;
   private State<T, S> markedState;
   private StateEvent<S> markedEvent;
@@ -47,6 +47,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
   private GenericStateMachine(T context, Supplier<AtomicBoolean> atomicBooleanSupplier,
       Consumer<AtomicBoolean> atomicBooleanConsumer,
+      StateMachineListener<T, S> stateMachineListener,
       BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
     this.states = new HashMap<>();
     this.inflightEvents = new ConcurrentHashMap<>();
@@ -57,6 +58,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     this.context = context;
     this.atomicBooleanSupplier = atomicBooleanSupplier;
     this.atomicBooleanConsumer = atomicBooleanConsumer;
+    this.stateMachineListener = stateMachineListener;
     this.unmappedEventHandler = unmappedEventHandler;
   }
 
@@ -283,11 +285,18 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     this.stateMachineListener = stateMachineListener;
   }
 
+  @Override
+  public void setUnmappedEventHandler(
+      BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
+    this.unmappedEventHandler = unmappedEventHandler;
+  }
+
   public static class Builder<T, S> {
 
     private T context;
     private Supplier<AtomicBoolean> atomicBooleanSupplier;
     private Consumer<AtomicBoolean> atomicBooleanConsumer;
+    private StateMachineListener<T, S> stateMachineListener;
     private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
 
     public Builder<T, S> setContext(T context) {
@@ -322,6 +331,15 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       return this;
     }
 
+    Builder<T, S> setStateMachineListener(StateMachineListener<T, S> stateMachineListener) {
+      this.stateMachineListener = stateMachineListener;
+      return this;
+    }
+
+    StateMachineListener<T, S> getStateMachineListener() {
+      return stateMachineListener;
+    }
+
     BiConsumer<StateEvent<S>, StateMachine<T, S>> getUnmappedEventHandler() {
       return this.unmappedEventHandler;
     }
@@ -349,7 +367,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
             sm.getCurrentState().getName());
       }
       return new GenericStateMachine<>(context, atomicBooleanSupplier, atomicBooleanConsumer,
-          unmappedEventHandler);
+          stateMachineListener, unmappedEventHandler);
     }
   }
 

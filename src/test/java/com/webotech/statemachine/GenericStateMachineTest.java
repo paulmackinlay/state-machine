@@ -215,4 +215,13 @@ class GenericStateMachineTest {
         obj)).build();
     assertSame(obj, objContextStateMachine.getContext());
   }
+
+  @Test
+  void shouldBuildWithStateMachineListener() {
+    StateMachineListener<Void, Void> listener = mock(StateMachineListener.class);
+    Builder<Void, Void> builder = new GenericStateMachine.Builder<Void, Void>().setStateMachineListener(
+        listener);
+    assertSame(listener, builder.getStateMachineListener());
+  }
+
 }
