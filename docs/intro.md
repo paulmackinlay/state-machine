@@ -16,7 +16,7 @@ This is done by making sure the transitions are
 
 These high level concepts describe how a state machine works.
 
-At its core
+At its core there are 3 repeatable steps in a state machine:
 
 1. when a state machine is in a given state
 2. it receives an event
@@ -31,9 +31,9 @@ When **State 1** receives **event 1** it transitions to **State 2**. When **Stat
 
 ## Uses of state machines
 
-Using a state machine promotes single responsibility so there are many situations where it is
-beneficial to build one into the design of an app. Appropriate use of a state machine will help code
-to be better organised, easier to maintain and easier to enhance.
+Using a state machine in code promotes single responsibility so there are many situations where it
+is beneficial to build one into the design of an app. Appropriate use of a state machine will help
+code to be better organised, easier to maintain and easier to enhance.
 
 In the next sections I have outlined a couple of examples.
 
@@ -46,25 +46,25 @@ The lifecycle of an application can be managed by a state machine. A machine wit
 * **Stopping**
 * **Stopped**
 
-could be used for this purpose. Here's the state diagram:
+can be used for this purpose. Here's the state diagram:
 
 ![](media/State_diagram_2.png)
 
-The **Starting** state would be used for bootstrapping tasks, like processing configuration,
-initialising database connections and starting up I/O. Once bootstrapping is complete, a transition
-to the **Running** state would indicate the normal operation of the app. The **Stopping** state
-would be used to gracefully bring all subsystems back to their initial (constructed but idle)
-states. Then once transition to the **Stopped** state completes, the application could exit or could
-be made to transition back to the **Starting** state. In this case the **Stopped** state would be
-used to put an application into a warm stand-by mode which can be a very useful feature.
+The **Starting** state is used for bootstrapping tasks like processing configuration, initialising
+database connections and starting up I/O. Once bootstrapping is complete, a transition to the
+**Running** state indicates the normal operation of the app. The **Stopping** state is used to
+gracefully bring all subsystems back to their initial (constructed but idle) states. Then once
+transition to the **Stopped** state completes, the application could exit or could be made to
+transition back to the **Starting** state. In this case the **Stopped** state would be used to put
+an application into a warm stand-by mode which can be a very useful feature.
 
-### State Driven Protocol
+### State Driven Protocol Example
 
 In a state driven protocol, distinct systems communicate asynchronously with each other, often
 using messaging. One system sends a message to the other and then waits to receive a response
-message before continuing with the execution of its business logic. This is a very common scenario,
-for example in e-commerce order flows, electronic trading and e-government processes to mention a
-few.
+message before continuing with the execution of its business logic. The messages form part of the
+events of the state machine. This is a very common real world scenario, for example in e-commerce
+order flows, electronic trading and e-government processes to mention a few.
 
 Here is a basic example based on negotiating the price of a product. Imagine an organisation,
 Seller, that sells products with an indicative price tag. Since the price is indicative, they allow
@@ -85,3 +85,9 @@ is in the **Countered** state, resulting in a transition to the **Sold** state. 
 by reconfiguring the state machine. Because logic is compartmentalised in areas of single
 responsibility, adapting a design by introducing new states/events can be done while minimising
 technical risk.
+
+## State machines in depth
+
+This page covers the basics at a high level; what a state machine is, how it works and what it is
+used for. In the next section I cover the details of how one works in code. Specifically, I talk
+about the [state-machine implementation](implementation.md) in this repo.
