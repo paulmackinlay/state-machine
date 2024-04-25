@@ -6,6 +6,29 @@
   <artifactId>state-machine</artifactId>
   <version>0.6.1-SNAPSHOT</version>
   <packaging>jar</packaging>
+  <name>${project.groupId}:${project.artifactId}</name>
+  <description>A thread-safe state machine</description>
+  <url>https://github.com/paulmackinlay/state-machine</url>
+
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Paul Mackinlay</name>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git@github.com:paulmackinlay/state-machine.git</connection>
+    <developerConnection>scm:git:git@github.com:paulmackinlay/state-machine.git
+    </developerConnection>
+    <url>git@github.com:paulmackinlay/state-machine.git</url>
+  </scm>
 
   <properties>
     <java.version>21</java.version>
@@ -13,9 +36,12 @@
     <maven-dependency-plugin.version>3.6.1</maven-dependency-plugin.version>
     <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
     <maven-enforcer-plugin.version>3.4.1</maven-enforcer-plugin.version>
-    <maven-jar-plugin.version>3.4.0</maven-jar-plugin.version>
+    <maven-jar-plugin.version>3.4.1</maven-jar-plugin.version>
     <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
+    <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
+    <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
+    <maven-gpg-plugin.version>3.2.4</maven-gpg-plugin.version>
     <log4j2.version>2.23.1</log4j2.version>
   </properties>
 
@@ -123,9 +149,51 @@
           </archive>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>${maven-source-plugin.version}</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Version>${project.version}</Version>
+              <Built-By>Webotech</Built-By>
+            </manifestEntries>
+          </archive>
+        </configuration>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>${maven-javadoc-plugin.version}</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Version>${project.version}</Version>
+              <Built-By>Webotech</Built-By>
+            </manifestEntries>
+          </archive>
+        </configuration>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
-
+  
   <profiles>
     <profile>
       <id>with-log4j-impl</id>
@@ -141,5 +209,38 @@
         </dependency>
       </dependencies>
     </profile>
+    <profile>
+      <id>central</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>${maven-gpg-plugin.version}</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
+
+  <distributionManagement>
+    <repository>
+      <id>sonatype-releases</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+    </repository>
+    <snapshotRepository>
+      <id>sonatype-snapshots</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
+
 </project>
