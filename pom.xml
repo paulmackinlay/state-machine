@@ -1,8 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.webotech</groupId>
   <artifactId>state-machine</artifactId>
-  <version>0.6.1</version>
+  <version>0.6.1-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>${project.groupId}:${project.artifactId}</name>
   <description>A thread-safe state machine</description>
@@ -25,12 +27,11 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git@github.com:paulmackinlay/state-machine.git</connection>
+    <connection>scm:git:https://github.com/paulmackinlay/state-machine.git</connection>
     <developerConnection>
-      scm:git:git@github.com:paulmackinlay/state-machine.git
+      scm:git:https://github.com/paulmackinlay/state-machine.git
     </developerConnection>
-    <url>git@github.com:paulmackinlay/state-machine.git</url>
-    <tag>state-machine-0.6.1</tag>
+    <url>https://github.com/paulmackinlay/state-machine</url>
   </scm>
 
   <properties>
