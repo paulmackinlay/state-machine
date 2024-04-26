@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2024 Paul Mackinlay <paul.mackinlay@gmail.com>
+ */
+
 package com.webotech.statemachine.service;
 
 import java.util.List;
