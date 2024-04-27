@@ -68,3 +68,51 @@ for [State](../src/main/java/com/webotech/statemachine/api/State.java)
 has `appendEntryActions(StateAction...)` for actions you want to execute when the state machine
 transitions to a state to and `appendExitActions(StateAction...)` for actions you want to execute
 when the state machine transitions away from a state.
+
+In this case you need to add the logic for the actions outlined above in
+individual [StateAction](../src/main/java/com/webotech/statemachine/api/StateAction.java)s and then
+append them to the `State` as entry actions. When the `starting` state is entered the actions will
+execute in the order that they were appended. It is important for them to be executed in a
+predictable order because in this case reading the config from property files (action 1) has to
+happen before the config is used to connect to a database (action 2).
+
+Finally, the `completeEvt` is fired (action 3) which causes the state machine to transition. For
+the `GenericStatMachine` implementation, firing an event needs some thought. Generally speaking
+events originate on a different thread form the one that executes the state machine, for example a
+messaging thread or an RPC thread. `GenericStatMachine` is thread safe so you won't get any
+unexpected side effects. In this case the `completeEvt` originates from a `StateAction` which is
+part of the internal execution of `GenericStateMachine`, it is better to fire the event on a
+separate thread. You can do this easily by
+using [EventManager](../src/main/java/com/webotech/statemachine/EventManager.java) which
+has `fireAsync(StateEvent)` and `fireBound(StateEvent)` methods. In this
+case `fireAsync(completeEvt)` is needed.
+
+Here is some pseudo code illustrating how the `StateAction`s are added to the `starting` State:
+
+```
+//define actions
+StateAction<> readConfigAction = sm -> {
+ /* Read config from property files and put the config on StateMachine 
+ context using sm.getContext() so it can be accessed by other StateActions */
+}
+StateAction<> initDbaAction = sm -> {
+ /* Get the database connection config using sm.getContext() 
+ and init a connection pool to the database */
+}
+StateAction<> completeAction = sm -> {
+ EventManager eventManager = sm.getContext().getEventManager();
+ eventManager.fireAsync(completeEvt);
+}
+starting.appendEntryActions(readConfigAction, initDbaAction, completeAction);
+```
+
+In the above code you will notice the idea of a context for the state machine. It is not necessary
+in many cases to use one (in which case define it as `Void`) but in others it is a conventient place
+to store data which is for the state machine's use. The context is a free form generic type and is
+available to the `StateMachine`, the `StateAction`s and the `StatMachineListener`. It has 2
+purposes:
+
+1. allow data to be exchanged between `StateAction`s
+2. act as a service locator that provides objects needed by the state machine
+
+TODO
