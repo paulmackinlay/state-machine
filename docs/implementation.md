@@ -22,7 +22,7 @@ you are coding.
 Before the state machine is started, you need to configure it with states, events and transitions.
 In [StateMachine](../src/main/java/com/webotech/statemachine/api/StateMachine.java) there are a
 number of methods that are clearly documented as being for this purpose. Once configuration is done,
-you will need to start the state machine so that it can start processing events.
+you will need to start the state machine so that it can begin processing events.
 
 The API has been written so that the configuration method names are aligned with natural language.
 This is how the [application lifecycle](intro.md#app-lifecycle-example) example would be configured.
@@ -66,8 +66,8 @@ carry out these 3 actions
 The way this is done is by appending `StateAction`s to a `State`. The API
 for [State](../src/main/java/com/webotech/statemachine/api/State.java)
 has `appendEntryActions(StateAction...)` for actions you want to execute when the state machine
-transitions **to** a state and `appendExitActions(StateAction...)` for actions you want to execute
-when the state machine transitions **away** from a state.
+transitions **to** the state and `appendExitActions(StateAction...)` for actions you want to execute
+when the state machine transitions **away** from the state.
 
 In this case you need to add the logic for the actions outlined above in
 individual [StateAction](../src/main/java/com/webotech/statemachine/api/StateAction.java)s and then
@@ -82,8 +82,8 @@ some pseudo code illustrating how the `StateAction`s are added to the `starting`
 ```
 //define actions
 StateAction<> readConfigAction = sm -> {
- /* Read config from property files and put the config on StateMachine 
- context using sm.getContext() so it can be accessed by other StateActions */
+ /* Read config from property files and put the config on the StateMachine 
+ context using sm.getContext() so it can be accessed by subsequent StateActions */
 }
 StateAction<> initDbaAction = sm -> {
  /* Get the database connection config using sm.getContext() 
@@ -106,7 +106,7 @@ purposes:
 
 ## Events in the state machine
 
-### Thread considerations
+### Threading considerations
 
 Typically you configure a `StateMachine` on the app's primary thread, while events originate on I/O
 theads like a messaging or RPC thread. `GenericStatMachine` is thread safe so you won't get any
@@ -130,7 +130,7 @@ to immediately transition back to `State 1` and so on. Since this is all done on
 the `StateMachine` enters an unending circular pattern that constantly increases the thread's stack,
 ultimately leading to a `StackOverflowError`.
 
-You can avoid this situation by using
+You can avoid this error by using
 the [EventManager](../src/main/java/com/webotech/statemachine/EventManager.java) which
 has `fireAsync(StateEvent)` and `fireBound(StateEvent)` methods. By using `fireAsync(completeEvt)`
 in the `StateAction`s above, the `StateMachine` would continously transition between states without
@@ -170,11 +170,11 @@ and the `StateMachine`.
 
 When events are driven by rich data messages like FIX messages during electronic trading, it
 can be convenient for the data in the message to be available to the `StateAction` as you may need
-to extract values from the message in the processing logic. To facilitate this, the `StateEvent`
-allows a generic payload to be set on it which can then be accessed by the `StateAction` when it is
-being executed.
+to extract values from it in the processing logic. To facilitate this, the `StateEvent` allows a
+generic payload to be set on it which can then be accessed by the `StateAction` when it is being
+executed.
 
-Note that the payload of a `StateEvent` is often not needed in which case you can define it
+Note that in many cases the payload of a `StateEvent` is not needed in which case you can define it
 as `Void`.
 
 ## TODO
