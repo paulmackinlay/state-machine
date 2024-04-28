@@ -9,6 +9,8 @@ package com.webotech.statemachine.api;
  */
 public interface StateAction<T, S> {
 
+  //TODO signature should be execute(StateEvent, StateMachine)
+
   /**
    * This is called when this {@link StateAction} os executed.
    */

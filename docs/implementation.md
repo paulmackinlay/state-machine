@@ -66,28 +66,18 @@ carry out these 3 actions
 The way this is done is by appending `StateAction`s to a `State`. The API
 for [State](../src/main/java/com/webotech/statemachine/api/State.java)
 has `appendEntryActions(StateAction...)` for actions you want to execute when the state machine
-transitions to a state to and `appendExitActions(StateAction...)` for actions you want to execute
-when the state machine transitions away from a state.
+transitions **to** a state and `appendExitActions(StateAction...)` for actions you want to execute
+when the state machine transitions **away** from a state.
 
 In this case you need to add the logic for the actions outlined above in
 individual [StateAction](../src/main/java/com/webotech/statemachine/api/StateAction.java)s and then
 append them to the `State` as entry actions. When the `starting` state is entered the actions will
 execute in the order that they were appended. It is important for them to be executed in a
-predictable order because in this case reading the config from property files (action 1) has to
-happen before the config is used to connect to a database (action 2).
+predictable order, in this case reading the config from property files (action 1) has to happen
+before the config is used to connect to a database (action 2).
 
-Finally, the `completeEvt` is fired (action 3) which causes the state machine to transition. For
-the `GenericStatMachine` implementation, firing an event needs some thought. Generally speaking
-events originate on a different thread form the one that executes the state machine, for example a
-messaging thread or an RPC thread. `GenericStatMachine` is thread safe so you won't get any
-unexpected side effects. In this case the `completeEvt` originates from a `StateAction` which is
-part of the internal execution of `GenericStateMachine`, it is better to fire the event on a
-separate thread. You can do this easily by
-using [EventManager](../src/main/java/com/webotech/statemachine/EventManager.java) which
-has `fireAsync(StateEvent)` and `fireBound(StateEvent)` methods. In this
-case `fireAsync(completeEvt)` is needed.
-
-Here is some pseudo code illustrating how the `StateAction`s are added to the `starting` State:
+Finally, the `completeEvt` is fired (action 3) which causes the state machine to transition. Here is
+some pseudo code illustrating how the `StateAction`s are added to the `starting` State:
 
 ```
 //define actions
@@ -97,11 +87,10 @@ StateAction<> readConfigAction = sm -> {
 }
 StateAction<> initDbaAction = sm -> {
  /* Get the database connection config using sm.getContext() 
- and init a connection pool to the database */
+ and start a connection pool to the database */
 }
 StateAction<> completeAction = sm -> {
- EventManager eventManager = sm.getContext().getEventManager();
- eventManager.fireAsync(completeEvt);
+ /* Fire a completeEvt */
 }
 starting.appendEntryActions(readConfigAction, initDbaAction, completeAction);
 ```
@@ -115,4 +104,79 @@ purposes:
 1. allow data to be exchanged between `StateAction`s
 2. act as a service locator that provides objects needed by the state machine
 
-TODO
+## Events in the state machine
+
+### Thread considerations
+
+Typically you configure a `StateMachine` on the app's primary thread, while events originate on I/O
+theads like a messaging or RPC thread. `GenericStatMachine` is thread safe so you won't get any
+unexpected side effects. Actually the separation that results from using I/O threads helps prevent a
+situation where circular execution causes a `StackOverflowError`.
+
+Imagine a 2 state machine where each `State` has a single entry `StateAction` that does nothing
+other than fire an event.
+
+![](media/State_diagram_1.png)
+
+In code, the `StateAction`s would look something like this:
+
+```
+StateAction<> action1 = sm -> sm.fire(event1);
+StateAction<> action2 = sm -> sm.fire(event2);
+```
+
+When in `State 1`, the state machine would immediately transition to `State 2` which would cause it
+to immediately transition back to `State 1` and so on. Since this is all done on a single thread,
+the `StateMachine` enters an unending circular pattern that constantly increases the thread's stack,
+ultimately leading to a `StackOverflowError`.
+
+You can avoid this situation by using
+the [EventManager](../src/main/java/com/webotech/statemachine/EventManager.java) which
+has `fireAsync(StateEvent)` and `fireBound(StateEvent)` methods. By using `fireAsync(completeEvt)`
+in the `StateAction`s above, the `StateMachine` would continously transition between states without
+causing any errors. The `StateAction` code would look something like this:
+
+```
+StateAction<> action1 = sm -> {
+  EventManager eventManager = sm.getContext().getEventManager();
+  eventManager.fireAsync(event1);
+}
+```
+
+Although this is a contrived example, it does highlight the point that you need to put some thought
+into how you fire events in your code. The exact way you do this will be dependant on the app's
+threading model. Having a clear understanding of your threading model is important so you can
+optimse the app's performance,
+the [EventManager](../src/main/java/com/webotech/statemachine/EventManager.java) is one of the tools
+that will help you do this.
+
+### Unmapped events
+
+While using the `StateMachine` you may come across situations where a `State` receives
+a `StateEvent` that has not been mapped during configuration. By default `GenericStateMachine`
+simply logs the details and ignores it, in messaging terms this is equivalent to dropping a message.
+However, you may want bespoke behaviour for unmapped events in which case you can build
+the `GenericStateMachine` with an unmapped event handler:
+
+```
+BiConsumer<StateEvent<>, StateMachine<>> unmappedHandler = ...;
+StateMachine<> sm = new StateMachine.Builder<>().setUnmappedEventHander(unmappedHandler);
+```
+
+The handler is a `BiConsumer` that calls back with a reference to the `StateEvent` that was received
+and the `StateMachine`.
+
+### Event payloads
+
+When events are driven by rich data messages like FIX messages during electronic trading, it
+can be convenient for the data in the message to be available to the `StateAction` as you may need
+to extract values from the message in the processing logic. To facilitate this, the `StateEvent`
+allows a generic payload to be set on it which can then be accessed by the `StateAction` when it is
+being executed.
+
+Note that the payload of a `StateEvent` is often not needed in which case you can define it
+as `Void`.
+
+## TODO
+
+TODO: Exception handling, StateMachineListener

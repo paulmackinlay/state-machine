@@ -9,11 +9,15 @@ package com.webotech.statemachine.api;
  */
 public interface State<T, S> {
 
+  //TODO signature should be  onEntry(StateEvent, StateMachine)
+
   /**
    * This is called when the state machine transitions to this {@link State}. Any
    * {@link StateAction}s that has been assigned to state entry will fire.
    */
   void onEntry(StateMachine<T, S> stateMachine);
+
+  //TODO signature should be  onExit(StateEvent, StateMachine)
 
   /**
    * This is called when the state machine transitions away from this {@link State}.  Any
