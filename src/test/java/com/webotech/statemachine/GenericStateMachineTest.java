@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -90,10 +91,10 @@ class GenericStateMachineTest {
   @Test
   void shouldMaintainOrderOrEntryAndExitActions() {
     State<List<String>, Void> one = new NamedState<>("one");
-    one.appendEntryActions(sm -> sm.getContext().add("1.1 entered"),
-        sm -> sm.getContext().add("1.2 entered"));
-    one.appendExitActions(sm -> sm.getContext().add("1.1 exited"),
-        sm -> sm.getContext().add("1.2 exited"));
+    one.appendEntryActions((ev, sm) -> sm.getContext().add("1.1 entered"),
+        (ev, sm) -> sm.getContext().add("1.2 entered"));
+    one.appendExitActions((ev, sm) -> sm.getContext().add("1.1 exited"),
+        (ev, sm) -> sm.getContext().add("1.2 exited"));
     txtStateMachine.initialSate(one).receives(event1).itEnds();
     txtStateMachine.start();
     txtStateMachine.fire(event1);
@@ -106,9 +107,9 @@ class GenericStateMachineTest {
   void shouldEnsureContextIsConsistent() {
     State<List<String>, Void> one = new NamedState<>("one");
     State<List<String>, Void> two = new NamedState<>("two");
-    one.appendEntryActions(sm -> sm.getContext().add("1 entered"));
-    two.appendEntryActions(sm -> sm.getContext().add("2 entered"));
-    two.appendExitActions(sm -> sm.getContext().add("ending"));
+    one.appendEntryActions((ev, sm) -> sm.getContext().add("1 entered"));
+    two.appendEntryActions((ev, sm) -> sm.getContext().add("2 entered"));
+    two.appendExitActions((ev, sm) -> sm.getContext().add("ending"));
     txtStateMachine.initialSate(one).receives(event1).itTransitionsTo(two).
         when(two).receives(event1).itEnds();
     txtStateMachine.start();
@@ -228,4 +229,16 @@ class GenericStateMachineTest {
     assertSame(listener, builder.getStateMachineListener());
   }
 
+  @Test
+  void shouldPassEventToAction() {
+    AtomicReference<StateEvent> eventRef = new AtomicReference<>();
+    state1.appendExitActions((ev, sm) -> {
+      eventRef.set(ev);
+    });
+    stateMachine.initialSate(state1).receives(event1).itEnds();
+    stateMachine.start();
+    assertNull(eventRef.get());
+    stateMachine.fire(event1);
+    assertEquals(event1, eventRef.get());
+  }
 }

@@ -221,7 +221,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
         }
       }
     }
-    this.initState.onEntry(this);
+    this.initState.onEntry(immediateEvent, this);
     this.currentState = this.initState;
   }
 
@@ -256,9 +256,9 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
         .compareAndSet(false, true)) {
       State<T, S> fromState = this.currentState;
       notifyStateMachineListener(false, fromState, stateEvent, toState);
-      this.currentState.onExit(this);
+      this.currentState.onExit(stateEvent, this);
       this.currentState = toState;
-      this.currentState.onEntry(this);
+      this.currentState.onEntry(stateEvent, this);
       this.atomicBooleanConsumer.accept(this.inflightEvents.remove(stateEvent));
       notifyStateMachineListener(true, fromState, stateEvent, toState);
     } else {

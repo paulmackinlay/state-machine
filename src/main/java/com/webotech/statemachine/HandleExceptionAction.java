@@ -5,9 +5,12 @@
 package com.webotech.statemachine;
 
 import com.webotech.statemachine.api.StateAction;
+import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+
+//TODO something is wrong here - probably should take two StateActions as arguments
 
 /**
  * <p>A {@link StateAction} that routes logic handling to a {@link Consumer} and routes any
@@ -28,7 +31,7 @@ public final class HandleExceptionAction<T, S> implements StateAction<T, S> {
   }
 
   @Override
-  public void execute(StateMachine<T, S> stateMachine) {
+  public void execute(StateEvent<S> stateEvent, StateMachine<T, S> stateMachine) {
     try {
       this.actionHandler.accept(stateMachine);
     } catch (Exception e) {

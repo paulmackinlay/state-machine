@@ -84,7 +84,7 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
           }
           AbstractAppService.this.appOperator.fireAsync(completeEvt);
         }, exceptionHandler));
-    this.stopped = LifecycleStateMachineFactory.newStoppedState(stateMachine -> {
+    this.stopped = LifecycleStateMachineFactory.newStoppedState((stopEvt, stateMachine) -> {
       this.logger.info(APP_STOPPED);
       this.appLatch.countDown();
     });

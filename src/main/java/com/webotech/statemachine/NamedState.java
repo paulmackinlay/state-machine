@@ -6,6 +6,7 @@ package com.webotech.statemachine;
 
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateAction;
+import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,13 +30,13 @@ public final class NamedState<T, S> implements State<T, S> {
   }
 
   @Override
-  public void onEntry(StateMachine<T, S> stateMachine) {
-    this.entryActions.forEach(a -> a.execute(stateMachine));
+  public void onEntry(StateEvent<S> stateEvent, StateMachine<T, S> stateMachine) {
+    this.entryActions.forEach(a -> a.execute(stateEvent, stateMachine));
   }
 
   @Override
-  public void onExit(StateMachine<T, S> stateMachine) {
-    this.exitActions.forEach(a -> a.execute(stateMachine));
+  public void onExit(StateEvent<S> stateEvent, StateMachine<T, S> stateMachine) {
+    this.exitActions.forEach(a -> a.execute(stateEvent, stateMachine));
   }
 
   @SuppressWarnings("unchecked")
