@@ -10,33 +10,33 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import com.webotech.statemachine.api.StateAction;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class HandleExceptionActionTest {
 
   private HandleExceptionAction<Void, Void> action;
-  private Consumer<StateMachine<Void, Void>> actionHandler;
+  private StateAction<Void, Void> stateAction;
   private BiConsumer<StateMachine<Void, Void>, Exception> exceptionHandler;
   private StateEvent<Void> event;
 
   @BeforeEach
   void setup() {
-    actionHandler = mock(Consumer.class);
+    stateAction = mock(StateAction.class);
     exceptionHandler = mock(BiConsumer.class);
     event = mock(StateEvent.class);
-    action = new HandleExceptionAction<>(actionHandler, exceptionHandler);
+    action = new HandleExceptionAction<>(stateAction, exceptionHandler);
   }
 
   @Test
   void shouldHandleBizLogic() {
     StateMachine<Void, Void> stateMachine = mock(StateMachine.class);
     action.execute(event, stateMachine);
-    verify(actionHandler, times(1)).accept(stateMachine);
+    verify(stateAction, times(1)).execute(event, stateMachine);
     verifyNoInteractions(exceptionHandler);
   }
 
@@ -44,9 +44,9 @@ class HandleExceptionActionTest {
   void shouldHandleExceptionLogic() {
     StateMachine<Void, Void> stateMachine = mock(StateMachine.class);
     IllegalStateException excp = new IllegalStateException("test induced");
-    doThrow(excp).when(actionHandler).accept(stateMachine);
+    doThrow(excp).when(stateAction).execute(event, stateMachine);
     action.execute(event, stateMachine);
-    verify(actionHandler, times(1)).accept(stateMachine);
+    verify(stateAction, times(1)).execute(event, stateMachine);
     verify(exceptionHandler, times(1)).accept(stateMachine, excp);
   }
 }

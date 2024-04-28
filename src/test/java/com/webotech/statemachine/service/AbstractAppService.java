@@ -63,19 +63,19 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
 
     State<C, Void> uninitialised = LifecycleStateMachineFactory.newUnitialisedState();
     State<C, Void> starting = LifecycleStateMachineFactory.newStartingState(
-        new HandleExceptionAction<>(stateMachine -> {
+        new HandleExceptionAction<>((ev, sm) -> {
           this.logger.info(STARTING_APP_WITH_ARGS,
-              Arrays.toString(stateMachine.getContext().getInitArgs()));
+              Arrays.toString(sm.getContext().getInitArgs()));
           for (Component<C> component : this.appContext.getComponents()) {
             component.start(this.appContext);
           }
           AbstractAppService.this.appOperator.fireAsync(completeEvt);
         }, exceptionHandler));
     State<C, Void> started = LifecycleStateMachineFactory
-        .newStartedState(new HandleExceptionAction<>(stateMachine -> this.logger.info(APP_STARTED),
+        .newStartedState(new HandleExceptionAction<>((ev, sm) -> this.logger.info(APP_STARTED),
             exceptionHandler));
     State<C, Void> stopping = LifecycleStateMachineFactory.newStoppingState(
-        new HandleExceptionAction<>(stateMachine -> {
+        new HandleExceptionAction<>((ev, sm) -> {
           this.logger.info(STOPPING_APP);
           List<Component<C>> components = this.appContext.getComponents();
           ListIterator<Component<C>> listIterator = components.listIterator(components.size());
