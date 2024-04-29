@@ -10,10 +10,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import com.webotech.statemachine.HandleExceptionAction.ExceptionHandler;
 import com.webotech.statemachine.api.StateAction;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
-import java.util.function.BiConsumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,13 +21,13 @@ class HandleExceptionActionTest {
 
   private HandleExceptionAction<Void, Void> action;
   private StateAction<Void, Void> stateAction;
-  private BiConsumer<StateMachine<Void, Void>, Exception> exceptionHandler;
+  private ExceptionHandler<Void, Void> exceptionHandler;
   private StateEvent<Void> event;
 
   @BeforeEach
   void setup() {
     stateAction = mock(StateAction.class);
-    exceptionHandler = mock(BiConsumer.class);
+    exceptionHandler = mock(ExceptionHandler.class);
     event = mock(StateEvent.class);
     action = new HandleExceptionAction<>(stateAction, exceptionHandler);
   }
@@ -47,6 +47,6 @@ class HandleExceptionActionTest {
     doThrow(excp).when(stateAction).execute(event, stateMachine);
     action.execute(event, stateMachine);
     verify(stateAction, times(1)).execute(event, stateMachine);
-    verify(exceptionHandler, times(1)).accept(stateMachine, excp);
+    verify(exceptionHandler, times(1)).onException(event, stateMachine, excp);
   }
 }

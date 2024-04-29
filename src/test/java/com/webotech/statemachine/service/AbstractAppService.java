@@ -12,6 +12,7 @@ import static com.webotech.statemachine.LifecycleStateMachineFactory.stopEvt;
 import com.webotech.statemachine.EventManager;
 import com.webotech.statemachine.GenericStateMachine;
 import com.webotech.statemachine.HandleExceptionAction;
+import com.webotech.statemachine.HandleExceptionAction.ExceptionHandler;
 import com.webotech.statemachine.LifecycleStateMachineFactory;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateMachine;
@@ -20,7 +21,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.CountDownLatch;
-import java.util.function.BiConsumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -54,9 +54,9 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
 
   private void configureAppStateMachine() {
     setStateMachineListener(LifecycleStateMachineFactory.stateMachineLogger());
-    BiConsumer<StateMachine<C, Void>, Exception> exceptionHandler = (stateMachine, e) -> {
+    ExceptionHandler<C, Void> exceptionHandler = (se, sa, e) -> {
       //TODO
-      this.logger.error(ERROR_WHILE_APP_IS_IN + stateMachine.getCurrentState().getName() + STATE,
+      this.logger.error(ERROR_WHILE_APP_IS_IN + sa.getClass().getSimpleName() + STATE,
           e);
       AbstractAppService.this.appOperator.fireAsync(errorEvt);
     };
