@@ -49,10 +49,10 @@ StateEvent<> exitEvt = new NamedStateEvent("exit");
 //configure the state machine
 StateMachine<> sm = new GenericStateMachine.Builder<>().build();
 sm = sm.initialState(starting).receives(completeEvt).itTransitionsTo(running)
-     when(running).receives(stopEvt).itTransitionsTo(stopping)
-     when(stopping).receives(completeEvt).itTransitionsTo(stopped)
-     when(stopped).receives(initEvt).itTransitionsTo(starting)
-     when(stopped).receives(exitEvent).itEnds();
+    .when(running).receives(stopEvt).itTransitionsTo(stopping)
+    .when(stopping).receives(completeEvt).itTransitionsTo(stopped)
+    .when(stopped).receives(initEvt).itTransitionsTo(starting)
+    .when(stopped).receives(exitEvent).itEnds();
 ```
 
 At this point the state machine can be started, and it would behave as defined in the diagram but
@@ -84,14 +84,14 @@ some pseudo code illustrating how the `StateAction`s are added to the `starting`
 StateAction<> readConfigAction = sm -> {
  /* Read config from property files and put the config on the StateMachine 
  context using sm.getContext() so it can be accessed by subsequent StateActions */
-}
+};
 StateAction<> initDbaAction = sm -> {
  /* Get the database connection config using sm.getContext() 
  and start a connection pool to the database */
-}
+};
 StateAction<> completeAction = sm -> {
  /* Fire a completeEvt */
-}
+};
 starting.appendEntryActions(readConfigAction, initDbaAction, completeAction);
 ```
 
@@ -140,15 +140,46 @@ causing any errors. The `StateAction` code would look something like this:
 StateAction<> action1 = sm -> {
   EventManager eventManager = sm.getContext().getEventManager();
   eventManager.fireAsync(event1);
-}
+};
 ```
 
 Although this is a contrived example, it does highlight the point that you need to put some thought
 into how you fire events in your code. The exact way you do this will be dependant on the app's
 threading model. Having a clear understanding of your threading model is important so you can
-optimse the app's performance,
+optimise the app's performance,
 the [EventManager](../src/main/java/com/webotech/statemachine/EventManager.java) is one of the tools
 that will help you do this.
+
+### Thread safety in `GenericStateMachine`
+
+`GenericStateMachine` is thread safe so when events are received on multiple threads there will be
+no unexpected side effects. The first event that is received will cause a transition to take place
+in an atomic way, so that the next event will be processed once transition is complete (in the
+subsequent state). It does this by using `AtomicBoolean`s as a barrier.
+
+In order to minimise object churn at runtime, by default the `AtomicBoolean`s are kept in a simple
+object pool and they get recycled during transitions. You can also choose to use your own mechanism
+for providing the `AtomicBoolean`s using the `withAtomicBooleanPool()` method on the builder that
+takes a supplier and a consumer:
+
+```
+//This will use a new AtomicBoolean for every transition which will need to be cleaned up by the GC
+StateMachine<> sm = new GenericStateMachine.Builder<>()
+    .withAtomicBooleanPool(() -> new::AtomicBoolean, ab -> {}).build();
+```
+
+### Duplicate events
+
+If a `StateEvent` is received while the same event is being processed, by
+default `GenericStateMachine` will log it as a duplicate and ignore it. In most cases this is
+desirable but it could be that your logic relies upon processing _all_ `StateEvent` payloads, in
+which case events cannot be ignored. If that is the behaviour you need, you can build the
+`StateMachine` as follows:
+
+```
+//The StateMachine will not drop duplicate events
+StateMachine<> sm = new GenericStateMachine.Builder<>().forceProcessDuplicateEvents().build();
+```
 
 ### Unmapped events
 
@@ -196,7 +227,7 @@ the `HandleExceptionAction`you can handle errors in a single place.
 
 ## Tracking the `StateMachine`
 
-If you need to track the `StateMachine` so that you call monitor the current state and any
+If you need to track the `StateMachine` so that you can monitor the current state and any
 transitions, you can use a `StateMachineListener`. A single `StateMachineListener` can be set on
 the `StateMachine`, at build time here is how to add one:
 
@@ -208,30 +239,33 @@ StateMachine<> sm = new GenericStateMachine.Builder<>.setStateMachineListener(sm
 As you can see from the
 API, [StateMachineListener](../src/main/java/com/webotech/statemachine/api/StateMachineListener.java)
 is called when the transition to a `State` begins (before any `StateAction`s execute) and when it
-ends (after all the `StateActions` complete). There are also 2 implementations of '
-StateMachineListener' that are available.
+ends (after all the `StateActions` complete). There are also 2 implementations
+of `StateMachineListener` that are available.
 
 The first implementation
 is [LoggingStateMachineListener](../src/main/java/com/webotech/statemachine/LoggingStateMachineListener.java)
-which will log as the `StateMachine` is used at runtime. Here is an example of the log output:
+which will log at runtime as the `StateMachine` is used. Here is an example of the log output:
 
 ```
+Starting transition: _UNINITIALISED_ + _immediate_ = STATE-1
+Transitioned to STATE-1
 Starting transition: STATE-1 + event-1 = STATE-2
 Transitioned to STATE-2
 Starting transition: STATE-2 + event-1 = _END_
 Transitioned to _END_
 ```
 
-In the output you can see that when the `StateMachine` ends, it transitions to a state
-called `_END_`, however when configuring the machine you do not explicitly define an end state.
-Actually the `GenericStateMachine` has private `State`s and `StateEvent`s which use reserved names
-that are used for its internal transitioning logic. You will be able to identify the reserved names
-in logs as they start and end with an underscore.
+In the output you can see that when the `StateMachine` starts and ends, it transitions with events
+and states that you have not explicitly configured. This is because `GenericStateMachine` has
+private `State`s and `StateEvent`s which use reserved names that are used for its internal
+transitioning logic. You will be able to identify the reserved names in logs as they start and end
+with an underscore.
 
 The second implementation
 is [MultiConsumerStateMachineListener](../src/main/java/com/webotech/statemachine/MultiConsumerStateMachineListener.java)
-which allows you to add/remove other `StateMachineListener`s in a thread safe manner. As an example
+which allows you to add/remove other `StateMachineListener`s in a thread safe manner. As an example,
 you may want to both log the `StateMachine`s lifecycle and persist it to a database. To do this you
-can implement a `StateMachineListener` that is responsible for persisting the lifecycle and
-combine it with the `LoggingStateMachineListener` by adding both
-to a `MultiConsumerStateMachineListener` which is set on the `StateMachine`. 
+can implement a `StateMachineListener` that is responsible for persisting the lifecycle and combine
+it with the `LoggingStateMachineListener` by adding both
+to a `MultiConsumerStateMachineListener`. The `MultiConsumerStateMachineListener` is then set on
+the `StateMachine`.

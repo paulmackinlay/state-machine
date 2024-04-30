@@ -221,7 +221,9 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
         }
       }
     }
+    notifyStateMachineListener(false, this.currentState, immediateEvent, this.initState);
     this.initState.onEntry(immediateEvent, this);
+    notifyStateMachineListener(true, this.currentState, immediateEvent, this.initState);
     this.currentState = this.initState;
   }
 
@@ -252,6 +254,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       notifyStateMachineListener(true, this.currentState, stateEvent, toState);
       return;
     }
+    //TODO add a facility not to drop duplicate events .forceProcessDuplicateEvents()
     if (this.inflightEvents.computeIfAbsent(stateEvent, k -> this.atomicBooleanSupplier.get())
         .compareAndSet(false, true)) {
       State<T, S> fromState = this.currentState;
@@ -297,6 +300,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
   public static class Builder<T, S> {
 
+    //TODO .forceProcessDuplicateEvents()
     private T context;
     private Supplier<AtomicBoolean> atomicBooleanSupplier;
     private Consumer<AtomicBoolean> atomicBooleanConsumer;

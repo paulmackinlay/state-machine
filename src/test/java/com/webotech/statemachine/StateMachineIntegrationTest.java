@@ -44,7 +44,9 @@ class StateMachineIntegrationTest {
     sm.fire(event1);
     String log = logStream.toString();
     //TODO how about logging when it starts?
-    assertEquals("Starting transition: STATE-1 + event-1 = STATE-2\n"
+    assertEquals("Starting transition: _UNINITIALISED_ + _immediate_ = STATE-1\n"
+        + "Transitioned to STATE-1\n"
+        + "Starting transition: STATE-1 + event-1 = STATE-2\n"
         + "Transitioned to STATE-2\n"
         + "Starting transition: STATE-2 + event-1 = _END_\n"
         + "Transitioned to _END_\n", log);
