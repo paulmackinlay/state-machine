@@ -152,9 +152,9 @@ that will help you do this.
 
 ### Thread safety in `GenericStateMachine`
 
-`GenericStateMachine` is thread safe so when events are received on multiple threads there will be
+`GenericStateMachine` is thread safe, so when events are received on multiple threads there will be
 no unexpected side effects. The first event that is received will cause a transition to take place
-in an atomic way, so that the next event will be processed once transition is complete (in the
+in an atomic way, so that the next event will be processed once the transition is complete (in the
 subsequent state). It does this by using `AtomicBoolean`s as a barrier.
 
 In order to minimise object churn at runtime, by default the `AtomicBoolean`s are kept in a simple
@@ -170,11 +170,11 @@ StateMachine<> sm = new GenericStateMachine.Builder<>()
 
 ### Duplicate events
 
-If a `StateEvent` is received while the same event is being processed, by
+If a `StateEvent` is received while the same `StateEvent` is being processed, by
 default `GenericStateMachine` will log it as a duplicate and ignore it. In most cases this is
-desirable but it could be that your logic relies upon processing _all_ `StateEvent` payloads, in
-which case events cannot be ignored. If that is the behaviour you need, you can build the
-`StateMachine` as follows:
+desirable but it could be that your logic relies upon processing _all_ `StateEvent` payloads or you
+wish to process the `StateEvent` after the transition has completed. For these cases duplicate
+events cannot be ignored and you will need to build the`StateMachine` as follows:
 
 ```
 //The StateMachine will not drop duplicate events
