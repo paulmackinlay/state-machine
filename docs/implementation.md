@@ -63,7 +63,7 @@ carry out these 3 actions
 2. use the config to start a connection pool to a database
 3. fire a `completeEvt` so that the state machine transitions to `running`
 
-The way this is done is by appending `StateAction`s to a `State`. The API
+The way this is done, is by appending `StateAction`s to a `State`. The API
 for [State](../src/main/java/com/webotech/statemachine/api/State.java)
 has `appendEntryActions(StateAction...)` for actions you want to execute when the state machine
 transitions **to** the state and `appendExitActions(StateAction...)` for actions you want to execute
@@ -168,19 +168,6 @@ StateMachine<> sm = new GenericStateMachine.Builder<>()
     .withAtomicBooleanPool(() -> new::AtomicBoolean, ab -> {}).build();
 ```
 
-### Duplicate events
-
-If a `StateEvent` is received while the same `StateEvent` is being processed, by
-default `GenericStateMachine` will log it as a duplicate and ignore it. In most cases this is
-desirable but it could be that your logic relies upon processing _all_ `StateEvent` payloads or you
-wish to process the `StateEvent` after the transition has completed. For these cases duplicate
-events cannot be ignored and you will need to build the`StateMachine` as follows:
-
-```
-//The StateMachine will not drop duplicate events
-StateMachine<> sm = new GenericStateMachine.Builder<>().forceProcessDuplicateEvents().build();
-```
-
 ### Unmapped events
 
 While using the `StateMachine` you may come across situations where a `State` receives
@@ -208,6 +195,19 @@ executed.
 Note that in many cases the payload of a `StateEvent` is not needed in which case you can define it
 as `Void`.
 
+### Duplicate events
+
+If a `StateEvent` is received while the same `StateEvent` is being processed, by
+default `GenericStateMachine` will log it as a duplicate and ignore it. In most cases this is
+desirable but it could be that your logic relies upon processing _all_ `StateEvent` payloads or you
+wish to process the `StateEvent` after the transition has completed. For these cases duplicate
+events cannot be ignored and you will need to build the`StateMachine` as follows:
+
+```
+//The StateMachine will not drop duplicate events
+StateMachine<> sm = new GenericStateMachine.Builder<>().processDuplicateEvents().build();
+```
+
 ## Exception handling
 
 When you use a state machine you should have a plan for how you will handle exceptions. Since
@@ -222,14 +222,14 @@ which is a `StateAction` designed to separate the concerns for business logic an
 construct it with a `StateAction` that encapsulates the business logic needed for your app, and an
 exception handler. The exception handler is called when an exception in the `StateAction` is thrown.
 The handler has access to the `StateEvent` that was received when the exception happened,
-the `StateMachine` and the `Exception` itself. By wrapping `StateAction`s with
+the `StateMachine` and the `Exception` itself. By wrapping all `StateAction`s with
 the `HandleExceptionAction`you can handle errors in a single place.
 
 ## Tracking the `StateMachine`
 
 If you need to track the `StateMachine` so that you can monitor the current state and any
 transitions, you can use a `StateMachineListener`. A single `StateMachineListener` can be set on
-the `StateMachine`, at build time here is how to add one:
+the `StateMachine` at build time, here is how to add one:
 
 ```
 StateMachineListener sml = ...;
@@ -263,9 +263,9 @@ with an underscore.
 
 The second implementation
 is [MultiConsumerStateMachineListener](../src/main/java/com/webotech/statemachine/MultiConsumerStateMachineListener.java)
-which allows you to add/remove other `StateMachineListener`s in a thread safe manner. As an example,
-you may want to both log the `StateMachine`s lifecycle and persist it to a database. To do this you
-can implement a `StateMachineListener` that is responsible for persisting the lifecycle and combine
-it with the `LoggingStateMachineListener` by adding both
-to a `MultiConsumerStateMachineListener`. The `MultiConsumerStateMachineListener` is then set on
+which allows you to add/remove multiple other `StateMachineListener`s in a thread safe manner. As an
+example, you may want to both log the `StateMachine`s lifecycle and persist it to a database. To do
+this you can implement a `StateMachineListener` that is responsible for persisting the lifecycle and
+combine it with the `LoggingStateMachineListener` by adding both to
+a `MultiConsumerStateMachineListener`. The `MultiConsumerStateMachineListener` is then set on
 the `StateMachine`.

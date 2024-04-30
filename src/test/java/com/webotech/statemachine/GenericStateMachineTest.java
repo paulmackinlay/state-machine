@@ -83,7 +83,11 @@ class GenericStateMachineTest {
     });
     stateMachine.start();
     stateMachine.fire(event1);
-    assertEquals(List.of(state1, event1, new NamedState<Void, Void>("_END_"),
+    assertEquals(List.of(new NamedState<Void, Void>("_UNINITIALISED_"),
+        new NamedStateEvent<Void>("_immediate_"), state1,
+        new NamedState<Void, Void>("_UNINITIALISED_"),
+        new NamedStateEvent<Void>("_immediate_"), state1,
+        state1, event1, new NamedState<Void, Void>("_END_"),
         state1, event1, new NamedState<Void, Void>("_END_")), stateData);
     assertTrue(stateMachine.isEnded());
   }

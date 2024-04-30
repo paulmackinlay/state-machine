@@ -62,6 +62,8 @@ public interface StateMachine<T, S> {
    */
   void start();
 
+  //TODO add  startInState(State)
+
   /**
    * Fires an event
    */
