@@ -47,7 +47,7 @@ StateEvent<> initEvt = new NamedStateEvent("init");
 StateEvent<> exitEvt = new NamedStateEvent("exit");
 
 //configure the state machine
-StateMachine<> sm = (new GenericStateMachine.Builder<>()).build();
+StateMachine<> sm = new GenericStateMachine.Builder<>().build();
 sm = sm.initialState(starting).receives(completeEvt).itTransitionsTo(running)
      when(running).receives(stopEvt).itTransitionsTo(stopping)
      when(stopping).receives(completeEvt).itTransitionsTo(stopped)
@@ -160,7 +160,7 @@ the `GenericStateMachine` with an unmapped event handler:
 
 ```
 BiConsumer<StateEvent<>, StateMachine<>> unmappedHandler = ...;
-StateMachine<> sm = new StateMachine.Builder<>().setUnmappedEventHander(unmappedHandler);
+StateMachine<> sm = new GenericStateMachine.Builder<>().setUnmappedEventHander(unmappedHandler);
 ```
 
 The handler is a `BiConsumer` that calls back with a reference to the `StateEvent` that was received
@@ -194,4 +194,44 @@ The handler has access to the `StateEvent` that was received when the exception 
 the `StateMachine` and the `Exception` itself. By wrapping `StateAction`s with
 the `HandleExceptionAction`you can handle errors in a single place.
 
-## TODO write about StateMachineListener
+## Tracking the `StateMachine`
+
+If you need to track the `StateMachine` so that you call monitor the current state and any
+transitions, you can use a `StateMachineListener`. A single `StateMachineListener` can be set on
+the `StateMachine`, at build time here is how to add one:
+
+```
+StateMachineListener sml = ...;
+StateMachine<> sm = new GenericStateMachine.Builder<>.setStateMachineListener(sml);
+```
+
+As you can see from the
+API, [StateMachineListener](../src/main/java/com/webotech/statemachine/api/StateMachineListener.java)
+is called when the transition to a `State` begins (before any `StateAction`s execute) and when it
+ends (after all the `StateActions` complete). There are also 2 implementations of '
+StateMachineListener' that are available.
+
+The first implementation
+is [LoggingStateMachineListener](../src/main/java/com/webotech/statemachine/LoggingStateMachineListener.java)
+which will log as the `StateMachine` is used at runtime. Here is an example of the log output:
+
+```
+Starting transition: STATE-1 + event-1 = STATE-2
+Transitioned to STATE-2
+Starting transition: STATE-2 + event-1 = _END_
+Transitioned to _END_
+```
+
+In the output you can see that when the `StateMachine` ends, it transitions to a state
+called `_END_`, however when configuring the machine you do not explicitly define an end state.
+Actually the `GenericStateMachine` has private `State`s and `StateEvent`s which use reserved names
+that are used for its internal transitioning logic. You will be able to identify the reserved names
+in logs as they start and end with an underscore.
+
+The second implementation
+is [MultiConsumerStateMachineListener](../src/main/java/com/webotech/statemachine/MultiConsumerStateMachineListener.java)
+which allows you to add/remove other `StateMachineListener`s in a thread safe manner. As an example
+you may want to both log the `StateMachine`s lifecycle and persist it to a database. To do this you
+can implement a `StateMachineListener` that is responsible for persisting the lifecycle and
+combine it with the `LoggingStateMachineListener` by adding both
+to a `MultiConsumerStateMachineListener` which is set on the `StateMachine`. 
