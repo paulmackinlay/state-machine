@@ -1,6 +1,7 @@
 # `com.webotech:state-machine` in depth
 
-Now that [state machine basics](01-intro) are covered, I will explain how the code works. These are
+Now that [state machine basics](01-intro.md) are covered, I will explain how the code works. These
+are
 the topics that are covered
 
 1. [The state machine API](03-api.md)
