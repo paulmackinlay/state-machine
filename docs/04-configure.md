@@ -6,7 +6,8 @@ number of methods that are clearly documented as being for this purpose. Once co
 you will need to start the state machine so that it can begin processing events.
 
 The API has been written so that the configuration method names are aligned with natural language.
-This is how the [application lifecycle](01-intro#app-lifecycle-example) example would be configured.
+This is how the [application lifecycle](01-intro.md#app-lifecycle-example) example would be
+configured.
 Here is the state diagram:
 
 ![](media/State_diagram_2.png)
