@@ -14,3 +14,5 @@ exception handler. The exception handler is called when an exception in the `Sta
 The handler has access to the `StateEvent` that was received when the exception happened,
 the `StateMachine` and the `Exception` itself. By wrapping all `StateAction`s with
 the `HandleExceptionAction`you can handle errors in a single place.
+
+[previous page](05-events.md) --- [next page](07-tracking.md)

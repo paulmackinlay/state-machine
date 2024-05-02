@@ -42,3 +42,5 @@ this you can implement a `StateMachineListener` that is responsible for persisti
 combine it with the `LoggingStateMachineListener` by adding both to
 a `MultiConsumerStateMachineListener`. The `MultiConsumerStateMachineListener` is then set on
 the `StateMachine`.
+
+[previous page](06-exceptions.md)

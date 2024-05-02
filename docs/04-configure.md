@@ -85,3 +85,5 @@ purposes:
 
 1. allow data to be exchanged between `StateAction`s
 2. act as a service locator that provides objects needed by the state machine
+
+[previous page](03-api.md) --- [next page](05-events.md)

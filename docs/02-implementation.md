@@ -9,3 +9,5 @@ the topics that are covered
 3. [Events in the state machine](05-events.md)
 4. [Exception handling](06-exceptions.md)
 5. [Tracking the state machine](07-tracking.md)
+
+[previous page](01-intro.md) --- [next page](03-api.md)

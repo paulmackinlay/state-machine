@@ -101,3 +101,5 @@ events cannot be ignored and you will need to build the`StateMachine` as follows
 //The StateMachine will not drop duplicate events
 StateMachine<> sm = new GenericStateMachine.Builder<>().processDuplicateEvents().build();
 ```
+
+[previous page](04-configure.md) --- [next page](06-exceptions.md)
