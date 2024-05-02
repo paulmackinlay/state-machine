@@ -254,7 +254,21 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       notifyStateMachineListener(true, this.currentState, stateEvent, toState);
       return;
     }
-    //TODO add a facility not to drop duplicate events .processDuplicateEvents()
+    /* TODO add a facility not to drop duplicate events .processDuplicateEvents()
+     * add facilities to measure the queue size, drop events while processing is taking place
+     * it would be good to have different `EventProcessingStrategy`s that also have a max event
+     * queue setting
+     * 1. DropDuplicateEventStrategy
+     * 2. ProcessDuplicateEventStrategy
+     * 3. DropEventsWhileProcessingStrategy
+     *
+     * EventProcessingStrategy {
+     * int maxEventQueueSize()
+     * boolean processEventPredicate()
+     * Function/Consumer processAlternative()
+     * }
+     *
+     */
     if (this.inflightEvents.computeIfAbsent(stateEvent, k -> this.atomicBooleanSupplier.get())
         .compareAndSet(false, true)) {
       State<T, S> fromState = this.currentState;
