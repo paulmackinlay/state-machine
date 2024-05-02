@@ -90,4 +90,4 @@ technical risk.
 
 This page covers the basics at a high level; what a state machine is, how it works and what it is
 used for. In the next section I cover the details of how one works in code. Specifically, I talk
-about the [state-machine implementation](implementation.md) in this repo.
+about the [state-machine implementation](02-implementation) in this repo.
