@@ -20,7 +20,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,14 +36,12 @@ class DropDuplicateEventStrategyTest {
   private State<Void, Void> currentState;
 
   @BeforeEach
-  void setup() {
+  void setup() throws InterruptedException {
     stateMachine = mock(GenericStateMachine.class, Mockito.RETURNS_DEEP_STUBS);
     currentState = mock(State.class, Mockito.RETURNS_DEEP_STUBS);
     when(stateMachine.getCurrentState()).thenReturn(currentState);
 
-    dropDuplicateEventStrategy = new DropDuplicateEventStrategy<>(AtomicBoolean::new,
-        ab -> {
-        });
+    dropDuplicateEventStrategy = new DropDuplicateEventStrategy.Builder<Void, Void>().build();
   }
 
   @Test
@@ -67,11 +64,12 @@ class DropDuplicateEventStrategyTest {
 
   @Test
   void shouldDropDuplicateEvent() {
+    int timeoutSecs = 5;
     CountDownLatch latch = new CountDownLatch(1);
     AtomicInteger noInvocations = new AtomicInteger(0);
     when(stateMachine.getCurrentState()).thenAnswer(i -> {
       if (noInvocations.getAndIncrement() == 0) {
-        boolean success = latch.await(5, TimeUnit.SECONDS);
+        boolean success = latch.await(timeoutSecs, TimeUnit.SECONDS);
         if (!success) {
           fail("Latch timed out");
         }
@@ -81,7 +79,8 @@ class DropDuplicateEventStrategyTest {
     executor.execute(
         () -> this.dropDuplicateEventStrategy.processEvent(event1, stateMachine, state1));
     long startMillis = System.currentTimeMillis();
-    while (noInvocations.get() == 0 && System.currentTimeMillis() - startMillis < 5000) {
+    while (noInvocations.get() == 0 && System.currentTimeMillis() - startMillis < (timeoutSecs
+        * 1000)) {
       // niente
     }
     OutputStream logStream = TestingUtil.initLogCaptureStream();

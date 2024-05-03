@@ -368,7 +368,8 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
             sm.getCurrentState().getName());
       }
       return new GenericStateMachine<>(context, stateMachineListener, unmappedEventHandler,
-          new DropDuplicateEventStrategy<>(atomicBooleanSupplier, atomicBooleanConsumer));
+          new DropDuplicateEventStrategy.Builder<T, S>().withAtomicBooleanPool(
+              atomicBooleanSupplier, atomicBooleanConsumer).build());
     }
   }
 }

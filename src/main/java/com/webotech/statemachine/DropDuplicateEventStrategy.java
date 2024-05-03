@@ -6,6 +6,7 @@ package com.webotech.statemachine;
 
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
+import com.webotech.statemachine.util.AtomicBooleanPool;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -26,7 +27,7 @@ public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy
    * The default {@link EventProcessingStrategy}, it transitions state atomically, duplicate
    * {@link StateEvent}s received by a single {@link State} are logged but not processed.
    */
-  DropDuplicateEventStrategy(Supplier<AtomicBoolean> atomicBooleanSupplier,
+  private DropDuplicateEventStrategy(Supplier<AtomicBoolean> atomicBooleanSupplier,
       Consumer<AtomicBoolean> atomicBooleanConsumer) {
     this.eventQueue = new ConcurrentHashMap<>();
     this.atomicBooleanSupplier = atomicBooleanSupplier;
@@ -51,4 +52,46 @@ public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy
     }
   }
 
+  static class Builder<T, S> {
+
+    private Supplier<AtomicBoolean> atomicBooleanSupplier;
+    private Consumer<AtomicBoolean> atomicBooleanConsumer;
+
+    /**
+     * Allows an object pool of {@link AtomicBoolean}s to be set. The pool implementation must be
+     * comprised of a {@link Supplier}  and a {@link Consumer}. It is expected that the
+     * implementation of these provide the logic where objects are taken from and given to the pool.
+     *
+     * @param atomicBooleanSupplier supplies {@link AtomicBoolean}s (take from pool)
+     * @param atomicBooleanConsumer consumes {@link AtomicBoolean}s (give to pool)
+     */
+    public DropDuplicateEventStrategy.Builder<T, S> withAtomicBooleanPool(
+        Supplier<AtomicBoolean> atomicBooleanSupplier,
+        Consumer<AtomicBoolean> atomicBooleanConsumer) {
+      this.atomicBooleanSupplier = atomicBooleanSupplier;
+      this.atomicBooleanConsumer = atomicBooleanConsumer;
+      return this;
+    }
+
+    Supplier<AtomicBoolean> getAtomicBooleanSupplier() {
+      return atomicBooleanSupplier;
+    }
+
+    Consumer<AtomicBoolean> getAtomicBooleanConsumer() {
+      return atomicBooleanConsumer;
+    }
+
+    public DropDuplicateEventStrategy<T, S> build() {
+      if (atomicBooleanSupplier == null || atomicBooleanConsumer == null) {
+        AtomicBooleanPool atomicBooleanPool = new AtomicBooleanPool();
+        if (atomicBooleanSupplier == null) {
+          atomicBooleanSupplier = atomicBooleanPool;
+        }
+        if (atomicBooleanConsumer == null) {
+          atomicBooleanConsumer = atomicBooleanPool;
+        }
+      }
+      return new DropDuplicateEventStrategy<>(atomicBooleanSupplier, atomicBooleanConsumer);
+    }
+  }
 }
