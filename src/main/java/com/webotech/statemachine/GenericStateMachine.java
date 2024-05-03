@@ -13,8 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -26,7 +24,6 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
   private static final Logger logger = LogManager.getLogger(GenericStateMachine.class);
   private static final String LOG_EVENT_NOT_MAPPED = "StateEvent [{}] not mapped for state [{}], ignoring";
-  private static final String LOG_EVENT_BEING_PROCESSED = "StateEvent [{}] received in state [{}] already being processed";
   private static final String RESERVED_STATE_NAME_END = "_END_";
   private static final String RESERVED_STATE_NAME_UNINITIALISED = "_UNINITIALISED_";
   private static final String RESERVED_STATE_NAME_NOOP = "_NOOP_";
@@ -34,14 +31,12 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
   static final List<String> reservedStateNames = List.of(RESERVED_STATE_NAME_UNINITIALISED,
       RESERVED_STATE_NAME_END, RESERVED_STATE_NAME_NOOP);
   private final StateEvent<S> immediateEvent;
-  private final Supplier<AtomicBoolean> atomicBooleanSupplier;
-  private final Consumer<AtomicBoolean> atomicBooleanConsumer;
   private final State<T, S> noState;
   private final State<T, S> endState;
   private final State<T, S> noopState;
   private final Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states;
-  private final ConcurrentMap<StateEvent<S>, AtomicBoolean> inflightEvents;
   private final T context;
+  private final EventProcessingStrategy<T, S> eventProcessingStrategy;
   private StateMachineListener<T, S> stateMachineListener;
   private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
   private State<T, S> initState;
@@ -54,16 +49,15 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       StateMachineListener<T, S> stateMachineListener,
       BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
     this.states = new HashMap<>();
-    this.inflightEvents = new ConcurrentHashMap<>();
     this.immediateEvent = new NamedStateEvent<>(RESERVED_STATE_EVENT_NAME_IMMEDIATE);
     this.endState = new NamedState<>(RESERVED_STATE_NAME_END);
     this.noState = new NamedState<>(RESERVED_STATE_NAME_UNINITIALISED);
     this.noopState = new NamedState<>(RESERVED_STATE_NAME_NOOP);
     this.context = context;
-    this.atomicBooleanSupplier = atomicBooleanSupplier;
-    this.atomicBooleanConsumer = atomicBooleanConsumer;
     this.stateMachineListener = stateMachineListener;
     this.unmappedEventHandler = unmappedEventHandler;
+    this.eventProcessingStrategy = new DropDuplicateEventStrategy<>(atomicBooleanSupplier,
+        atomicBooleanConsumer);
   }
 
   @SuppressWarnings("hiding")
@@ -184,7 +178,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     }
   }
 
-  private void notifyStateMachineListener(boolean isComplete, State<T, S> fromState,
+  void notifyStateMachineListener(boolean isComplete, State<T, S> fromState,
       StateEvent<S> stateEvent, State<T, S> toState) {
     if (this.stateMachineListener != null) {
       if (fromState == null) {
@@ -254,33 +248,16 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       notifyStateMachineListener(true, this.currentState, stateEvent, toState);
       return;
     }
-    /* TODO add a facility not to drop duplicate events .processDuplicateEvents()
+    /*
+     *  TODO add a facility not to drop duplicate events .processDuplicateEvents()
      * add facilities to measure the queue size, drop events while processing is taking place
      * it would be good to have different `EventProcessingStrategy`s that also have a max event
      * queue setting
      * 1. DropDuplicateEventStrategy
      * 2. ProcessDuplicateEventStrategy
      * 3. DropEventsWhileProcessingStrategy
-     *
-     * EventProcessingStrategy {
-     * int maxEventQueueSize()
-     * boolean processEventPredicate()
-     * Function/Consumer processAlternative()
-     * }
-     *
      */
-    if (this.inflightEvents.computeIfAbsent(stateEvent, k -> this.atomicBooleanSupplier.get())
-        .compareAndSet(false, true)) {
-      State<T, S> fromState = this.currentState;
-      notifyStateMachineListener(false, fromState, stateEvent, toState);
-      this.currentState.onExit(stateEvent, this);
-      this.currentState = toState;
-      this.currentState.onEntry(stateEvent, this);
-      this.atomicBooleanConsumer.accept(this.inflightEvents.remove(stateEvent));
-      notifyStateMachineListener(true, fromState, stateEvent, toState);
-    } else {
-      logger.info(LOG_EVENT_BEING_PROCESSED, stateEvent.getName(), this.currentState.getName());
-    }
+    this.eventProcessingStrategy.processEvent(stateEvent, this, toState);
   }
 
   @Override
@@ -310,6 +287,10 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
   public void setUnmappedEventHandler(
       BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
     this.unmappedEventHandler = unmappedEventHandler;
+  }
+
+  void setCurrentState(State<T, S> state) {
+    this.currentState = state;
   }
 
   public static class Builder<T, S> {
@@ -392,5 +373,4 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
           stateMachineListener, unmappedEventHandler);
     }
   }
-
 }
