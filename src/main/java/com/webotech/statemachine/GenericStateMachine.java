@@ -44,10 +44,9 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
   private StateEvent<S> markedEvent;
   private State<T, S> currentState;
 
-  private GenericStateMachine(T context, Supplier<AtomicBoolean> atomicBooleanSupplier,
-      Consumer<AtomicBoolean> atomicBooleanConsumer,
-      StateMachineListener<T, S> stateMachineListener,
-      BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
+  private GenericStateMachine(T context, StateMachineListener<T, S> stateMachineListener,
+      BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler,
+      EventProcessingStrategy<T, S> eventProcessingStrategy) {
     this.states = new HashMap<>();
     this.immediateEvent = new NamedStateEvent<>(RESERVED_STATE_EVENT_NAME_IMMEDIATE);
     this.endState = new NamedState<>(RESERVED_STATE_NAME_END);
@@ -56,8 +55,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     this.context = context;
     this.stateMachineListener = stateMachineListener;
     this.unmappedEventHandler = unmappedEventHandler;
-    this.eventProcessingStrategy = new DropDuplicateEventStrategy<>(atomicBooleanSupplier,
-        atomicBooleanConsumer);
+    this.eventProcessingStrategy = eventProcessingStrategy;
   }
 
   @SuppressWarnings("hiding")
@@ -369,8 +367,8 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
         unmappedEventHandler = (ev, sm) -> logger.info(LOG_EVENT_NOT_MAPPED, ev.getName(),
             sm.getCurrentState().getName());
       }
-      return new GenericStateMachine<>(context, atomicBooleanSupplier, atomicBooleanConsumer,
-          stateMachineListener, unmappedEventHandler);
+      return new GenericStateMachine<>(context, stateMachineListener, unmappedEventHandler,
+          new DropDuplicateEventStrategy<>(atomicBooleanSupplier, atomicBooleanConsumer));
     }
   }
 }
