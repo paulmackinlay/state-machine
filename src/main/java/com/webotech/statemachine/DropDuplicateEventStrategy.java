@@ -26,7 +26,6 @@ public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy
    * The default {@link EventProcessingStrategy}, it transitions state atomically, duplicate
    * {@link StateEvent}s received by a single {@link State} are logged but not processed.
    */
-//TODO test this
   DropDuplicateEventStrategy(Supplier<AtomicBoolean> atomicBooleanSupplier,
       Consumer<AtomicBoolean> atomicBooleanConsumer) {
     this.eventQueue = new ConcurrentHashMap<>();

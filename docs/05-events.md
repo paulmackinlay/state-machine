@@ -59,7 +59,7 @@ takes a supplier and a consumer:
 ```
 //This will use a new AtomicBoolean for every transition which will need to be cleaned up by the GC
 StateMachine<> sm = new GenericStateMachine.Builder<>()
-    .withAtomicBooleanPool(() -> new::AtomicBoolean, ab -> {}).build();
+    .withAtomicBooleanPool(() -> AtomicBoolean::new, ab -> {}).build();
 ```
 
 ### Unmapped events
