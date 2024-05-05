@@ -115,6 +115,7 @@ public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy
     private final Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states;
     private final BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
 
+    //TODO make unmappedEventHandler optional, will use a default implementation if it isn't set
     Builder(Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states,
         BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
       this.states = states;

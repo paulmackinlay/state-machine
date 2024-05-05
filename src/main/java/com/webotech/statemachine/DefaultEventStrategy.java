@@ -102,6 +102,10 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
       return this;
     }
 
+    BiConsumer<StateEvent<S>, StateMachine<T, S>> getUnmappedEventHandler() {
+      return unmappedEventHandler;
+    }
+
     public DefaultEventStrategy<T, S> build() {
       if (unmappedEventHandler == null) {
         unmappedEventHandler = (ev, sm) -> logger.info(LOG_EVENT_NOT_MAPPED, ev.getName(),

@@ -4,8 +4,6 @@
 
 package com.webotech.statemachine.api;
 
-import java.util.function.BiConsumer;
-
 /**
  * <p>This is the API for the state machine. It made up from methods that are used to configure it
  * before it is started and service methods that are used while the state machine is running.</p>
@@ -86,14 +84,6 @@ public interface StateMachine<T, S> {
    * is responsible for fanning out notifications.
    */
   void setStateMachineListener(StateMachineListener<T, S> stateMachineListener);
-
-  //TODO get rid of this from here, it is an implementation concern
-
-  /**
-   * Sets a handler that will be called when a {@link State} receives a {@link StateEvent} that has
-   * not been mapped.
-   */
-  void setUnmappedEventHandler(BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler);
 
   /**
    * @return true if the {@link StateMachine} has been started.

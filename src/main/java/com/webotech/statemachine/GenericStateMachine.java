@@ -268,12 +268,6 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     this.stateMachineListener = stateMachineListener;
   }
 
-  @Override
-  public void setUnmappedEventHandler(
-      BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
-    throw new UnsupportedOperationException("TODO get rid of this");
-  }
-
   void setCurrentState(State<T, S> state) {
     this.currentState = state;
   }
@@ -316,6 +310,10 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
     StateMachineListener<T, S> getStateMachineListener() {
       return stateMachineListener;
+    }
+
+    EventProcessingStrategy getEventProcessingStrategy() {
+      return eventProcessingStrategy;
     }
 
     public GenericStateMachine<T, S> build() {

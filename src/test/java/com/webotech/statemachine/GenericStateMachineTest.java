@@ -201,28 +201,14 @@ class GenericStateMachineTest {
         "my-context")).build();
     assertEquals("my-context", stringContextStateMachine.getContext());
   }
-
-  //TODO this should be tested with an integration test and a different unit test
-//  @Test
-//  void shouldBuildWithUnmappedEventHandler() {
-//    BiConsumer<StateEvent<Void>, StateMachine<Void, Void>> unmappedEventHandler = (ev, sm) -> {
-//    };
-//    Builder<Void, Void> builder = new GenericStateMachine.Builder<Void, Void>().setUnmappedEventHandler(
-//        unmappedEventHandler);
-//    assertSame(unmappedEventHandler, builder.getUnmappedEventHandler());
-//  }
-
-//  @Test
-  //TODO change this to shouldBuildWithEventProessingStrategy
-//  void shouldBuildWithPool() {
-//    Supplier<AtomicBoolean> poolSupplier = AtomicBoolean::new;
-//    Consumer<AtomicBoolean> poolConsumer = a -> {
-//    };
-//    Builder<Void, Void> builder = new GenericStateMachine.Builder<Void, Void>().withAtomicBooleanPool(
-//        poolSupplier, poolConsumer);
-//    assertSame(poolSupplier, builder.getAtomicBooleanSupplier());
-//    assertSame(poolConsumer, builder.getAtomicBooleanConsumer());
-//  }
+  
+  @Test
+  void shouldBuildWithEventProcessingStrategy() {
+    EventProcessingStrategy<Void, Void> strategy = mock(EventProcessingStrategy.class);
+    Builder<Void, Void> builder = new GenericStateMachine.Builder<Void, Void>().setEventProcessingStrategy(
+        strategy);
+    assertSame(strategy, builder.getEventProcessingStrategy());
+  }
 
   @Test
   void shouldBuildWithMutableContext() {

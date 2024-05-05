@@ -5,6 +5,7 @@
 package com.webotech.statemachine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -13,6 +14,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.webotech.statemachine.DropDuplicateEventStrategy.Builder;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
@@ -25,6 +27,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -142,4 +146,16 @@ class DropDuplicateEventStrategyTest {
         logStream.toString());
     verify(stateMachine, times(1)).setCurrentState(state1);
   }
+
+  @Test
+  void shouldBuildWithPool() {
+    Supplier<AtomicBoolean> poolSupplier = AtomicBoolean::new;
+    Consumer<AtomicBoolean> poolConsumer = a -> {
+    };
+    Builder<Void, Void> builder = new DropDuplicateEventStrategy.Builder<Void, Void>(new HashMap(),
+        null).withAtomicBooleanPool(poolSupplier, poolConsumer);
+    assertSame(poolSupplier, builder.getAtomicBooleanSupplier());
+    assertSame(poolConsumer, builder.getAtomicBooleanConsumer());
+  }
+
 }
