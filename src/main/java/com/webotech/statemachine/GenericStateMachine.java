@@ -8,22 +8,17 @@ import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
-import com.webotech.statemachine.util.AtomicBooleanPool;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
   private static final Logger logger = LogManager.getLogger(GenericStateMachine.class);
-  private static final String LOG_EVENT_NOT_MAPPED = "StateEvent [{}] not mapped for state [{}], ignoring";
   private static final String RESERVED_STATE_NAME_END = "_END_";
   private static final String RESERVED_STATE_NAME_UNINITIALISED = "_UNINITIALISED_";
   private static final String RESERVED_STATE_NAME_NOOP = "_NOOP_";
@@ -38,23 +33,21 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
   private final T context;
   private final EventProcessingStrategy<T, S> eventProcessingStrategy;
   private StateMachineListener<T, S> stateMachineListener;
-  private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
   private State<T, S> initState;
   private State<T, S> markedState;
   private StateEvent<S> markedEvent;
   private State<T, S> currentState;
 
-  private GenericStateMachine(T context, StateMachineListener<T, S> stateMachineListener,
-      BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler,
+  private GenericStateMachine(T context, Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states,
+      StateMachineListener<T, S> stateMachineListener,
       EventProcessingStrategy<T, S> eventProcessingStrategy) {
-    this.states = new HashMap<>();
+    this.states = states;
     this.immediateEvent = new NamedStateEvent<>(RESERVED_STATE_EVENT_NAME_IMMEDIATE);
     this.endState = new NamedState<>(RESERVED_STATE_NAME_END);
     this.noState = new NamedState<>(RESERVED_STATE_NAME_UNINITIALISED);
     this.noopState = new NamedState<>(RESERVED_STATE_NAME_NOOP);
     this.context = context;
     this.stateMachineListener = stateMachineListener;
-    this.unmappedEventHandler = unmappedEventHandler;
     this.eventProcessingStrategy = eventProcessingStrategy;
   }
 
@@ -230,21 +223,15 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
   }
 
   @Override
+  public int getEventQueueSize() {
+    return this.eventProcessingStrategy.getEventQueueSize();
+  }
+
+  @Override
   public void fire(StateEvent<S> stateEvent) {
     if (this.currentState == null) {
       throw new IllegalStateException(
           "The current state is null, did you start the state machine?");
-    }
-    State<T, S> toState = this.states.get(this.currentState).get(stateEvent);
-    if (toState == null) {
-      this.unmappedEventHandler.accept(stateEvent, this);
-      return;
-    }
-    if (this.noopState.equals(toState)) {
-      // No transition but notify the listener so can tell a StateEvent was processed
-      notifyStateMachineListener(false, this.currentState, stateEvent, toState);
-      notifyStateMachineListener(true, this.currentState, stateEvent, toState);
-      return;
     }
     /*
      *  TODO add a facility not to drop duplicate events .processDuplicateEvents()
@@ -255,7 +242,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
      * 2. ProcessDuplicateEventStrategy
      * 3. DropEventsWhileProcessingStrategy
      */
-    this.eventProcessingStrategy.processEvent(stateEvent, this, toState);
+    this.eventProcessingStrategy.processEvent(stateEvent, this);
   }
 
   @Override
@@ -284,39 +271,25 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
   @Override
   public void setUnmappedEventHandler(
       BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
-    this.unmappedEventHandler = unmappedEventHandler;
+    throw new UnsupportedOperationException("TODO get rid of this");
   }
 
   void setCurrentState(State<T, S> state) {
     this.currentState = state;
   }
 
+  State<T, S> getNoopState() {
+    return this.noopState;
+  }
+
   public static class Builder<T, S> {
 
-    //TODO .processDuplicateEvents()
     private T context;
-    private Supplier<AtomicBoolean> atomicBooleanSupplier;
-    private Consumer<AtomicBoolean> atomicBooleanConsumer;
     private StateMachineListener<T, S> stateMachineListener;
-    private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
+    private EventProcessingStrategy eventProcessingStrategy;
 
     public Builder<T, S> setContext(T context) {
       this.context = context;
-      return this;
-    }
-
-    /**
-     * Allows an object pool of {@link AtomicBoolean}s to be set. The pool implementation must be
-     * comprised of a {@link Supplier}  and a {@link Consumer}. It is expected that the
-     * implementation of these provide the logic where objects are taken from and given to the pool.
-     *
-     * @param atomicBooleanSupplier supplies {@link AtomicBoolean}s (take from pool)
-     * @param atomicBooleanConsumer consumes {@link AtomicBoolean}s (give to pool)
-     */
-    public Builder<T, S> withAtomicBooleanPool(Supplier<AtomicBoolean> atomicBooleanSupplier,
-        Consumer<AtomicBoolean> atomicBooleanConsumer) {
-      this.atomicBooleanSupplier = atomicBooleanSupplier;
-      this.atomicBooleanConsumer = atomicBooleanConsumer;
       return this;
     }
 
@@ -328,7 +301,6 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
      */
     public Builder<T, S> setUnmappedEventHandler(
         BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
-      this.unmappedEventHandler = unmappedEventHandler;
       return this;
     }
 
@@ -337,39 +309,26 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       return this;
     }
 
+    Builder<T, S> setEventProcessingStrategy(EventProcessingStrategy eventProcessingStrategy) {
+      this.eventProcessingStrategy = eventProcessingStrategy;
+      return this;
+    }
+
     StateMachineListener<T, S> getStateMachineListener() {
       return stateMachineListener;
     }
 
-    BiConsumer<StateEvent<S>, StateMachine<T, S>> getUnmappedEventHandler() {
-      return this.unmappedEventHandler;
-    }
-
-    Supplier<AtomicBoolean> getAtomicBooleanSupplier() {
-      return atomicBooleanSupplier;
-    }
-
-    Consumer<AtomicBoolean> getAtomicBooleanConsumer() {
-      return atomicBooleanConsumer;
-    }
-
     public GenericStateMachine<T, S> build() {
-      if (atomicBooleanSupplier == null || atomicBooleanConsumer == null) {
-        AtomicBooleanPool atomicBooleanPool = new AtomicBooleanPool();
-        if (atomicBooleanSupplier == null) {
-          atomicBooleanSupplier = atomicBooleanPool;
-        }
-        if (atomicBooleanConsumer == null) {
-          atomicBooleanConsumer = atomicBooleanPool;
-        }
+      Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states = new HashMap();
+      if (eventProcessingStrategy == null) {
+        this.eventProcessingStrategy = new DefaultEventStrategy.Builder<T, S>(states).build();
+// TODO clean this up
+//          new DropDuplicateEventStrategy.Builder<T, S>(states,
+//              unmappedEventHandler).withAtomicBooleanPool(atomicBooleanSupplier,
+//              atomicBooleanConsumer).build()
       }
-      if (unmappedEventHandler == null) {
-        unmappedEventHandler = (ev, sm) -> logger.info(LOG_EVENT_NOT_MAPPED, ev.getName(),
-            sm.getCurrentState().getName());
-      }
-      return new GenericStateMachine<>(context, stateMachineListener, unmappedEventHandler,
-          new DropDuplicateEventStrategy.Builder<T, S>().withAtomicBooleanPool(
-              atomicBooleanSupplier, atomicBooleanConsumer).build());
+      return new GenericStateMachine<>(context, states, stateMachineListener,
+          eventProcessingStrategy);
     }
   }
 }

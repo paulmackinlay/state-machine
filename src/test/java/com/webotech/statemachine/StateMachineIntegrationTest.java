@@ -21,27 +21,26 @@ class StateMachineIntegrationTest {
   private StateEvent<Void> event1;
 
   @BeforeEach
-  void setuo() {
+  void setup() {
     state1 = new NamedState<>("STATE-1");
     state2 = new NamedState<>("STATE-2");
     event1 = new NamedStateEvent<>("event-1");
   }
 
-
   //TODO create integration tests
   @Test
   void shouldUseTheLoggingStateMachineListener() {
     StateMachineListener<Void, Void> loggingStateMachineListener = new LoggingStateMachineListener<>();
-    StateMachine<Void, Void> sm = new GenericStateMachine.Builder<Void, Void>().setStateMachineListener(
-            loggingStateMachineListener)
-        .build();
-    sm.initialSate(state1).receives(event1).itTransitionsTo(state2).when(state2).receives(event1)
-        .itEnds();
+    StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().setStateMachineListener(
+        loggingStateMachineListener).build();
+    stateMachine.initialSate(state1).receives(event1).itTransitionsTo(state2).when(state2)
+        .receives(event1).itEnds();
 
     OutputStream logStream = TestingUtil.initLogCaptureStream();
-    sm.start();
-    sm.fire(event1);
-    sm.fire(event1);
+    stateMachine.start();
+    stateMachine.fire(event1);
+    stateMachine.fire(event1);
+    TestingUtil.waitForAllEventsToProcess(stateMachine);
     String log = logStream.toString();
     //TODO how about logging when it starts?
     assertEquals("Starting transition: _UNINITIALISED_ + _immediate_ = STATE-1\n"

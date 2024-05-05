@@ -87,6 +87,8 @@ public interface StateMachine<T, S> {
    */
   void setStateMachineListener(StateMachineListener<T, S> stateMachineListener);
 
+  //TODO get rid of this from here, it is an implementation concern
+
   /**
    * Sets a handler that will be called when a {@link State} receives a {@link StateEvent} that has
    * not been mapped.
@@ -102,4 +104,9 @@ public interface StateMachine<T, S> {
    * @return true when the {@link StateMachine} has reached an ended state.
    */
   boolean isEnded();
+
+  /**
+   * @return the number of {@link StateEvent}s that haven't completed processing.
+   */
+  int getEventQueueSize();
 }
