@@ -18,7 +18,6 @@ import java.util.function.BiConsumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-//TODO test this
 public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S> {
 
   private static final Logger logger = LogManager.getLogger(DefaultEventStrategy.class);
@@ -119,7 +118,7 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
       if (executor == null) {
         executor = Executors.newSingleThreadExecutor(
             Threads.newNamedDaemonThreadFactory(stateMachineName, (t, e) -> {
-              logger.error("Unhandled exception in thread {}" + t.getName(), e);
+              logger.error("Unhandled exception in thread {}", t.getName(), e);
             }));
       }
       return new DefaultEventStrategy<>(states, unmappedEventHandler, executor);
