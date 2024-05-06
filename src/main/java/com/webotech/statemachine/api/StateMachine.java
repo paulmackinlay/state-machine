@@ -60,7 +60,11 @@ public interface StateMachine<T, S> {
    */
   void start();
 
-  //TODO add  startInState(State)
+  /**
+   * Starts the {@link StateMachine} in a given {@link State}. This is useful for initialising a
+   * {@link StateMachine} from a persisted state.
+   */
+  void startInState(State<T, S> state);
 
   /**
    * Fires an event

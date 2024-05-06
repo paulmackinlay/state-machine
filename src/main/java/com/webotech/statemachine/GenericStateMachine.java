@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.BiConsumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -212,6 +211,15 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     this.currentState = this.initState;
   }
 
+  //TODO test this
+  @Override
+  public void startInState(State<T, S> state) {
+    if (!this.states.keySet().contains(state)) {
+      throw new IllegalStateException("State [" + state + "] has not been configured");
+    }
+    this.currentState = state;
+  }
+
   @Override
   public boolean isStarted() {
     return this.currentState != null && !this.currentState.equals(noState);
@@ -278,23 +286,19 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
   public static class Builder<T, S> {
 
+    private String name;
     private T context;
     private StateMachineListener<T, S> stateMachineListener;
     private EventProcessingStrategy eventProcessingStrategy;
 
-    public Builder<T, S> setContext(T context) {
-      this.context = context;
+    //TODO test this
+    public Builder<T, S> setName(String name) {
+      this.name = name;
       return this;
     }
 
-    /**
-     * When the {@link StateMachine} receives a {@link StateEvent} that is not mapped for the
-     * current state, by default this is logged but setting the handler here allows you to override
-     * the behaviour. This handler is called with the {@link StateEvent} that was received and a
-     * reference to the {@link StateMachine}.
-     */
-    public Builder<T, S> setUnmappedEventHandler(
-        BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
+    public Builder<T, S> setContext(T context) {
+      this.context = context;
       return this;
     }
 
@@ -317,9 +321,13 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     }
 
     public GenericStateMachine<T, S> build() {
+      if (name == null) {
+        name = "state-machine";
+      }
       Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states = new HashMap();
       if (eventProcessingStrategy == null) {
-        this.eventProcessingStrategy = new DefaultEventStrategy.Builder<T, S>(states).build();
+        this.eventProcessingStrategy = new DefaultEventStrategy.Builder<T, S>(name,
+            states).build();
 // TODO clean this up
 //          new DropDuplicateEventStrategy.Builder<T, S>(states,
 //              unmappedEventHandler).withAtomicBooleanPool(atomicBooleanSupplier,

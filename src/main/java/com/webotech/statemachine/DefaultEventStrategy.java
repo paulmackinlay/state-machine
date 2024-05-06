@@ -33,16 +33,12 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
    * {@link StateEvent}s received by a single {@link State} are logged but not processed.
    */
   private DefaultEventStrategy(Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states,
-      BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
+      BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler,
+      ExecutorService executor) {
     this.eventQueue = new ConcurrentLinkedQueue<>();
     this.states = states;
     this.unmappedEventHandler = unmappedEventHandler;
-    //TODO improve this
-    this.executor = Executors.newSingleThreadExecutor(
-        Threads.newNamedDaemonThreadFactory("state-machine", (t, e) -> {
-          //TODO
-          logger.error("Exception on thread " + t.getName(), e);
-        }));
+    this.executor = executor;
   }
 
   @Override
@@ -51,34 +47,32 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
   }
 
   @Override
-  public void processEvent(StateEvent<S> stateEvent2, GenericStateMachine<T, S> stateMachine2) {
-    eventQueue.offer(new AbstractMap.SimpleEntry<>(stateEvent2, stateMachine2));
+  public void processEvent(StateEvent<S> stateEvent, GenericStateMachine<T, S> stateMachine) {
+    eventQueue.offer(new AbstractMap.SimpleEntry<>(stateEvent, stateMachine));
 
     executor.execute(() -> {
       while (!eventQueue.isEmpty()) {
         Entry<StateEvent<S>, GenericStateMachine<T, S>> eventPair = eventQueue.peek();
-        StateEvent<S> stateEvent = eventPair.getKey();
-        GenericStateMachine<T, S> stateMachine = eventPair.getValue();
+        StateEvent<S> event = eventPair.getKey();
+        GenericStateMachine<T, S> machine = eventPair.getValue();
         try {
-          State<T, S> toState = this.states.get(stateMachine.getCurrentState()).get(stateEvent);
+          State<T, S> toState = this.states.get(machine.getCurrentState()).get(event);
           if (toState == null) {
-            unmappedEventHandler.accept(stateEvent, stateMachine);
+            unmappedEventHandler.accept(event, machine);
             return;
           }
-          if (stateMachine.getNoopState().equals(toState)) {
+          if (machine.getNoopState().equals(toState)) {
             // No transition but notify the listener so can tell a StateEvent was processed
-            stateMachine.notifyStateMachineListener(false, stateMachine.getCurrentState(),
-                stateEvent, toState);
-            stateMachine.notifyStateMachineListener(true, stateMachine.getCurrentState(),
-                stateEvent, toState);
+            machine.notifyStateMachineListener(false, machine.getCurrentState(), event, toState);
+            machine.notifyStateMachineListener(true, machine.getCurrentState(), event, toState);
             return;
           }
-          State<T, S> fromState = stateMachine.getCurrentState();
-          stateMachine.notifyStateMachineListener(false, fromState, stateEvent, toState);
-          stateMachine.getCurrentState().onExit(stateEvent, stateMachine);
-          stateMachine.setCurrentState(toState);
-          stateMachine.getCurrentState().onEntry(stateEvent, stateMachine);
-          stateMachine.notifyStateMachineListener(true, fromState, stateEvent, toState);
+          State<T, S> fromState = machine.getCurrentState();
+          machine.notifyStateMachineListener(false, fromState, event, toState);
+          machine.getCurrentState().onExit(event, machine);
+          machine.setCurrentState(toState);
+          machine.getCurrentState().onEntry(event, machine);
+          machine.notifyStateMachineListener(true, fromState, event, toState);
         } finally {
           eventQueue.poll();
         }
@@ -90,10 +84,13 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
   static class Builder<T, S> {
 
     private final Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states;
+    private final String stateMachineName;
     private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
+    private ExecutorService executor;
 
-    Builder(Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states) {
+    Builder(String stateMachineName, Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states) {
       this.states = states;
+      this.stateMachineName = stateMachineName;
     }
 
     public Builder<T, S> setUnmappedEventHandler(
@@ -106,12 +103,27 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
       return unmappedEventHandler;
     }
 
+    ExecutorService getExecutor() {
+      return executor;
+    }
+
+    public Builder<T, S> setExecutor(ExecutorService executor) {
+      this.executor = executor;
+      return this;
+    }
+
     public DefaultEventStrategy<T, S> build() {
       if (unmappedEventHandler == null) {
         unmappedEventHandler = (ev, sm) -> logger.info(LOG_EVENT_NOT_MAPPED, ev.getName(),
             sm.getCurrentState().getName());
       }
-      return new DefaultEventStrategy<>(states, unmappedEventHandler);
+      if (executor == null) {
+        executor = Executors.newSingleThreadExecutor(
+            Threads.newNamedDaemonThreadFactory(stateMachineName, (t, e) -> {
+              logger.error("Unhandled exception in thread {}" + t.getName(), e);
+            }));
+      }
+      return new DefaultEventStrategy<>(states, unmappedEventHandler, executor);
     }
   }
 }

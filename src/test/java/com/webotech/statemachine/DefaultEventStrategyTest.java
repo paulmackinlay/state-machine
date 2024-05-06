@@ -20,14 +20,15 @@ class DefaultEventStrategyTest {
 
   @BeforeEach
   void setup() {
-    strategy = new DefaultEventStrategy.Builder<Void, Void>(new HashMap<>()).build();
+    strategy = new DefaultEventStrategy.Builder<Void, Void>("state-machine",
+        new HashMap<>()).build();
   }
 
   @Test
   void shouldBuildWithUnmappedEventHandler() {
     BiConsumer<StateEvent<Void>, StateMachine<Void, Void>> unmappedEventHander = (se, sm) -> {
     };
-    Builder<Void, Void> builder = new DefaultEventStrategy.Builder<Void, Void>(
+    Builder<Void, Void> builder = new DefaultEventStrategy.Builder<Void, Void>("state-machine",
         new HashMap<>()).setUnmappedEventHandler(unmappedEventHander);
     assertSame(unmappedEventHander, builder.getUnmappedEventHandler());
   }
