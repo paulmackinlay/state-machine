@@ -80,7 +80,6 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
     });
   }
 
-  //TODO test the builder
   static class Builder<T, S> {
 
     private final Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states;
