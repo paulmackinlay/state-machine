@@ -290,10 +290,13 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     private StateMachineListener<T, S> stateMachineListener;
     private EventProcessingStrategy eventProcessingStrategy;
 
-    //TODO test this
     public Builder<T, S> setName(String name) {
       this.name = name;
       return this;
+    }
+
+    String getName() {
+      return this.name;
     }
 
     public Builder<T, S> setContext(T context) {

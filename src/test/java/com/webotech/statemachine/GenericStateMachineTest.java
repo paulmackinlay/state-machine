@@ -243,6 +243,13 @@ class GenericStateMachineTest {
   }
 
   @Test
+  void shouldBuildWithName() {
+    String name = "my-state-machine";
+    Builder<Void, Void> builder = new GenericStateMachine.Builder<Void, Void>().setName(name);
+    assertSame(name, builder.getName());
+  }
+
+  @Test
   void shouldPassEventToAction() {
     AtomicReference<StateEvent> eventRef = new AtomicReference<>();
     state1.appendExitActions((ev, sm) -> {
