@@ -19,6 +19,7 @@ import com.webotech.statemachine.api.StateAction;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -105,6 +106,21 @@ class GenericStateMachineTest {
     assertEquals(List.of("1.1 entered", "1.2 entered", "1.1 exited", "1.2 exited"),
         txtStateMachine.getContext());
     assertTrue(txtStateMachine.isEnded());
+  }
+
+  @Test
+  void shouldStartInState() throws IOException {
+    StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().setStateMachineListener(
+            new LoggingStateMachineListener<>()).build().initialSate(state1).receives(event1)
+        .itTransitionsTo(state2).when(state2).receives(event1).itTransitionsTo(state1);
+    try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
+      stateMachine.startInState(state2);
+      stateMachine.fire(event1);
+      TestingUtil.waitForAllEventsToProcess(stateMachine);
+      assertEquals(state1, stateMachine.getCurrentState());
+      assertEquals("Starting transition: STATE-2 + event-1 = STATE-1\n"
+          + "Transitioned to STATE-1\n", logStream.toString());
+    }
   }
 
   @Test
@@ -201,7 +217,7 @@ class GenericStateMachineTest {
         "my-context")).build();
     assertEquals("my-context", stringContextStateMachine.getContext());
   }
-  
+
   @Test
   void shouldBuildWithEventProcessingStrategy() {
     EventProcessingStrategy<Void, Void> strategy = mock(EventProcessingStrategy.class);

@@ -211,7 +211,6 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     this.currentState = this.initState;
   }
 
-  //TODO test this
   @Override
   public void startInState(State<T, S> state) {
     if (!this.states.keySet().contains(state)) {
