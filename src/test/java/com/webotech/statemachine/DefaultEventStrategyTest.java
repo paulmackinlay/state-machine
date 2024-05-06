@@ -16,10 +16,13 @@ import com.webotech.statemachine.DefaultEventStrategy.Builder;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,25 +55,32 @@ class DefaultEventStrategyTest {
   }
 
   @Test
-  void shouldIterateOverQueueEvents() {
-    //TODO
-    /*
-    2 events are fired before the 1st event finishes processing - assert both events are processed
-     */
+  void shouldProcessAllQueuedEvents() {
+    CountDownLatch latch = new CountDownLatch(1);
+    when(stateMachine.getCurrentState()).thenAnswer(i -> {
+      boolean success = latch.await(1, TimeUnit.SECONDS);
+      return state1;
+    });
+    strategy.processEvent(event1, stateMachine);
+    strategy.processEvent(event1, stateMachine);
+    latch.countDown();
+    TestingUtil.waitForAllEventsToProcess(stateMachine);
+
+    verify(stateMachine, times(2)).setCurrentState(any(State.class));
   }
 
   @Test
-  void shouldHandleUncaughtException() {
+  void shouldHandleUncaughtException() throws IOException {
     when(stateMachine.getCurrentState()).thenThrow(new IllegalStateException("test induced"));
-    OutputStream logStream = TestingUtil.initLogCaptureStream();
 
-    strategy.processEvent(event1, stateMachine);
-    TestingUtil.waitForAllEventsToProcess(stateMachine);
+    try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
+      strategy.processEvent(event1, stateMachine);
+      TestingUtil.waitForAllEventsToProcess(stateMachine);
 
-    String log = logStream.toString();
-    System.err.println(log);
-    assertTrue(log.startsWith("Unhandled exception in thread state-machine-"));
-    assertTrue(log.contains("java.lang.IllegalStateException: test induced"));
+      String log = logStream.toString();
+      assertTrue(log.startsWith("Unhandled exception in thread state-machine-"));
+      assertTrue(log.contains("java.lang.IllegalStateException: test induced"));
+    }
   }
 
   @Test
