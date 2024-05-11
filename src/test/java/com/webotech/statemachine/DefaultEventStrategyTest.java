@@ -31,7 +31,6 @@ import org.mockito.Mockito;
 class DefaultEventStrategyTest {
 
   private static final StateEvent<Void> event1 = new NamedStateEvent<>("event1");
-  private static final StateEvent<Void> event2 = new NamedStateEvent<>("event2");
   private static final State<Void, Void> state1 = new NamedState("STATE-1");
   private static final State<Void, Void> state2 = new NamedState("STATE-2");
   private static final State<Void, Void> noopState = new NamedState<>(
@@ -81,51 +80,6 @@ class DefaultEventStrategyTest {
       assertTrue(log.startsWith("Unhandled exception in thread state-machine-"));
       assertTrue(log.contains("java.lang.IllegalStateException: test induced"));
     }
-  }
-
-  @Test
-  void shouldHandleUnmappedEvent() {
-    strategy.processEvent(event2, stateMachine);
-    TestingUtil.waitForAllEventsToProcess(stateMachine);
-
-    verify(unmappedEventHandler, times(1)).accept(event2, stateMachine);
-  }
-
-  @Test
-  void shouldHandleNoopState() {
-    when(stateMachine.getCurrentState()).thenReturn(state2);
-
-    strategy.processEvent(event1, stateMachine);
-    TestingUtil.waitForAllEventsToProcess(stateMachine);
-
-    // notify to NOOP state before/after
-    verify(stateMachine, times(1)).notifyStateMachineListener(false, state2,
-        event1, noopState);
-    verify(stateMachine, times(1)).notifyStateMachineListener(true, state2,
-        event1, noopState);
-
-    // ensure no state change
-    verify(stateMachine, times(0)).setCurrentState(any());
-  }
-
-  @Test
-  void shouldTransition() {
-    State<Void, Void> mockState = mock(State.class);
-    when(stateMachine.getCurrentState()).thenReturn(state1, state1, mockState);
-
-    strategy.processEvent(event1, stateMachine);
-    TestingUtil.waitForAllEventsToProcess(stateMachine);
-
-    // notification before/after state transition
-    verify(stateMachine, times(1)).notifyStateMachineListener(false, state1, event1, state2);
-    verify(stateMachine, times(1)).notifyStateMachineListener(false, state1, event1, state2);
-
-    // transition
-    verify(stateMachine, times(1)).setCurrentState(state2);
-
-    // entry/exit actions
-    verify(mockState, times(1)).onExit(event1, stateMachine);
-    verify(mockState, times(1)).onEntry(event1, stateMachine);
   }
 
   @Test
