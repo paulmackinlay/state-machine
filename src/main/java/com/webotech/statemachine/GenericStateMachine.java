@@ -330,10 +330,6 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       if (eventProcessingStrategy == null) {
         this.eventProcessingStrategy = new DefaultEventStrategy.Builder<T, S>(name,
             states).build();
-// TODO clean this up
-//          new DropDuplicateEventStrategy.Builder<T, S>(states,
-//              unmappedEventHandler).withAtomicBooleanPool(atomicBooleanSupplier,
-//              atomicBooleanConsumer).build()
       }
       return new GenericStateMachine<>(context, states, stateMachineListener,
           eventProcessingStrategy);
