@@ -23,9 +23,7 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
   private static final Logger logger = LogManager.getLogger(DefaultEventStrategy.class);
   private static final String LOG_EVENT_NOT_MAPPED = "StateEvent [{}] not mapped for state [{}], ignoring";
   private final ConcurrentLinkedQueue<Entry<StateEvent<S>, GenericStateMachine<T, S>>> eventQueue;
-  private final Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states;
   private final ExecutorService executor;
-  private final BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
   private final TransitionTask<T, S> transitionTask;
 
   /**
@@ -36,10 +34,8 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
   private DefaultEventStrategy(Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states,
       BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler,
       ExecutorService executor) {
-    this.eventQueue = new ConcurrentLinkedQueue<>();
-    this.states = states;
-    this.unmappedEventHandler = unmappedEventHandler;
     this.executor = executor;
+    this.eventQueue = new ConcurrentLinkedQueue<>();
     this.transitionTask = new TransitionTask<>(states, unmappedEventHandler);
   }
 
@@ -64,6 +60,10 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
         }
       }
     });
+  }
+
+  ConcurrentLinkedQueue<Entry<StateEvent<S>, GenericStateMachine<T, S>>> getEventQueue() {
+    return eventQueue;
   }
 
   static class Builder<T, S> {
