@@ -86,4 +86,27 @@ purposes:
 1. allow data to be exchanged between `StateAction`s
 2. act as a service locator that provides objects needed by the state machine
 
+Once the `StateMachine` is configured and all the `StateAction`s have been appended to the
+various `State`s you have to start it. This is simply done:
+
+```
+StateMachine sm = ....
+sm.start();
+```
+
+The `StateMachine` will transition to the configured `initState()` executing entry `StateAction`s.
+
+However you may want to have the `StateMachine` initialised in another state, for example in the
+case where you persist your `StateMachine` in one process and need it to be picked up form where it
+left off in another. You can do that but using:
+
+```
+StateMachine sm = ....
+State anIntermediateState = ....
+sm.startInState(State<T, S> anIntermediateState);
+```
+
+In this case the `StateMachine` will be initialised in `anIntermediateState` but no
+entry `SateAction`s will be executed as no transition is taking place.
+
 [previous page](03-api.md) --- [next page](05-events.md)
