@@ -30,9 +30,7 @@ public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy
    * dropped. {@link StateEvent}s in the queue are processed in sequence, in
    * the order they were received.
    */
-  private DropDuplicateEventStrategy(Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states,
-      BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler,
-      ExecutorService executor, DefaultEventStrategy<T, S> defaultEventStrategy) {
+  private DropDuplicateEventStrategy(DefaultEventStrategy<T, S> defaultEventStrategy) {
     this.defaultStrategy = defaultEventStrategy;
   }
 
@@ -100,8 +98,7 @@ public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy
       DefaultEventStrategy<T, S> defaultEventStrategy = new DefaultEventStrategy.Builder<>(
           stateMachineName, states).setExecutor(executor)
           .setUnmappedEventHandler(unmappedEventHandler).build();
-      return new DropDuplicateEventStrategy<>(states, unmappedEventHandler, executor,
-          defaultEventStrategy);
+      return new DropDuplicateEventStrategy<>(defaultEventStrategy);
     }
   }
 }
