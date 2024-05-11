@@ -26,10 +26,12 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
   private final Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states;
   private final ExecutorService executor;
   private final BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
+  private final TransitionTask<T, S> transitionTask;
 
   /**
-   * The default {@link EventProcessingStrategy}, it transitions state atomically, duplicate
-   * {@link StateEvent}s received by a single {@link State} are logged but not processed.
+   * The default {@link EventProcessingStrategy}, it transitions state atomically. All
+   * {@link StateEvent}s are processed. By default {@link StateEvent}s are processed in sequence, in
+   * the order they were received.
    */
   private DefaultEventStrategy(Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states,
       BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler,
@@ -38,6 +40,7 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
     this.states = states;
     this.unmappedEventHandler = unmappedEventHandler;
     this.executor = executor;
+    this.transitionTask = new TransitionTask<>(states, unmappedEventHandler);
   }
 
   @Override
@@ -55,23 +58,7 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
         StateEvent<S> event = eventPair.getKey();
         GenericStateMachine<T, S> machine = eventPair.getValue();
         try {
-          State<T, S> toState = this.states.get(machine.getCurrentState()).get(event);
-          if (toState == null) {
-            unmappedEventHandler.accept(event, machine);
-            return;
-          }
-          if (machine.getNoopState().equals(toState)) {
-            // No transition but notify the listener so can tell a StateEvent was processed
-            machine.notifyStateMachineListener(false, machine.getCurrentState(), event, toState);
-            machine.notifyStateMachineListener(true, machine.getCurrentState(), event, toState);
-            return;
-          }
-          State<T, S> fromState = machine.getCurrentState();
-          machine.notifyStateMachineListener(false, fromState, event, toState);
-          machine.getCurrentState().onExit(event, machine);
-          machine.setCurrentState(toState);
-          machine.getCurrentState().onEntry(event, machine);
-          machine.notifyStateMachineListener(true, fromState, event, toState);
+          transitionTask.execute(event, machine);
         } finally {
           eventQueue.poll();
         }
@@ -105,6 +92,10 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
       return executor;
     }
 
+    /**
+     * The {@link ExecutorService} passed in here will be responsible for processing events, a
+     * single thread executor is needed to guarantee sequential processing.
+     */
     public Builder<T, S> setExecutor(ExecutorService executor) {
       this.executor = executor;
       return this;
