@@ -240,15 +240,6 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       throw new IllegalStateException(
           "The current state is null, did you start the state machine?");
     }
-    /*
-     *  TODO add a facility not to drop duplicate events .processDuplicateEvents()
-     * add facilities to measure the queue size, drop events while processing is taking place
-     * it would be good to have different `EventProcessingStrategy`s that also have a max event
-     * queue setting
-     * 1. DropDuplicateEventStrategy
-     * 2. ProcessDuplicateEventStrategy
-     * 3. DropEventsWhileProcessingStrategy
-     */
     this.eventProcessingStrategy.processEvent(stateEvent, this);
   }
 
