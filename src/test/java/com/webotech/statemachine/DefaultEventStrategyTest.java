@@ -88,7 +88,7 @@ class DefaultEventStrategyTest {
         fail("Timed out");
       }
       TestingUtil.waitForAllEventsToProcess(stateMachine);
-
+      TimeUnit.MILLISECONDS.sleep(300);
       String log = logStream.toString();
       assertTrue(log.startsWith("Unhandled exception in thread state-machine-"));
       assertTrue(log.contains("java.lang.IllegalStateException: test induced"));
