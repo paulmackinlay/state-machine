@@ -6,6 +6,7 @@ package com.webotech.statemachine;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -57,7 +58,9 @@ class DefaultEventStrategyTest {
   void shouldProcessAllQueuedEvents() {
     CountDownLatch latch = new CountDownLatch(1);
     when(stateMachine.getCurrentState()).thenAnswer(i -> {
-      boolean success = latch.await(1, TimeUnit.SECONDS);
+      if (!latch.await(1, TimeUnit.SECONDS)) {
+        fail("Timed out");
+      }
       return state1;
     });
     strategy.processEvent(event1, stateMachine);
@@ -69,11 +72,21 @@ class DefaultEventStrategyTest {
   }
 
   @Test
-  void shouldHandleUncaughtException() throws IOException {
-    when(stateMachine.getCurrentState()).thenThrow(new IllegalStateException("test induced"));
+  void shouldHandleUncaughtException() throws IOException, InterruptedException {
+    CountDownLatch latch = new CountDownLatch(1);
+    when(stateMachine.getCurrentState()).thenAnswer(i -> {
+      try {
+        throw new IllegalStateException("test induced");
+      } finally {
+        latch.countDown();
+      }
+    });
 
     try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
       strategy.processEvent(event1, stateMachine);
+      if (!latch.await(1, TimeUnit.SECONDS)) {
+        fail("Timed out");
+      }
       TestingUtil.waitForAllEventsToProcess(stateMachine);
 
       String log = logStream.toString();
