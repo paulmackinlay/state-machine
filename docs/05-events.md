@@ -1,66 +1,35 @@
 ## Events in the state machine
 
-### Threading considerations
+### Event processing
 
-Typically you configure a `StateMachine` on the app's primary thread, while events originate on I/O
-theads like a messaging or RPC thread. `GenericStatMachine` is thread safe so you won't get any
-unexpected side effects. Actually the separation that results from using I/O threads helps prevent a
-situation where circular execution causes a `StackOverflowError`.
+In `GenericStateMachine` events are processed by
+an [EventProcessingStrategy](../src/main/java/com/webotech/statemachine/EventProcessingStrategy.java).
+There are a couple of implementations and the default implementation is discussed here.
 
-Imagine a 2 state machine where each `State` has a single entry `StateAction` that does nothing
-other than fire an event.
+When it comes to processing events, understanding the thread interaction in a `StateMachine` is
+important. It is typical for events to originate on I/O threads (like a messaging or RPC thread),
+however when you need to fire an event from a `StateAction` it will originate in the current thread.
+In order handle programatic flow originating from different threads in a consistent way, by
+default `GenericStateMachine` hands off processing to a single thread executor. This has the effect
+of
 
-![](media/State_diagram_1.png)
-
-In code, the `StateAction`s would look something like this:
-
-```
-StateAction<> action1 = sm -> sm.fire(event1);
-StateAction<> action2 = sm -> sm.fire(event2);
-```
-
-When in `State 1`, the state machine would immediately transition to `State 2` which would cause it
-to immediately transition back to `State 1` and so on. Since this is all done on a single thread,
-the `StateMachine` enters an unending circular pattern that constantly increases the thread's stack,
-ultimately leading to a `StackOverflowError`.
-
-You can avoid this error by using
-the [EventManager](../src/main/java/com/webotech/statemachine/EventManager.java) which
-has `fireAsync(StateEvent)` and `fireBound(StateEvent)` methods. By using `fireAsync(completeEvt)`
-in the `StateAction`s above, the `StateMachine` would continously transition between states without
-causing any errors. The `StateAction` code would look something like this:
-
-```
-StateAction<> action1 = sm -> {
-  EventManager eventManager = sm.getContext().getEventManager();
-  eventManager.fireAsync(event1);
-};
-```
-
-Although this is a contrived example, it does highlight the point that you need to put some thought
-into how you fire events in your code. The exact way you do this will be dependant on the app's
-threading model. Having a clear understanding of your threading model is important so you can
-optimise the app's performance,
-the [EventManager](../src/main/java/com/webotech/statemachine/EventManager.java) is one of the tools
-that will help you do this.
-
-### Thread safety in `GenericStateMachine`
+- quickly freeing I/O threads thereby avoid blocking
+- avoid thread contention when events originate on the current thread
+- guarantees events to be processed in the same order they were received
+- being thread-safe
 
 `GenericStateMachine` is thread safe, so when events are received on multiple threads there will be
 no unexpected side effects. The first event that is received will cause a transition to take place
 in an atomic way, so that the next event will be processed once the transition is complete (in the
-subsequent state). It does this by using `AtomicBoolean`s as a barrier.
+subsequent state).
 
-In order to minimise object churn at runtime, by default the `AtomicBoolean`s are kept in a simple
-object pool and they get recycled during transitions. You can also choose to use your own mechanism
-for providing the `AtomicBoolean`s using the `withAtomicBooleanPool()` method on the builder that
-takes a supplier and a consumer:
+When constructing a `GenericStateMachine`, flexibility has been built in so if you need finer
+control of how events are processed there are these options:
 
-```
-//This will use a new AtomicBoolean for every transition which will need to be cleaned up by the GC
-StateMachine<> sm = new GenericStateMachine.Builder<>()
-    .withAtomicBooleanPool(() -> AtomicBoolean::new, ab -> {}).build();
-```
+- use the builder that constructs the `EventProcessingStrategy` to pass in your
+  own `ExecutorService`
+- choose a different implementation of `EventProcessingStrategy`
+- implement your own `EventProcessingStrategy`
 
 ### Unmapped events
 
