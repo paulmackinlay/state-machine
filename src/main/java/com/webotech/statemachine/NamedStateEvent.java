@@ -44,7 +44,7 @@ public final class NamedStateEvent<S> implements StateEvent<S> {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    NamedStateEvent that = (NamedStateEvent) o;
+    NamedStateEvent<S> that = (NamedStateEvent) o;
     return Objects.equals(name, that.name);
   }
 

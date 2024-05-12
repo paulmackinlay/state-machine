@@ -91,9 +91,8 @@ public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy
       }
       if (executor == null) {
         executor = Executors.newSingleThreadExecutor(
-            Threads.newNamedDaemonThreadFactory(stateMachineName, (t, e) -> {
-              logger.error("Unhandled exception in thread {}", t.getName(), e);
-            }));
+            Threads.newNamedDaemonThreadFactory(stateMachineName,
+                (t, e) -> logger.error("Unhandled exception in thread {}", t.getName(), e)));
       }
       DefaultEventStrategy<T, S> defaultEventStrategy = new DefaultEventStrategy.Builder<>(
           stateMachineName, states).setExecutor(executor)

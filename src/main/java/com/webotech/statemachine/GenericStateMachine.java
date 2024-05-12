@@ -12,12 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
-  private static final Logger logger = LogManager.getLogger(GenericStateMachine.class);
   private static final String RESERVED_STATE_NAME_END = "_END_";
   private static final String RESERVED_STATE_NAME_UNINITIALISED = "_UNINITIALISED_";
   static final String RESERVED_STATE_NAME_NOOP = "_NOOP_";
@@ -279,7 +276,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     private String name;
     private T context;
     private StateMachineListener<T, S> stateMachineListener;
-    private EventProcessingStrategy eventProcessingStrategy;
+    private EventProcessingStrategy<T, S> eventProcessingStrategy;
 
     public Builder<T, S> setName(String name) {
       this.name = name;
@@ -300,7 +297,8 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       return this;
     }
 
-    Builder<T, S> setEventProcessingStrategy(EventProcessingStrategy eventProcessingStrategy) {
+    Builder<T, S> setEventProcessingStrategy(
+        EventProcessingStrategy<T, S> eventProcessingStrategy) {
       this.eventProcessingStrategy = eventProcessingStrategy;
       return this;
     }
@@ -309,7 +307,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       return stateMachineListener;
     }
 
-    EventProcessingStrategy getEventProcessingStrategy() {
+    EventProcessingStrategy<T, S> getEventProcessingStrategy() {
       return eventProcessingStrategy;
     }
 
@@ -317,7 +315,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       if (name == null) {
         name = "state-machine";
       }
-      Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states = new HashMap();
+      Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states = new HashMap<>();
       if (eventProcessingStrategy == null) {
         this.eventProcessingStrategy = new DefaultEventStrategy.Builder<T, S>(name,
             states).build();

@@ -108,9 +108,8 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
       }
       if (executor == null) {
         executor = Executors.newSingleThreadExecutor(
-            Threads.newNamedDaemonThreadFactory(stateMachineName, (t, e) -> {
-              logger.error("Unhandled exception in thread {}", t.getName(), e);
-            }));
+            Threads.newNamedDaemonThreadFactory(stateMachineName,
+                (t, e) -> logger.error("Unhandled exception in thread {}", t.getName(), e)));
       }
       return new DefaultEventStrategy<>(states, unmappedEventHandler, executor);
     }
