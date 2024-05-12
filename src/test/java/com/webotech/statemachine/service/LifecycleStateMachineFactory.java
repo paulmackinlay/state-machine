@@ -2,15 +2,16 @@
  * Copyright (c) 2024 Paul Mackinlay <paul.mackinlay@gmail.com>
  */
 
-package com.webotech.statemachine;
+package com.webotech.statemachine.service;
 
+import com.webotech.statemachine.LoggingStateMachineListener;
+import com.webotech.statemachine.NamedState;
+import com.webotech.statemachine.NamedStateEvent;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateAction;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
-
-//TODO review this
 
 /**
  * Useful for a {@link StateMachine} that backs an app.
@@ -22,11 +23,11 @@ public final class LifecycleStateMachineFactory {
   public static final StateEvent<Void> stopEvt = new NamedStateEvent<>("stop");
   public static final StateEvent<Void> errorEvt = new NamedStateEvent<>("error");
 
-  public static final String UNINITIALISED = "UNINITIALISED";
-  public static final String STARTING = "STARTING";
-  public static final String STARTED = "STARTED";
-  public static final String STOPPING = "STOPPING";
-  public static final String STOPPED = "STOPPED";
+  public static final String STATE_UNINITIALISED = "UNINITIALISED";
+  public static final String STATE_STARTING = "STARTING";
+  public static final String STATE_STARTED = "STARTED";
+  public static final String STATE_STOPPING = "STOPPING";
+  public static final String STATE_STOPPED = "STOPPED";
   @SuppressWarnings("rawtypes")
   private static LoggingStateMachineListener loggingStateMachineListener;
 
@@ -36,27 +37,27 @@ public final class LifecycleStateMachineFactory {
 
   @SafeVarargs
   public static <T> State<T, Void> newUnitialisedState(StateAction<T, Void>... entryActions) {
-    return newState(UNINITIALISED, entryActions);
+    return newState(STATE_UNINITIALISED, entryActions);
   }
 
   @SafeVarargs
   public static <T> State<T, Void> newStartingState(StateAction<T, Void>... entryActions) {
-    return newState(STARTING, entryActions);
+    return newState(STATE_STARTING, entryActions);
   }
 
   @SafeVarargs
   public static <T> State<T, Void> newStartedState(StateAction<T, Void>... entryActions) {
-    return newState(STARTED, entryActions);
+    return newState(STATE_STARTED, entryActions);
   }
 
   @SafeVarargs
   public static <T> State<T, Void> newStoppingState(StateAction<T, Void>... entryActions) {
-    return newState(STOPPING, entryActions);
+    return newState(STATE_STOPPING, entryActions);
   }
 
   @SafeVarargs
   public static <T> State<T, Void> newStoppedState(StateAction<T, Void>... entryActions) {
-    return newState(STOPPED, entryActions);
+    return newState(STATE_STOPPED, entryActions);
   }
 
   public static <T> void configureAppStateMachine(StateMachine<T, Void> stateMachine,

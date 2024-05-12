@@ -4,16 +4,15 @@
 
 package com.webotech.statemachine.service;
 
-import static com.webotech.statemachine.LifecycleStateMachineFactory.completeEvt;
-import static com.webotech.statemachine.LifecycleStateMachineFactory.errorEvt;
-import static com.webotech.statemachine.LifecycleStateMachineFactory.startEvt;
-import static com.webotech.statemachine.LifecycleStateMachineFactory.stopEvt;
+import static com.webotech.statemachine.service.LifecycleStateMachineFactory.completeEvt;
+import static com.webotech.statemachine.service.LifecycleStateMachineFactory.errorEvt;
+import static com.webotech.statemachine.service.LifecycleStateMachineFactory.startEvt;
+import static com.webotech.statemachine.service.LifecycleStateMachineFactory.stopEvt;
 
 import com.webotech.statemachine.EventManager;
 import com.webotech.statemachine.GenericStateMachine;
 import com.webotech.statemachine.HandleExceptionAction;
 import com.webotech.statemachine.HandleExceptionAction.ExceptionHandler;
-import com.webotech.statemachine.LifecycleStateMachineFactory;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
