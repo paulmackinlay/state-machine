@@ -8,14 +8,14 @@ you will need to start the state machine so that it can begin processing events.
 The API has been written so that the configuration method names are aligned with natural language.
 This is how the [application lifecycle](01-intro.md#app-lifecycle-example) example would be
 configured.
+
 Here is the state diagram:
 
 ![](media/State_diagram_2.png)
 
-Configuration is done by following these steps (I've omitted defining generic types for
-brevity).
+Configuration is done by following these steps (I've omitted defining generic types for brevity).
 
-```
+```java
 //define the states
 State<> starting = new NamedState<>("STARTING");
 State<> running = new NamedState<>("RUNNING");
@@ -61,7 +61,7 @@ before the config is used to connect to a database (action 2).
 Finally, the `completeEvt` is fired (action 3) which causes the state machine to transition. Here is
 some pseudo code illustrating how the `StateAction`s are added to the `starting` State:
 
-```
+```java
 //define actions
 StateAction<> readConfigAction = sm -> {
  /* Read config from property files and put the config on the StateMachine 
@@ -89,7 +89,7 @@ purposes:
 Once the `StateMachine` is configured and all the `StateAction`s have been appended to the
 various `State`s you have to start it. This is simply done:
 
-```
+```java
 StateMachine sm = ....
 sm.start();
 ```
@@ -100,7 +100,7 @@ However you may want to have the `StateMachine` initialised in another state, fo
 case where you persist your `StateMachine` in one process and need it to be picked up form where it
 left off in another. You can do that but using:
 
-```
+```java
 StateMachine sm = ....
 State anIntermediateState = ....
 sm.startInState(State<T, S> anIntermediateState);

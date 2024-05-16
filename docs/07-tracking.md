@@ -4,7 +4,7 @@ If you need to track the `StateMachine` so that you can monitor the current stat
 transitions, you can use a `StateMachineListener`. A single `StateMachineListener` can be set on
 the `StateMachine` at build time, here is how to add one:
 
-```
+```java
 StateMachineListener sml = ...;
 StateMachine<> sm = new GenericStateMachine.Builder<>.setStateMachineListener(sml);
 ```
