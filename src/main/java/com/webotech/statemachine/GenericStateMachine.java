@@ -202,7 +202,6 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
         }
       }
     }
-    //TODO test this to make sure you can't start it twice
     if (isStarted()) {
       throw new IllegalStateException("The state machine is already started");
     }

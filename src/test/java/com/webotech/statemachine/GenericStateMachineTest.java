@@ -263,4 +263,11 @@ class GenericStateMachineTest {
     assertEquals(event1, eventRef.get());
   }
 
+  @Test
+  void shouldNotStartMultipleTimes() {
+    stateMachine.initialSate(state1).receives(event1).itEnds();
+    stateMachine.start();
+    assertThrows(IllegalStateException.class, () -> stateMachine.start());
+  }
+
 }
