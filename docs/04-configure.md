@@ -109,4 +109,9 @@ sm.startInState(State<T, S> anIntermediateState);
 In this case the `StateMachine` will be initialised in `anIntermediateState` but no
 entry `SateAction`s will be executed as no transition is taking place.
 
+When the `StateMachine` ends no transition takes place. You can configure a `StateMachine` to
+transition to a `State` and then it ends in which case entry actions are executed for the
+configured `State` but no exit actions. Alternatively you can configure a `StateMachine` to end when
+it receives a `StateEvent` which would cause it to immediately stop with no actions executing.
+
 [previous page](03-api.md) --- [next page](05-events.md)
