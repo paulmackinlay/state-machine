@@ -5,7 +5,12 @@
 package com.webotech.statemachine.api;
 
 /**
- * Encapsulates the API for the listening to state transitions for a {@link StateMachine}.
+ * <p></p>Encapsulates the API for the listening to state transitions for a
+ * {@link StateMachine}.</p>
+ * <p>Generic types are
+ * <li>T - the context for the {@link StateMachine}</li>
+ * <li>S - the payload of the {@link StateEvent}</li>
+ * </p>
  */
 public interface StateMachineListener<T, S> {
 

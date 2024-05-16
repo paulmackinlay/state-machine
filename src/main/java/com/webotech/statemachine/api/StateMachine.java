@@ -15,6 +15,10 @@ package com.webotech.statemachine.api;
  * sm = sm.when(STOPPING).receives(DONE).itTransitionsTo(STOPPED);
  * when(STOPPED).itEnds();
  * </pre>
+ * <p>Generic types are
+ * <li>T - the context for the {@link StateMachine}</li>
+ * <li>S - the payload of the {@link StateEvent}</li>
+ * </p>
  */
 public interface StateMachine<T, S> {
 

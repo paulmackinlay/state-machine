@@ -5,10 +5,14 @@
 package com.webotech.statemachine.api;
 
 /**
- * Representation of a state of the state machine
+ * <p></p>Representation of a state of the state machine.</p>
+ * <p>Generic types are
+ * <li>T - the context for the {@link StateMachine}</li>
+ * <li>S - the payload of the {@link StateEvent}</li>
+ * </p>
  */
 public interface State<T, S> {
-  
+
   /**
    * This is called when the state machine transitions to this {@link State}. Any
    * {@link StateAction}s that has been assigned to state entry will fire.
