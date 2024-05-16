@@ -7,6 +7,7 @@ package com.webotech.statemachine;
 import com.webotech.statemachine.api.StateMachine;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.Level;
@@ -44,6 +45,12 @@ public class TestingUtil {
         throw new IllegalStateException(e);
       }
     }
+  }
+
+  public static OutputStream initStdOutStream() {
+    OutputStream stdOutStream = new ByteArrayOutputStream();
+    System.setOut(new PrintStream(stdOutStream));
+    return stdOutStream;
   }
 
   private static void addOutputStreamLogAppender(OutputStream logStream, String streamName) {

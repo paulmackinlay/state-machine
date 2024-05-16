@@ -202,10 +202,14 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
         }
       }
     }
-    notifyStateMachineListener(false, this.currentState, immediateEvent, this.initState);
-    this.initState.onEntry(immediateEvent, this);
-    notifyStateMachineListener(true, this.currentState, immediateEvent, this.initState);
-    this.currentState = this.initState;
+    //TODO test this to make sure you can't start it twice
+    if (isStarted()) {
+      throw new IllegalStateException("The state machine is already started");
+    }
+    currentState = initState;
+    notifyStateMachineListener(false, noState, immediateEvent, initState);
+    initState.onEntry(immediateEvent, this);
+    notifyStateMachineListener(true, noState, immediateEvent, initState);
   }
 
   @Override
