@@ -15,10 +15,10 @@ import java.util.Map.Entry;
 
 public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
-  private static final String RESERVED_STATE_NAME_END = "_END_";
+  static final String RESERVED_STATE_NAME_END = "_END_";
   private static final String RESERVED_STATE_NAME_UNINITIALISED = "_UNINITIALISED_";
   static final String RESERVED_STATE_NAME_NOOP = "_NOOP_";
-  private static final String RESERVED_STATE_EVENT_NAME_IMMEDIATE = "_immediate_";
+  static final String RESERVED_STATE_EVENT_NAME_IMMEDIATE = "_immediate_";
   static final List<String> reservedStateNames = List.of(RESERVED_STATE_NAME_UNINITIALISED,
       RESERVED_STATE_NAME_END, RESERVED_STATE_NAME_NOOP);
   private final StateEvent<S> immediateEvent;
@@ -183,6 +183,14 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
         this.stateMachineListener.onStateChangeBegin(fromState, stateEvent, toState);
       }
     }
+  }
+
+  StateEvent<S> getImmediateEvent() {
+    return this.immediateEvent;
+  }
+
+  State<T, S> getEndState() {
+    return this.endState;
   }
 
   @Override

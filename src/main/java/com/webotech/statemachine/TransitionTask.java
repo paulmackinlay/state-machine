@@ -42,5 +42,8 @@ public class TransitionTask<T, S> {
     machine.setCurrentState(toState);
     machine.getCurrentState().onEntry(event, machine);
     machine.notifyStateMachineListener(true, fromState, event, toState);
+    if (machine.getEndState().equals(states.get(toState).get(machine.getImmediateEvent()))) {
+      machine.setCurrentState(machine.getEndState());
+    }
   }
 }

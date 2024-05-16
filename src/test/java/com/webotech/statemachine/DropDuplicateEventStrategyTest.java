@@ -34,6 +34,10 @@ class DropDuplicateEventStrategyTest {
   private static final State<Void, Void> state2 = new NamedState("STATE-2");
   private static final State<Void, Void> noopState = new NamedState<>(
       GenericStateMachine.RESERVED_STATE_NAME_NOOP);
+  private static final State<Void, Void> endState = new NamedState<>(
+      GenericStateMachine.RESERVED_STATE_NAME_END);
+  private static final StateEvent<Void> immediateEvent = new NamedStateEvent<>(
+      GenericStateMachine.RESERVED_STATE_EVENT_NAME_IMMEDIATE);
   private final static int timeoutSecs = 5;
   private GenericStateMachine<Void, Void> stateMachine;
   private DropDuplicateEventStrategy<Void, Void> strategy;
@@ -50,6 +54,8 @@ class DropDuplicateEventStrategyTest {
 
     when(stateMachine.getNoopState()).thenReturn(noopState);
     when(stateMachine.getCurrentState()).thenReturn(state1);
+    when(stateMachine.getEndState()).thenReturn(endState);
+    when(stateMachine.getImmediateEvent()).thenReturn(immediateEvent);
     when(stateMachine.getEventQueueSize()).thenAnswer(i -> strategy.getEventQueueSize());
   }
 

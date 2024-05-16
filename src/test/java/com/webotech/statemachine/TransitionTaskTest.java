@@ -26,6 +26,10 @@ class TransitionTaskTest {
   private static final State<Void, Void> state2 = new NamedState("STATE-2");
   private static final State<Void, Void> noopState = new NamedState<>(
       GenericStateMachine.RESERVED_STATE_NAME_NOOP);
+  private static final State<Void, Void> endState = new NamedState<>(
+      GenericStateMachine.RESERVED_STATE_NAME_END);
+  private static final StateEvent<Void> immediateEvent = new NamedStateEvent<>(
+      GenericStateMachine.RESERVED_STATE_EVENT_NAME_IMMEDIATE);
   private BiConsumer<StateEvent<Void>, StateMachine<Void, Void>> unmappedEventHandler;
   private GenericStateMachine<Void, Void> stateMachine;
   private TransitionTask<Void, Void> transitionTask;
@@ -40,7 +44,8 @@ class TransitionTaskTest {
 
     when(stateMachine.getNoopState()).thenReturn(noopState);
     when(stateMachine.getCurrentState()).thenReturn(state1);
-
+    when(stateMachine.getEndState()).thenReturn(endState);
+    when(stateMachine.getImmediateEvent()).thenReturn(immediateEvent);
   }
 
   @Test

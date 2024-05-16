@@ -22,6 +22,7 @@ import org.apache.logging.log4j.core.layout.PatternLayout;
 public class TestingUtil {
 
   private static final long stateEventQueueTimeoutMills = 5000;
+  private static final long machineEndTimeoutMills = 10000;
   private static final AtomicInteger streamCount = new AtomicInteger();
 
   private TestingUtil() {
@@ -44,6 +45,25 @@ public class TestingUtil {
       } catch (InterruptedException e) {
         throw new IllegalStateException(e);
       }
+    }
+  }
+
+  public static void waitForMachineToEnd(StateMachine<?, ?> stateMachine) {
+    long millisStart = System.currentTimeMillis();
+    long runningTimeMills = 0;
+    while (stateMachine.isStarted() && !stateMachine.isEnded()
+        && runningTimeMills < machineEndTimeoutMills) {
+      runningTimeMills = System.currentTimeMillis() - millisStart;
+      try {
+        TimeUnit.MILLISECONDS.sleep(50);
+      } catch (InterruptedException e) {
+        throw new IllegalStateException(e);
+      }
+    }
+    if (runningTimeMills > machineEndTimeoutMills) {
+      throw new IllegalStateException(
+          "Time out while waiting for state machine to end, took longer than "
+              + machineEndTimeoutMills + " millis");
     }
   }
 
