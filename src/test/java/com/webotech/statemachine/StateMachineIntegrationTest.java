@@ -39,7 +39,10 @@ class StateMachineIntegrationTest {
         .receives(event1).itEnds();
 
     try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
+      assertFalse(stateMachine.isEnded());
+      assertFalse(stateMachine.isStarted());
       stateMachine.start();
+      assertTrue(stateMachine.isStarted());
       stateMachine.fire(event1);
       stateMachine.fire(event1);
       TestingUtil.waitForAllEventsToProcess(stateMachine);
@@ -50,6 +53,8 @@ class StateMachineIntegrationTest {
           + "Transitioned to STATE-2\n"
           + "Starting transition: STATE-2 + event-1 = _END_\n"
           + "Transitioned to _END_\n", log);
+      assertTrue(stateMachine.isEnded());
+      assertTrue(stateMachine.isStarted());
     }
   }
 
@@ -94,14 +99,15 @@ class StateMachineIntegrationTest {
 
   /*
   TODO
-  1. state machine that ends in a state
-  2. state machine that ends on event
+  1. state machine that ends in a state DONE
+  2. state machine that ends on event DONE
   3. state machine that goes in circles and then ends on event
-  4. state machine that logs
+  4. state machine that logs DONE
   5. state machine that notifies
   6. state machine that can be used to start an app
   7. context based
   8. events with payload
+  9. fire many events concurrently
    */
   @Test
   void shouldEndInAState() throws IOException {
@@ -109,17 +115,18 @@ class StateMachineIntegrationTest {
         new LoggingStateMachineListener<>()).build();
     stateMachine.initialSate(state1).receives(event1).itTransitionsTo(state2).when(state2).itEnds();
     try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
+      assertFalse(stateMachine.isEnded());
       assertFalse(stateMachine.isStarted());
       stateMachine.start();
       assertTrue(stateMachine.isStarted());
       stateMachine.fire(event1);
-//      TestingUtil.waitForAllEventsToProcess(stateMachine);
       TestingUtil.waitForMachineToEnd(stateMachine);
       assertEquals("Starting transition: _UNINITIALISED_ + _immediate_ = STATE-1\n"
           + "Transitioned to STATE-1\n"
           + "Starting transition: STATE-1 + event-1 = STATE-2\n"
           + "Transitioned to STATE-2\n", logStream.toString());
       assertTrue(stateMachine.isEnded());
+      assertTrue(stateMachine.isStarted());
     }
   }
 }
