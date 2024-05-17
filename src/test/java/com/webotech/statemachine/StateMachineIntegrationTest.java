@@ -142,6 +142,8 @@ class StateMachineIntegrationTest {
   8. events with payload
   9. fire many events concurrently
   10. state machine that starts in a specific state
+  11. Unmapped event handlers
+  12. no transition configuration
    */
   @Test
   void shouldEndInAState() throws IOException {
@@ -196,18 +198,18 @@ class StateMachineIntegrationTest {
     TestingUtil.waitForMachineToEnd(stateMachine);
 
     assertEquals(2, beginUpdates.size());
-    assertListenedRow(beginUpdates.get(0), "_UNINITIALISED_", "_immediate_", state1.getName());
-    assertListenedRow(beginUpdates.get(1), state1.getName(), event1.getName(), state2.getName());
+    assertNotifiedRow(beginUpdates.get(0), "_UNINITIALISED_", "_immediate_", state1.getName());
+    assertNotifiedRow(beginUpdates.get(1), state1.getName(), event1.getName(), state2.getName());
 
     assertEquals(2, endUpdates.size());
-    assertListenedRow(endUpdates.get(0), "_UNINITIALISED_", "_immediate_", state1.getName());
-    assertListenedRow(endUpdates.get(1), state1.getName(), event1.getName(), state2.getName());
+    assertNotifiedRow(endUpdates.get(0), "_UNINITIALISED_", "_immediate_", state1.getName());
+    assertNotifiedRow(endUpdates.get(1), state1.getName(), event1.getName(), state2.getName());
 
     assertEquals("Starting transition: _UNINITIALISED_ + _immediate_ = STATE-1\n"
         + "Transitioned to STATE-1\n", log);
   }
 
-  private void assertListenedRow(List<Object> row, String fromStateName, String eventName,
+  private void assertNotifiedRow(List<Object> row, String fromStateName, String eventName,
       String toStateName) {
     assertEquals(new NamedState<Void, Void>(fromStateName), row.get(0));
     assertEquals(new NamedStateEvent<Void>(eventName), row.get(1));
