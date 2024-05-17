@@ -1,7 +1,8 @@
 # state-machine
 
 This repo contains a [state machine API](src/main/java/com/webotech/statemachine/api) with a generic
-[implementation](src/main/java/com/webotech/statemachine/GenericStateMachine.java) written in core java that is thread safe.
+[implementation](src/main/java/com/webotech/statemachine/GenericStateMachine.java) written in core
+java that is thread safe.
 
 - State machine API with comprehensive javadoc
 - Generic implementation
@@ -12,15 +13,19 @@ This repo contains a [state machine API](src/main/java/com/webotech/statemachine
 You can find how core [concepts of a state machine](docs/01-intro.md) are implemented in the
 [documentation](docs/02-implementation.md) or you can dive directly into the code.
 
+The integration tests are useful to show various usecases for state-machine - please note that tests
+are desinged to run on systems with UNIX style line endings.
+
 **Note
-** although the current version is being used in production on a number of projects, the logic is still undergoing significant changes. You may want to wait for a major release version (1.0.0)
+** although the current version is being used in production on a number of projects, the logic is
+still undergoing significant changes. You may want to wait for a major release version (1.0.0)
 when it will become more stable.
 
 ## Use state-machine with maven or gradle
 
 This project is in maven central, to start using it just add this dependency to your POM
 
-```
+```xml
 <dependency>
     <groupId>com.webotech</groupId>
     <artifactId>state-machine</artifactId>
@@ -30,7 +35,7 @@ This project is in maven central, to start using it just add this dependency to 
 
 or this dependency in gradle
 
-```
+```groovy
 implementation 'com.webotech:state-machine:0.8.0'
 ```
 
