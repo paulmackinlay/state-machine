@@ -14,6 +14,8 @@ import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -53,6 +55,37 @@ class StateMachineIntegrationTest {
           + "Transitioned to STATE-2\n"
           + "Starting transition: STATE-2 + event-1 = _END_\n"
           + "Transitioned to _END_\n", log);
+      assertTrue(stateMachine.isEnded());
+      assertTrue(stateMachine.isStarted());
+    }
+  }
+
+  @Test
+  void shouldUseNamedLoggingStateMachineListener() throws IOException {
+    String name = "a-test-state-machine";
+    StateMachineListener<Void, Void> loggingStateMachineListener = new LoggingStateMachineListener<>(
+        name);
+    StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().setStateMachineListener(
+        loggingStateMachineListener).setName(name).build();
+    stateMachine.initialSate(state1).receives(event1).itTransitionsTo(state2).when(state2)
+        .receives(event1).itEnds();
+
+    try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
+      assertFalse(stateMachine.isEnded());
+      assertFalse(stateMachine.isStarted());
+      stateMachine.start();
+      assertTrue(stateMachine.isStarted());
+      stateMachine.fire(event1);
+      stateMachine.fire(event1);
+      TestingUtil.waitForAllEventsToProcess(stateMachine);
+      String log = logStream.toString();
+      assertEquals(
+          "Starting a-test-state-machine transition: _UNINITIALISED_ + _immediate_ = STATE-1\n"
+              + "a-test-state-machine transitioned to STATE-1\n"
+              + "Starting a-test-state-machine transition: STATE-1 + event-1 = STATE-2\n"
+              + "a-test-state-machine transitioned to STATE-2\n"
+              + "Starting a-test-state-machine transition: STATE-2 + event-1 = _END_\n"
+              + "a-test-state-machine transitioned to _END_\n", log);
       assertTrue(stateMachine.isEnded());
       assertTrue(stateMachine.isStarted());
     }
@@ -99,15 +132,16 @@ class StateMachineIntegrationTest {
 
   /*
   TODO
-  1. state machine that ends in a state DONE
-  2. state machine that ends on event DONE
+  DONE 1. state machine that ends in a state
+  DONE 2. state machine that ends on event
   3. state machine that goes in circles and then ends on event
-  4. state machine that logs DONE
-  5. state machine that notifies
+  DONE 4. state machine that logs
+  DONE 5. state machine that notifies
   6. state machine that can be used to start an app
   7. context based
   8. events with payload
   9. fire many events concurrently
+  10. state machine that starts in a specific state
    */
   @Test
   void shouldEndInAState() throws IOException {
@@ -128,5 +162,55 @@ class StateMachineIntegrationTest {
       assertTrue(stateMachine.isEnded());
       assertTrue(stateMachine.isStarted());
     }
+  }
+
+  @Test
+  void shouldNotifyStateChangesAndLogThem() throws IOException {
+    List<List<Object>> beginUpdates = new ArrayList<>();
+    List<List<Object>> endUpdates = new ArrayList<>();
+    StateMachineListener<Void, Void> listener = new StateMachineListener<Void, Void>() {
+      @Override
+      public void onStateChangeBegin(State<Void, Void> fromState, StateEvent<Void> event,
+          State<Void, Void> toState) {
+        beginUpdates.add(List.of(fromState, event, toState));
+      }
+
+      @Override
+      public void onStateChangeEnd(State<Void, Void> fromState, StateEvent<Void> event,
+          State<Void, Void> toState) {
+        endUpdates.add(List.of(fromState, event, toState));
+      }
+    };
+    MultiConsumerStateMachineListener<Void, Void> multiListener = new MultiConsumerStateMachineListener<>();
+    multiListener.add(new LoggingStateMachineListener<>());
+    multiListener.add(listener);
+    StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().setStateMachineListener(
+        multiListener).build();
+    stateMachine.initialSate(state1).receives(event1).itTransitionsTo(state2).when(state2).itEnds();
+    String log;
+    try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
+      stateMachine.start();
+      stateMachine.fire(event1);
+      log = logStream.toString();
+    }
+    TestingUtil.waitForMachineToEnd(stateMachine);
+
+    assertEquals(2, beginUpdates.size());
+    assertListenedRow(beginUpdates.get(0), "_UNINITIALISED_", "_immediate_", state1.getName());
+    assertListenedRow(beginUpdates.get(1), state1.getName(), event1.getName(), state2.getName());
+
+    assertEquals(2, endUpdates.size());
+    assertListenedRow(endUpdates.get(0), "_UNINITIALISED_", "_immediate_", state1.getName());
+    assertListenedRow(endUpdates.get(1), state1.getName(), event1.getName(), state2.getName());
+
+    assertEquals("Starting transition: _UNINITIALISED_ + _immediate_ = STATE-1\n"
+        + "Transitioned to STATE-1\n", log);
+  }
+
+  private void assertListenedRow(List<Object> row, String fromStateName, String eventName,
+      String toStateName) {
+    assertEquals(new NamedState<Void, Void>(fromStateName), row.get(0));
+    assertEquals(new NamedStateEvent<Void>(eventName), row.get(1));
+    assertEquals(new NamedState<Void, Void>(toStateName), row.get(2));
   }
 }
