@@ -13,12 +13,11 @@ java that is thread safe.
 You can find how core [concepts of a state machine](docs/01-intro.md) are implemented in the
 [documentation](docs/02-implementation.md) or you can dive directly into the code.
 
-The integration tests are useful to show various usecases for state-machine - please note that tests
-are desinged to run on systems with UNIX style line endings.
+The integration tests are useful to show various usecases for `state-machine`. Please note that
+tests are designed to run on systems with UNIX style line endings.
 
-**Note
-** although the current version is being used in production on a number of projects, the logic is
-still undergoing significant changes. You may want to wait for a major release version (1.0.0)
+**Note** although the current version is being used in production on a number of projects, the logic
+is still undergoing significant changes. You may want to wait for a major release version (1.0.0)
 when it will become more stable.
 
 ## Use state-machine with maven or gradle
