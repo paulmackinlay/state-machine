@@ -12,6 +12,8 @@ import java.util.concurrent.Executors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+//TODO is this needed? Just delete it
+
 /**
  * Responsible for firing {@link StateEvent}s into a {@link StateMachine}. The {@link StateEvent}s
  * can be fired asynchronously using an {@link ExecutorService} or bound to the current thread.
