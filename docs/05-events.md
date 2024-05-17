@@ -9,11 +9,11 @@ There are a couple of implementations and the default implementation is discusse
 When it comes to processing events, understanding the thread interaction in a `StateMachine` is
 important. It is typical for events to originate on I/O threads (like a messaging or RPC thread),
 however when you need to fire an event from a `StateAction` it will originate in the current thread.
-In order handle programatic flow originating from different threads in a consistent way, by
+In order to handle programatic flow originating from different threads in a consistent way, by
 default `GenericStateMachine` hands off processing to a single thread executor. This has the effect
 of
 
-- quickly freeing I/O threads thereby avoid blocking
+- quickly freeing I/O threads which avoids blocking
 - avoid thread contention when events originate on the current thread
 - guarantees events to be processed in the same order they were received
 - being thread-safe
@@ -59,6 +59,8 @@ Note that in many cases the payload of a `StateEvent` is not needed in which cas
 as `Void`.
 
 ### Duplicate events
+
+TODO - this is not right!
 
 If a `StateEvent` is received while the same `StateEvent` is being processed, by
 default `GenericStateMachine` will log it as a duplicate and ignore it. In most cases this is
