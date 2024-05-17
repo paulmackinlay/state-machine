@@ -79,6 +79,6 @@ NamedStateEvent[continue] caused transition away from NamedState[FIRST-STATE]
 NamedStateEvent[continue] caused transition to NamedState[SECOND-STATE]
 ```
 
-The state diagram is:
+The state diagram for this example is:
 
 ![](docs/media/Quick_start_diagram.png)
