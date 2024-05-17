@@ -55,6 +55,7 @@ extract values from a FIX message in the `StateAction`s processing logic. To fac
 approach, you can set a generic payload on a `StateEvent` which can then be accessed by
 a `StateAction` when it is being executed.
 
-In many cases the payload of a `StateEvent` is not needed in which case you can define it as `Void`.
+In many cases the payload of a `StateEvent` is not needed, in which case you can define it
+as `Void`.
 
 [previous page](04-configure.md) --- [next page](06-exceptions.md)
