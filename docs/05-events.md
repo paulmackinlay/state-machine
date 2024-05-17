@@ -49,28 +49,12 @@ and the `StateMachine`.
 
 ### Event payloads
 
-When events are driven by rich data messages like FIX messages during electronic trading, it can be
-convenient for the data in the message to be available to the `StateAction` as you may need to
-extract values from it in the processing logic. To facilitate this, the `StateEvent` allows a
-generic payload to be set on it which can then be accessed by the `StateAction` when it is being
-executed.
+When events are driven by rich data messages, like FIX messages during electronic trading, it can be
+convenient for the data to be available in the `StateAction`. This allows you, for example, to
+extract values from a FIX message in the `StateAction`s processing logic. To facilitate this
+approach, you can set a generic payload on a `StateEvent` which can then be accessed by
+a `StateAction` when it is being executed.
 
-Note that in many cases the payload of a `StateEvent` is not needed in which case you can define it
-as `Void`.
-
-### Duplicate events
-
-TODO - this is not right!
-
-If a `StateEvent` is received while the same `StateEvent` is being processed, by
-default `GenericStateMachine` will log it as a duplicate and ignore it. In most cases this is
-desirable but it could be that your logic relies upon processing _all_ `StateEvent` payloads or you
-wish to process the `StateEvent` after the transition has completed. For these cases duplicate
-events cannot be ignored and you will need to build the`StateMachine` as follows:
-
-```java
-//The StateMachine will not drop duplicate events
-StateMachine<> sm = new GenericStateMachine.Builder<>().processDuplicateEvents().build();
-```
+In many cases the payload of a `StateEvent` is not needed in which case you can define it as `Void`.
 
 [previous page](04-configure.md) --- [next page](06-exceptions.md)
