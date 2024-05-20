@@ -9,7 +9,6 @@ import static com.webotech.statemachine.service.LifecycleStateMachineFactory.err
 import static com.webotech.statemachine.service.LifecycleStateMachineFactory.startEvt;
 import static com.webotech.statemachine.service.LifecycleStateMachineFactory.stopEvt;
 
-import com.webotech.statemachine.EventManager;
 import com.webotech.statemachine.GenericStateMachine;
 import com.webotech.statemachine.HandleExceptionAction;
 import com.webotech.statemachine.HandleExceptionAction.ExceptionHandler;

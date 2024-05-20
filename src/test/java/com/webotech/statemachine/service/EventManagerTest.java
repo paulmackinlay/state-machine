@@ -2,13 +2,14 @@
  * Copyright (c) 2024 Paul Mackinlay <paul.mackinlay@gmail.com>
  */
 
-package com.webotech.statemachine;
+package com.webotech.statemachine.service;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.webotech.statemachine.NamedStateEvent;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import java.util.concurrent.ExecutorService;

@@ -2,7 +2,7 @@
  * Copyright (c) 2024 Paul Mackinlay <paul.mackinlay@gmail.com>
  */
 
-package com.webotech.statemachine;
+package com.webotech.statemachine.service;
 
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
@@ -11,8 +11,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-//TODO is this needed? Just delete it
 
 /**
  * Responsible for firing {@link StateEvent}s into a {@link StateMachine}. The {@link StateEvent}s
