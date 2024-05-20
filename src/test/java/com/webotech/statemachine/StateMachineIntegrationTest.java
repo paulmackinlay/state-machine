@@ -7,8 +7,10 @@ package com.webotech.statemachine;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.webotech.statemachine.api.State;
+import com.webotech.statemachine.api.StateAction;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
@@ -16,20 +18,24 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class StateMachineIntegrationTest {
 
+  public static final int TIMEOUT_MILLIS = 5000;
   private State<Void, Void> state1;
   private State<Void, Void> state2;
   private StateEvent<Void> event1;
+  private StateEvent<Void> event2;
 
   @BeforeEach
   void setup() {
     state1 = new NamedState<>("STATE-1");
     state2 = new NamedState<>("STATE-2");
     event1 = new NamedStateEvent<>("event-1");
+    event2 = new NamedStateEvent<>("event-2");
   }
 
   @Test
@@ -207,6 +213,74 @@ class StateMachineIntegrationTest {
 
     assertEquals("Starting transition: _UNINITIALISED_ + _immediate_ = STATE-1\n"
         + "Transitioned to STATE-1\n", log);
+  }
+
+  @Test
+  void shouldStopPerpetuallyActiveStateMachine() {
+    State<AtomicInteger, Void> aState1 = new NamedState<>("A-STATE-1");
+    State<AtomicInteger, Void> aState2 = new NamedState<>("A-STATE-2");
+
+    StateMachine<AtomicInteger, Void> paStateMachine = new GenericStateMachine.Builder<AtomicInteger, Void>().setContext(
+        new AtomicInteger()).build();
+    paStateMachine.initialSate(aState1).receives(event1).itTransitionsTo(aState2)
+        .when(aState2).receives(event1).itTransitionsTo(aState1);
+    StateAction<AtomicInteger, Void> incrementCountAction = (ev, sm) -> {
+      sm.getContext().incrementAndGet();
+      sm.fire(event1);
+    };
+    aState1.appendEntryActions(incrementCountAction);
+    aState2.appendEntryActions(incrementCountAction);
+    int minTransitions = 50;
+
+    paStateMachine.start();
+    long initMillis = System.currentTimeMillis();
+    long maxMillis = 0;
+    while (paStateMachine.getContext().get() <= minTransitions && maxMillis < TIMEOUT_MILLIS) {
+      maxMillis = System.currentTimeMillis() - initMillis;
+    }
+    paStateMachine.stop();
+    if (maxMillis > TIMEOUT_MILLIS) {
+      fail("Timed out");
+    }
+    TestingUtil.waitForMachineToEnd(paStateMachine);
+    assertTrue(paStateMachine.getContext().get() > minTransitions,
+        "Not enough transitions took place");
+    assertTrue(paStateMachine.isEnded(), "State machine ended");
+  }
+
+  @Test
+  void shouldStopPerpetuallyActiveStateMachineWithEvent() {
+    State<AtomicInteger, Void> aState1 = new NamedState<>("A-STATE-1");
+    State<AtomicInteger, Void> aState2 = new NamedState<>("A-STATE-2");
+
+    StateMachine<AtomicInteger, Void> paStateMachine = new GenericStateMachine.Builder<AtomicInteger, Void>().setContext(
+        new AtomicInteger()).build();
+    paStateMachine.initialSate(aState1).receives(event1).itTransitionsTo(aState2)
+        .when(aState1).receives(event2).itEnds()
+        .when(aState2).receives(event1).itTransitionsTo(aState1)
+        .when(aState2).receives(event2).itEnds();
+    StateAction<AtomicInteger, Void> incrementCountAction = (ev, sm) -> {
+      sm.getContext().incrementAndGet();
+      sm.fire(event1);
+    };
+    aState1.appendEntryActions(incrementCountAction);
+    aState2.appendEntryActions(incrementCountAction);
+
+    int minTransitions = 50;
+    paStateMachine.start();
+    long initMillis = System.currentTimeMillis();
+    long maxMillis = 0;
+    while (paStateMachine.getContext().get() <= minTransitions && maxMillis < TIMEOUT_MILLIS) {
+      maxMillis = System.currentTimeMillis() - initMillis;
+    }
+    paStateMachine.fire(event2);
+    if (maxMillis > TIMEOUT_MILLIS) {
+      fail("Timed out");
+    }
+    TestingUtil.waitForMachineToEnd(paStateMachine);
+    assertTrue(paStateMachine.getContext().get() > minTransitions,
+        "Not enough transitions took place");
+    assertTrue(paStateMachine.isEnded(), "State machine ended");
   }
 
   private void assertNotifiedRow(List<Object> row, String fromStateName, String eventName,

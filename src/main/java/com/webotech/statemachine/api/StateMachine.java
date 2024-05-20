@@ -107,4 +107,9 @@ public interface StateMachine<T, S> {
    * @return the number of {@link StateEvent}s that haven't completed processing.
    */
   int getEventQueueSize();
+
+  /**
+   * Stops the {@link StateMachine}
+   */
+  void stop();
 }

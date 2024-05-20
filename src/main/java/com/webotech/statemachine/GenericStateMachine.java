@@ -220,6 +220,11 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
   }
 
   @Override
+  public void stop() {
+    setCurrentState(this.endState);
+  }
+
+  @Override
   public void startInState(State<T, S> state) {
     if (!this.states.keySet().contains(state)) {
       throw new IllegalStateException("State [" + state + "] has not been configured");

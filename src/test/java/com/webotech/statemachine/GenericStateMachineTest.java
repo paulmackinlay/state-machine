@@ -124,6 +124,17 @@ class GenericStateMachineTest {
   }
 
   @Test
+  void shouldStop() {
+    StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().build()
+        .initialSate(state1).receives(event1).itTransitionsTo(state2).when(state2).receives(event1)
+        .itTransitionsTo(state1);
+    assertFalse(stateMachine.isEnded());
+    stateMachine.stop();
+    TestingUtil.waitForMachineToEnd(stateMachine);
+    assertTrue(stateMachine.isEnded());
+  }
+
+  @Test
   void shouldEnsureContextIsConsistent() {
     State<List<String>, Void> one = new NamedState<>("one");
     State<List<String>, Void> two = new NamedState<>("two");

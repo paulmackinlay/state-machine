@@ -44,7 +44,7 @@ public class TransitionTask<T, S> {
     machine.notifyStateMachineListener(true, fromState, event, toState);
     if (states.get(toState) == null || machine.getEndState()
         .equals(states.get(toState).get(machine.getImmediateEvent()))) {
-      machine.setCurrentState(machine.getEndState());
+      machine.stop();
     }
   }
 }
