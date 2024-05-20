@@ -1,4 +1,6 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.webotech</groupId>
   <artifactId>state-machine</artifactId>
@@ -196,12 +198,6 @@
           <groupId>org.apache.logging.log4j</groupId>
           <artifactId>log4j-core</artifactId>
           <version>${log4j2.version}</version>
-          <scope>test</scope>
-        </dependency>
-        <dependency>
-          <groupId>org.apache.logging.log4j</groupId>
-          <artifactId>log4j-core</artifactId>
-          <version>${log4j2.version}</version>
           <scope>runtime</scope>
         </dependency>
       </dependencies>
@@ -271,7 +267,7 @@
             <artifactId>maven-release-plugin</artifactId>
             <version>${maven-release-plugin.version}</version>
             <configuration>
-              <releaseProfiles>central</releaseProfiles>
+              <releaseProfiles>central,with-log4j-impl</releaseProfiles>
             </configuration>
           </plugin>
         </plugins>
