@@ -22,7 +22,9 @@ when it will become more stable.
 
 ## Use state-machine with maven or gradle
 
-This project is in maven central, to start using it just add this dependency to your POM
+This project is
+in [maven central](https://central.sonatype.com/artifact/com.webotech/state-machine), to start using
+it just add this dependency to your POM
 
 ```xml
 <dependency>
