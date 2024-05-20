@@ -140,7 +140,7 @@ class StateMachineIntegrationTest {
   TODO
   DONE 1. state machine that ends in a state
   DONE 2. state machine that ends on event
-  3. state machine that goes in circles and then ends on event
+  DONE 3. state machine that goes in circles and then ends on event
   DONE 4. state machine that logs
   DONE 5. state machine that notifies
   6. state machine that can be used to start an app
