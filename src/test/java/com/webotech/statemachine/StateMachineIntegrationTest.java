@@ -18,6 +18,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +33,9 @@ class StateMachineIntegrationTest {
   private State<Void, Void> state2;
   private StateEvent<Void> event1;
   private StateEvent<Void> event2;
+  private List<List<Object>> beginUpdates;
+  private List<List<Object>> endUpdates;
+  private StateMachineListener<Void, Void> collectorListener;
 
   @BeforeEach
   void setup() {
@@ -36,6 +43,22 @@ class StateMachineIntegrationTest {
     state2 = new NamedState<>("STATE-2");
     event1 = new NamedStateEvent<>("event-1");
     event2 = new NamedStateEvent<>("event-2");
+
+    beginUpdates = new ArrayList<>();
+    endUpdates = new ArrayList<>();
+    collectorListener = new StateMachineListener<>() {
+      @Override
+      public void onStateChangeBegin(State<Void, Void> fromState, StateEvent<Void> event,
+          State<Void, Void> toState) {
+        beginUpdates.add(List.of(fromState, event, toState));
+      }
+
+      @Override
+      public void onStateChangeEnd(State<Void, Void> fromState, StateEvent<Void> event,
+          State<Void, Void> toState) {
+        endUpdates.add(List.of(fromState, event, toState));
+      }
+    };
   }
 
   @Test
@@ -146,10 +169,11 @@ class StateMachineIntegrationTest {
   6. state machine that can be used to start an app
   7. context based
   8. events with payload
-  9. fire many events concurrently
+  DONE 9. fire many events concurrently
   10. state machine that starts in a specific state
   11. Unmapped event handlers
   12. no transition configuration
+  13. fire many events on many threads with actions that block for a random time, ensure it handles it gracefully
    */
   @Test
   void shouldEndInAState() throws IOException {
@@ -174,24 +198,9 @@ class StateMachineIntegrationTest {
 
   @Test
   void shouldNotifyStateChangesAndLogThem() throws IOException {
-    List<List<Object>> beginUpdates = new ArrayList<>();
-    List<List<Object>> endUpdates = new ArrayList<>();
-    StateMachineListener<Void, Void> listener = new StateMachineListener<Void, Void>() {
-      @Override
-      public void onStateChangeBegin(State<Void, Void> fromState, StateEvent<Void> event,
-          State<Void, Void> toState) {
-        beginUpdates.add(List.of(fromState, event, toState));
-      }
-
-      @Override
-      public void onStateChangeEnd(State<Void, Void> fromState, StateEvent<Void> event,
-          State<Void, Void> toState) {
-        endUpdates.add(List.of(fromState, event, toState));
-      }
-    };
     MultiConsumerStateMachineListener<Void, Void> multiListener = new MultiConsumerStateMachineListener<>();
     multiListener.add(new LoggingStateMachineListener<>());
-    multiListener.add(listener);
+    multiListener.add(collectorListener);
     StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().setStateMachineListener(
         multiListener).build();
     stateMachine.initialSate(state1).receives(event1).itTransitionsTo(state2).when(state2).itEnds();
@@ -281,6 +290,51 @@ class StateMachineIntegrationTest {
     assertTrue(paStateMachine.getContext().get() > minTransitions,
         "Not enough transitions took place");
     assertTrue(paStateMachine.isEnded(), "State machine ended");
+  }
+
+  @Test
+  void shouldHandleEventsOnManyThreads() throws InterruptedException {
+    StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().setStateMachineListener(
+        collectorListener).build();
+    stateMachine.initialSate(state1).receives(event1).itTransitionsTo(state2)
+        .when(state2).receives(event1).itTransitionsTo(state1)
+        .when(state1).receives(event2).itEnds()
+        .when(state2).receives(event2).itEnds();
+
+    int noEvents = 500;
+    CountDownLatch latch = new CountDownLatch(1);
+    AtomicInteger count = new AtomicInteger();
+    ExecutorService executor = Executors.newFixedThreadPool(30);
+    for (int i = 0; i < noEvents; i++) {
+      executor.execute(() -> {
+        try {
+          latch.await(5, TimeUnit.SECONDS);
+          stateMachine.fire(event1);
+        } catch (InterruptedException e) {
+          throw new IllegalStateException(e);
+        } finally {
+          count.incrementAndGet();
+        }
+      });
+    }
+    stateMachine.start();
+    latch.countDown();
+    while (count.incrementAndGet() < noEvents) {
+      TimeUnit.MILLISECONDS.sleep(50);
+    }
+    stateMachine.fire(event2);
+    TestingUtil.waitForMachineToEnd(stateMachine);
+
+    assertTrue(stateMachine.isEnded());
+    assertEquals(noEvents + 2, beginUpdates.size());
+    assertEquals(noEvents + 2, endUpdates.size());
+    for (int i = 0; i < beginUpdates.size() - 1; i++) {
+      if (i % 2 == 0) {
+        assertEquals(state1, beginUpdates.get(i).get(2));
+      } else {
+        assertEquals(state2, beginUpdates.get(i).get(2));
+      }
+    }
   }
 
   private void assertNotifiedRow(List<Object> row, String fromStateName, String eventName,

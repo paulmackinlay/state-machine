@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.StringJoiner;
 
 public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
@@ -285,6 +286,14 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
   State<T, S> getNoopState() {
     return this.noopState;
+  }
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", GenericStateMachine.class.getSimpleName() + "[", "]")
+        .add("currentState=" + currentState)
+        .add("context=" + context)
+        .toString();
   }
 
   public static class Builder<T, S> {

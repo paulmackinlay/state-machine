@@ -38,13 +38,19 @@ public class TestingUtil {
 
   public static void waitForAllEventsToProcess(StateMachine<?, ?> stateMachine) {
     long millisStart = System.currentTimeMillis();
-    while (stateMachine.getEventQueueSize() > 0
-        && System.currentTimeMillis() - millisStart < stateEventQueueTimeoutMills) {
+    long runningTimeMills = 0;
+    while (stateMachine.getEventQueueSize() > 0 && runningTimeMills < stateEventQueueTimeoutMills) {
       try {
         TimeUnit.MILLISECONDS.sleep(50);
       } catch (InterruptedException e) {
         throw new IllegalStateException(e);
       }
+      runningTimeMills = System.currentTimeMillis() - millisStart;
+    }
+    if (runningTimeMills > stateEventQueueTimeoutMills) {
+      throw new IllegalStateException(
+          "Time out while waiting for all events to process, took longer than "
+              + stateEventQueueTimeoutMills + " millis");
     }
   }
 
