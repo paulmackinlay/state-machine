@@ -226,12 +226,16 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     notifyStateMachineListener(true, noState, immediateEvent, initState);
   }
 
+  /**
+   * This causes an immediate stop of the {@link StateMachine}. Any queued {@link StateEvent}s will
+   * not process as expected and any {@link StateEvent} that is being processed may not complete as
+   * expected (a runtime exception is likely).
+   * <p>
+   * To gracefully stop a {@link StateMachine} a {@link StateEvent} should be configured to cause it
+   * to stop and fired.
+   */
   @Override
   public void stop() {
-    //TODO this should go at the beginning of the executor queue
-    // maybe you need to drain the queue first
-    // or document that it isn't thread-safe
-    // also maybe states need to be emptied
     setCurrentState(this.endState);
   }
 

@@ -30,6 +30,20 @@ class MultiConsumerStateMachineListenerTest {
   }
 
   @Test
+  void shouldConstructWithListeners() {
+    List<Object> beginData = new ArrayList<>();
+    List<Object> endData = new ArrayList<>();
+    multiConsumerStateMachineListener = new MultiConsumerStateMachineListener<>(
+        new TestStateMachineListener(beginData, endData), null);
+    assertTrue(beginData.isEmpty());
+    multiConsumerStateMachineListener.onStateChangeBegin(fromState, event, toState);
+    assertCallbackData(beginData, 1);
+    assertTrue(endData.isEmpty());
+    multiConsumerStateMachineListener.onStateChangeEnd(fromState, event, toState);
+    assertCallbackData(endData, 1);
+  }
+
+  @Test
   void shouldPassThroughToSingleListener() {
     List<Object> beginData = new ArrayList<>();
     List<Object> endData = new ArrayList<>();

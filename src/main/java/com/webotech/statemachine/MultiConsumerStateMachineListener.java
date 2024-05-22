@@ -21,7 +21,6 @@ public class MultiConsumerStateMachineListener<T, S> implements StateMachineList
 
   private final Map<StateMachineListener<T, S>, StateMachineListener<T, S>> consumers;
 
-  //TODO test this
   @SafeVarargs
   public MultiConsumerStateMachineListener(StateMachineListener<T, S>... listeners) {
     this.consumers = new ConcurrentHashMap<>();
