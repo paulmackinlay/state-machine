@@ -40,11 +40,7 @@ public class TestingUtil {
     long millisStart = System.currentTimeMillis();
     long runningTimeMills = 0;
     while (stateMachine.getEventQueueSize() > 0 && runningTimeMills < stateEventQueueTimeoutMills) {
-      try {
-        TimeUnit.MILLISECONDS.sleep(50);
-      } catch (InterruptedException e) {
-        throw new IllegalStateException(e);
-      }
+      sleep(50);
       runningTimeMills = System.currentTimeMillis() - millisStart;
     }
     if (runningTimeMills > stateEventQueueTimeoutMills) {
@@ -60,11 +56,7 @@ public class TestingUtil {
     while (stateMachine.isStarted() && !stateMachine.isEnded()
         && runningTimeMills < machineEndTimeoutMills) {
       runningTimeMills = System.currentTimeMillis() - millisStart;
-      try {
-        TimeUnit.MILLISECONDS.sleep(50);
-      } catch (InterruptedException e) {
-        throw new IllegalStateException(e);
-      }
+      sleep(50);
     }
     if (runningTimeMills > machineEndTimeoutMills) {
       throw new IllegalStateException(
@@ -77,6 +69,14 @@ public class TestingUtil {
     OutputStream stdOutStream = new ByteArrayOutputStream();
     System.setOut(new PrintStream(stdOutStream));
     return stdOutStream;
+  }
+
+  public static void sleep(long millis) {
+    try {
+      TimeUnit.MILLISECONDS.sleep(millis);
+    } catch (InterruptedException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   private static void addOutputStreamLogAppender(OutputStream logStream, String streamName) {

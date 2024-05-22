@@ -8,14 +8,20 @@ import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
+import com.webotech.statemachine.util.Threads;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringJoiner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
+  private static final Logger logger = LogManager.getLogger(GenericStateMachine.class);
   static final String RESERVED_STATE_NAME_END = "_END_";
   private static final String RESERVED_STATE_NAME_UNINITIALISED = "_UNINITIALISED_";
   static final String RESERVED_STATE_NAME_NOOP = "_NOOP_";
@@ -222,6 +228,10 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
   @Override
   public void stop() {
+    //TODO this should go at the beginning of the executor queue
+    // maybe you need to drain the queue first
+    // or document that it isn't thread-safe
+    // also maybe states need to be emptied
     setCurrentState(this.endState);
   }
 
@@ -302,6 +312,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     private T context;
     private StateMachineListener<T, S> stateMachineListener;
     private EventProcessingStrategy<T, S> eventProcessingStrategy;
+    private ExecutorService executor;
 
     public Builder<T, S> setName(String name) {
       this.name = name;
@@ -328,6 +339,17 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       return this;
     }
 
+    //TODO test this
+    Builder<T, S> setExecutor(ExecutorService executor) {
+      this.executor = executor;
+      return this;
+    }
+
+    //TODO test this
+    ExecutorService getExecutor() {
+      return executor;
+    }
+
     StateMachineListener<T, S> getStateMachineListener() {
       return stateMachineListener;
     }
@@ -340,10 +362,17 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       if (name == null) {
         name = "state-machine";
       }
+      if (executor == null) {
+        executor =
+            Executors.newSingleThreadExecutor(
+                Threads.newNamedDaemonThreadFactory(name,
+                    (t, e) -> logger.error("Unhandled exception in thread {}", t.getName(), e)));
+      }
       Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states = new HashMap<>();
       if (eventProcessingStrategy == null) {
-        this.eventProcessingStrategy = new DefaultEventStrategy.Builder<T, S>(name,
-            states).build();
+        //TODO executor should be a mandatory field
+        eventProcessingStrategy = new DefaultEventStrategy.Builder<T, S>(name,
+            states).setExecutor(executor).build();
       }
       return new GenericStateMachine<>(context, states, stateMachineListener,
           eventProcessingStrategy);

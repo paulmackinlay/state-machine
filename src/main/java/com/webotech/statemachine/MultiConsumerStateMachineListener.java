@@ -8,7 +8,9 @@ import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachineListener;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 /**
  * A {@link StateMachineListener} that lets you add/remove multiple other
@@ -19,8 +21,11 @@ public class MultiConsumerStateMachineListener<T, S> implements StateMachineList
 
   private final Map<StateMachineListener<T, S>, StateMachineListener<T, S>> consumers;
 
-  public MultiConsumerStateMachineListener() {
+  //TODO test this
+  @SafeVarargs
+  public MultiConsumerStateMachineListener(StateMachineListener<T, S>... listeners) {
     this.consumers = new ConcurrentHashMap<>();
+    Stream.of(listeners).filter(Objects::nonNull).forEach(this::add);
   }
 
   /**
