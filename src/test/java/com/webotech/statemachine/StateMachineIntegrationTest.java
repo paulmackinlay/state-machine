@@ -169,14 +169,89 @@ class StateMachineIntegrationTest {
   DONE 4. state machine that logs
   DONE 5. state machine that notifies
   6. state machine that can be used to start an app
-  7. context based
+  DONE 7. context based
   8. events with payload
   DONE 9. fire many events concurrently
   10. state machine that starts in a specific state
   11. Unmapped event handlers
   12. no transition configuration
-  13. fire many events on many threads with actions that block for a random time, ensure it handles it gracefully
+  DONE 13. fire many events on many threads with actions that block for a random time, ensure it handles it gracefully
    */
+
+  @Test
+  void shouldUseAContext() throws IOException {
+    TestContext context = new TestContext("test-context");
+    State<TestContext, Void> state1 = new NamedState<>("state1");
+    State<TestContext, Void> state2 = new NamedState<>("state2");
+    StateEvent<Void> event1 = new NamedStateEvent<>("event1");
+    StateEvent<Void> event2 = new NamedStateEvent<>("event2");
+    StateEvent<Void> end = new NamedStateEvent<>("end");
+
+    state1.appendEntryActions((ev, sm) -> {
+      TestContext ctxt = sm.getContext();
+      ctxt.timestamp = System.currentTimeMillis();
+      System.out.println(ctxt.name + " " + ctxt.counter);
+      int i = ctxt.counter.incrementAndGet();
+      if (i >= 20) {
+        sm.fire(end);
+      } else {
+        sm.fire(event1);
+      }
+    });
+    state1.appendExitActions((ev, sm) -> {
+      TestContext ctxt = sm.getContext();
+      ctxt.timestamp = System.currentTimeMillis();
+      ctxt.counter.incrementAndGet();
+    });
+    state2.appendEntryActions((ev, sm) -> {
+      TestContext ctxt = sm.getContext();
+      ctxt.timestamp = System.currentTimeMillis();
+      System.out.println(ctxt.name + " " + ctxt.counter);
+      ctxt.counter.incrementAndGet();
+      sm.fire(event2);
+    });
+    state2.appendExitActions((ev, sm) -> {
+      TestContext ctxt = sm.getContext();
+      ctxt.timestamp = System.currentTimeMillis();
+      ctxt.counter.incrementAndGet();
+    });
+
+    StateMachine<TestContext, Void> sm = new GenericStateMachine.Builder<TestContext, Void>().setContext(
+            context).build().initialSate(state1).receives(event1).itTransitionsTo(state2).when(state1)
+        .receives(end).itEnds().when(state2).receives(event2).itTransitionsTo(state1).when(state2)
+        .receives(end).itEnds();
+    try (OutputStream logStream = TestingUtil.initStdOutStream()) {
+      sm.start();
+      TestingUtil.waitForMachineToEnd(sm);
+      assertEquals(22, context.counter.get());
+      assertTrue(System.currentTimeMillis() >= context.timestamp);
+      assertEquals("test-context", context.name);
+      assertEquals("test-context 0\n"
+          + "test-context 2\n"
+          + "test-context 4\n"
+          + "test-context 6\n"
+          + "test-context 8\n"
+          + "test-context 10\n"
+          + "test-context 12\n"
+          + "test-context 14\n"
+          + "test-context 16\n"
+          + "test-context 18\n"
+          + "test-context 20\n", logStream.toString());
+    }
+  }
+
+  private static class TestContext {
+
+    final String name;
+    final AtomicInteger counter;
+    long timestamp = 0;
+
+    TestContext(String name) {
+      this.name = name;
+      this.counter = new AtomicInteger();
+    }
+  }
+
   @Test
   void shouldEndInAState() throws IOException {
     StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().setStateMachineListener(
