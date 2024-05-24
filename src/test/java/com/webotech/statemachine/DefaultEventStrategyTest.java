@@ -17,20 +17,28 @@ import com.webotech.statemachine.DefaultEventStrategy.Builder;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
+import com.webotech.statemachine.util.Threads;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 class DefaultEventStrategyTest {
 
+  private final static Logger logger = LogManager.getLogger(DefaultEventStrategyTest.class);
+  private final static ExecutorService executor = Executors.newSingleThreadExecutor(
+      Threads.newNamedDaemonThreadFactory("state-machine",
+          (t, e) -> logger.error("Unhandled exception in thread {}", t.getName(), e)));
   private static final StateEvent<Void> event1 = new NamedStateEvent<>("event1");
   private static final State<Void, Void> state1 = new NamedState("STATE-1");
   private static final State<Void, Void> state2 = new NamedState("STATE-2");
@@ -46,8 +54,8 @@ class DefaultEventStrategyTest {
         BiConsumer.class);
     Map<State<Void, Void>, Map<StateEvent<Void>, State<Void, Void>>> states = Map.of(state1,
         Map.of(event1, state2), state2, Map.of(event1, noopState));
-    strategy = new DefaultEventStrategy.Builder<Void, Void>("state-machine",
-        states).setUnmappedEventHandler(unmappedEventHandler).build();
+    strategy = new DefaultEventStrategy.Builder<Void, Void>(states,
+        executor).setUnmappedEventHandler(unmappedEventHandler).build();
 
     when(stateMachine.getNoopState()).thenReturn(noopState);
     when(stateMachine.getCurrentState()).thenReturn(state1);
@@ -114,16 +122,9 @@ class DefaultEventStrategyTest {
   void shouldBuildWithUnmappedEventHandler() {
     BiConsumer<StateEvent<Void>, StateMachine<Void, Void>> unmappedEventHander = (se, sm) -> {
     };
-    Builder<Void, Void> builder = new DefaultEventStrategy.Builder<Void, Void>("state-machine",
-        new HashMap<>()).setUnmappedEventHandler(unmappedEventHander);
+    Builder<Void, Void> builder = new DefaultEventStrategy.Builder<Void, Void>(new HashMap<>(),
+        executor).setUnmappedEventHandler(unmappedEventHander);
     assertSame(unmappedEventHander, builder.getUnmappedEventHandler());
   }
 
-  @Test
-  void shouldBuildWithExecutor() {
-    ExecutorService executor = mock(ExecutorService.class);
-    Builder<Void, Void> builder = new DefaultEventStrategy.Builder<Void, Void>("state-machine",
-        new HashMap<>()).setExecutor(executor);
-    assertSame(executor, builder.getExecutor());
-  }
 }

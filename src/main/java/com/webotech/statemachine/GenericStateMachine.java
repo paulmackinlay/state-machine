@@ -372,9 +372,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       }
       Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states = new HashMap<>();
       if (eventProcessingStrategy == null) {
-        //TODO executor should be a mandatory field
-        eventProcessingStrategy = new DefaultEventStrategy.Builder<T, S>(name,
-            states).setExecutor(executor).build();
+        eventProcessingStrategy = new DefaultEventStrategy.Builder<T, S>(states, executor).build();
       }
       return new GenericStateMachine<>(context, states, stateMachineListener,
           eventProcessingStrategy);
