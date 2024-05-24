@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -235,6 +236,14 @@ class GenericStateMachineTest {
     Builder<Void, Void> builder = new GenericStateMachine.Builder<Void, Void>().setEventProcessingStrategy(
         strategy);
     assertSame(strategy, builder.getEventProcessingStrategy());
+  }
+
+  @Test
+  void shouldBuildWithExecutorService() {
+    ExecutorService executor = mock(ExecutorService.class);
+    Builder<Void, Void> builder = new GenericStateMachine.Builder<Void, Void>().setExecutor(
+        executor);
+    assertSame(executor, builder.getExecutor());
   }
 
   @Test

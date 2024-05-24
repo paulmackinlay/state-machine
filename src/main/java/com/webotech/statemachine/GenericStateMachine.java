@@ -343,13 +343,11 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       return this;
     }
 
-    //TODO test this
     Builder<T, S> setExecutor(ExecutorService executor) {
       this.executor = executor;
       return this;
     }
 
-    //TODO test this
     ExecutorService getExecutor() {
       return executor;
     }
