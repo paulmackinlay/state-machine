@@ -20,6 +20,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.StringJoiner;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -170,13 +171,103 @@ class StateMachineIntegrationTest {
   DONE 5. state machine that notifies
   6. state machine that can be used to start an app
   DONE 7. context based
-  8. events with payload
+  DONE 8. events with payload
   DONE 9. fire many events concurrently
   10. state machine that starts in a specific state
   11. Unmapped event handlers
   12. no transition configuration
   DONE 13. fire many events on many threads with actions that block for a random time, ensure it handles it gracefully
    */
+
+  @Test
+  void shouldUseEventPayloadsOnIndividualEventInstancesToControlFlow() {
+    StringBuilder txtBuilder = new StringBuilder();
+    State<Void, TestPayload> state1 = new NamedState<>("state1");
+    State<Void, TestPayload> state2 = new NamedState<>("state2");
+    StateEvent<TestPayload> event1 = new NamedStateEvent<>("event1");
+    StateEvent<TestPayload> end = new NamedStateEvent<>("end");
+    state1.appendEntryActions((ev, sm) -> {
+      if (ev.getPayload() != null) {
+        int i = ev.getPayload().aNumber;
+        if (i == -1) {
+          sm.fire(end);
+        } else {
+          txtBuilder.append("Event [").append(ev.getName()).append("] ID: ").append(i).append("\n");
+        }
+      }
+    });
+    state2.appendEntryActions((ev, sm) -> {
+      int i = ev.getPayload().aNumber;
+      if (i == -1) {
+        sm.fire(end);
+      } else {
+        txtBuilder.append("Event [").append(ev.getName()).append("] ID: ").append(i).append("\n");
+      }
+    });
+    StateMachine<Void, TestPayload> sm = new GenericStateMachine.Builder<Void, TestPayload>().setStateMachineListener(
+            new LoggingStateMachineListener<>()).build()
+        .initialSate(state1).receives(event1).itTransitionsTo(state2).when(state1).receives(end)
+        .itEnds().when(state2).receives(event1).itTransitionsTo(state1).when(state2).receives(end)
+        .itEnds();
+    sm.start();
+    for (int id = 1; id < 5; id++) {
+      StateEvent<TestPayload> event = new NamedStateEvent<>(event1.getName());
+      event.setPayload(new TestPayload(id));
+      sm.fire(event);
+    }
+    StateEvent<TestPayload> event = new NamedStateEvent<>(event1.getName());
+    event.setPayload(new TestPayload(-1));
+    sm.fire(event);
+    TestingUtil.waitForMachineToEnd(sm);
+    assertEquals("Event [event1] ID: 1\n"
+        + "Event [event1] ID: 2\n"
+        + "Event [event1] ID: 3\n"
+        + "Event [event1] ID: 4\n", txtBuilder.toString());
+  }
+
+  @Test
+  void shouldUseEventPayloadsOnReusedEventInstancesToControlFlow() {
+    StringBuilder txtBuilder = new StringBuilder();
+    State<Void, TestPayload> state1 = new NamedState<>("state1");
+    State<Void, TestPayload> state2 = new NamedState<>("state2");
+    StateEvent<TestPayload> event1 = new NamedStateEvent<>("event1");
+    StateEvent<TestPayload> end = new NamedStateEvent<>("end");
+    state1.appendEntryActions((ev, sm) -> {
+      if (ev.getPayload() != null) {
+        int i = ev.getPayload().aNumber;
+        if (i == -1) {
+          sm.fire(end);
+        } else {
+          txtBuilder.append("Event [").append(ev.getName()).append("] ID: ").append(i).append("\n");
+        }
+      }
+    });
+    state2.appendEntryActions((ev, sm) -> {
+      int i = ev.getPayload().aNumber;
+      if (i == -1) {
+        sm.fire(end);
+      } else {
+        txtBuilder.append("Event [").append(ev.getName()).append("] ID: ").append(i).append("\n");
+      }
+    });
+    StateMachine<Void, TestPayload> sm = new GenericStateMachine.Builder<Void, TestPayload>().setStateMachineListener(
+            new LoggingStateMachineListener<>()).build()
+        .initialSate(state1).receives(event1).itTransitionsTo(state2).when(state1).receives(end)
+        .itEnds().when(state2).receives(event1).itTransitionsTo(state1).when(state2).receives(end)
+        .itEnds();
+    sm.start();
+    for (int id = 1; id < 5; id++) {
+      event1.setPayload(new TestPayload(id));
+      sm.fire(event1);
+    }
+    event1.setPayload(new TestPayload(-1));
+    sm.fire(event1);
+    TestingUtil.waitForMachineToEnd(sm);
+    assertEquals("Event [event1] ID: 1\n"
+        + "Event [event1] ID: 2\n"
+        + "Event [event1] ID: 3\n"
+        + "Event [event1] ID: 4\n", txtBuilder.toString());
+  }
 
   @Test
   void shouldUseAContext() throws IOException {
@@ -249,6 +340,22 @@ class StateMachineIntegrationTest {
     TestContext(String name) {
       this.name = name;
       this.counter = new AtomicInteger();
+    }
+  }
+
+  private static class TestPayload {
+
+    int aNumber;
+
+    TestPayload(int aNumber) {
+      this.aNumber = aNumber;
+    }
+
+    @Override
+    public String toString() {
+      return new StringJoiner(", ", TestPayload.class.getSimpleName() + "[", "]")
+          .add("aNumber=" + aNumber)
+          .toString();
     }
   }
 

@@ -46,8 +46,14 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
 
   @Override
   public void processEvent(StateEvent<S> stateEvent, GenericStateMachine<T, S> stateMachine) {
-    eventQueue.offer(new AbstractMap.SimpleEntry<>(stateEvent, stateMachine));
-
+    if (stateEvent.getPayload() != null) {
+      /* Use a safe copy of the StateEvent in case the client is
+        setting different payloads on the same event instance */
+      eventQueue.offer(
+          new AbstractMap.SimpleEntry<>(new NamedStateEvent<>(stateEvent), stateMachine));
+    } else {
+      eventQueue.offer(new AbstractMap.SimpleEntry<>(stateEvent, stateMachine));
+    }
     executor.execute(() -> {
       while (!eventQueue.isEmpty()) {
         Entry<StateEvent<S>, GenericStateMachine<T, S>> eventPair = eventQueue.peek();

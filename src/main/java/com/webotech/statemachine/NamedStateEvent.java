@@ -17,8 +17,16 @@ public final class NamedStateEvent<S> implements StateEvent<S> {
   private S payload;
 
   public NamedStateEvent(String name) {
+    this(name, null);
+  }
+
+  NamedStateEvent(StateEvent<S> stateEvent) {
+    this(stateEvent.getName(), stateEvent.getPayload());
+  }
+
+  private NamedStateEvent(String name, S payload) {
     this.name = name;
-    this.payload = null;
+    this.payload = payload;
   }
 
   @Override
