@@ -47,4 +47,9 @@ public class TransitionTask<T, S> {
       machine.stop();
     }
   }
+
+  //TODO I don't like this, it's not intuitive, some through needs to be put into how to better handled it
+  public Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> getStates() {
+    return states;
+  }
 }

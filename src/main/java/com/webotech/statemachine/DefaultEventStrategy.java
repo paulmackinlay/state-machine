@@ -52,6 +52,14 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
     } else {
       eventQueue.offer(new AbstractMap.SimpleEntry<>(stateEvent, stateMachine));
     }
+    /*
+    TODO catch exception and callback on a listener - should be like
+    UnexpectedFlowListener {
+      onExceptionDuringEventProcessing
+      onEventPostMachineEnd
+      onEventBeforeMachineStart
+    }
+     */
     executor.execute(() -> {
       while (!eventQueue.isEmpty()) {
         Entry<StateEvent<S>, GenericStateMachine<T, S>> eventPair = eventQueue.peek();
@@ -66,11 +74,16 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
     });
   }
 
+  @Override
+  public Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> getStates() {
+    return this.transitionTask.getStates();
+  }
+
   ConcurrentLinkedQueue<Entry<StateEvent<S>, GenericStateMachine<T, S>>> getEventQueue() {
     return eventQueue;
   }
 
-  static class Builder<T, S> {
+  public static class Builder<T, S> {
 
     private final Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states;
     private final ExecutorService executor;
@@ -80,7 +93,8 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
      * The {@link ExecutorService} passed in here will be responsible for processing events, a
      * single thread executor is needed to guarantee sequential processing.
      */
-    Builder(Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states, ExecutorService executor) {
+    public Builder(Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states,
+        ExecutorService executor) {
       this.states = states;
       this.executor = executor;
     }

@@ -47,6 +47,11 @@ public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy
     defaultStrategy.processEvent(stateEvent, stateMachine);
   }
 
+  @Override
+  public Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> getStates() {
+    return defaultStrategy.getStates();
+  }
+
   static class Builder<T, S> {
 
     private final Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states;

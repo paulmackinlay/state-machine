@@ -17,8 +17,12 @@ import com.webotech.statemachine.api.StateMachineListener;
 import com.webotech.statemachine.util.Threads;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.StringJoiner;
 import java.util.concurrent.CountDownLatch;
@@ -26,6 +30,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -174,7 +180,7 @@ class StateMachineIntegrationTest {
   DONE 8. events with payload
   DONE 9. fire many events concurrently
   10. state machine that starts in a specific state
-  11. Unmapped event handlers
+  DONE 11. Unmapped event handlers
   12. no transition configuration
   DONE 13. fire many events on many threads with actions that block for a random time, ensure it handles it gracefully
    */
@@ -592,6 +598,35 @@ class StateMachineIntegrationTest {
     } finally {
       executor.shutdownNow();
     }
+  }
+
+  @Test
+  void shouldUseUnmappedEventHandler() {
+    AtomicReference<Entry<StateEvent<Void>, State<Void, Void>>> unmappedData = new AtomicReference<>();
+    ExecutorService executor =
+        Executors.newSingleThreadExecutor();
+    Map<State<Void, Void>, Map<StateEvent<Void>, State<Void, Void>>> states = new HashMap<>();
+    BiConsumer<StateEvent<Void>, StateMachine<Void, Void>> unmappedEventHandler = (se, sm) -> {
+      unmappedData.set(new SimpleImmutableEntry<>(se, sm.getCurrentState()));
+    };
+    StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().setEventProcessingStrategy(
+        new DefaultEventStrategy.Builder<>(states, executor).setUnmappedEventHandler(
+            unmappedEventHandler).build()).build();
+
+    stateMachine.initialSate(state1).receives(event1).itTransitionsTo(state2)
+        .when(state1).receives(event2).itEnds()
+        .when(state2).receives(event2).itTransitionsTo(state1);
+    stateMachine.start();
+    stateMachine.fire(event1);
+    stateMachine.fire(event1);
+    stateMachine.fire(event2);
+    stateMachine.fire(event2);
+    TestingUtil.waitForMachineToEnd(stateMachine);
+
+    StateEvent<Void> unmappedEvent = unmappedData.get().getKey();
+    State<Void, Void> unmappedState = unmappedData.get().getValue();
+    assertEquals(event1, unmappedEvent);
+    assertEquals(state2, unmappedState);
   }
 
   private void assertNotifiedRow(List<Object> row, String fromStateName, String eventName,
