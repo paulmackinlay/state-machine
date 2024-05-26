@@ -20,7 +20,6 @@ import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.util.Threads;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -54,8 +53,9 @@ class DefaultEventStrategyTest {
         BiConsumer.class);
     Map<State<Void, Void>, Map<StateEvent<Void>, State<Void, Void>>> states = Map.of(state1,
         Map.of(event1, state2), state2, Map.of(event1, noopState));
-    strategy = new DefaultEventStrategy.Builder<Void, Void>(states,
-        executor).setUnmappedEventHandler(unmappedEventHandler).build();
+    strategy = new DefaultEventStrategy.Builder<Void, Void>(executor).setUnmappedEventHandler(
+        unmappedEventHandler).build();
+    strategy.setStates(states);
 
     when(stateMachine.getNoopState()).thenReturn(noopState);
     when(stateMachine.getCurrentState()).thenReturn(state1);
@@ -122,7 +122,7 @@ class DefaultEventStrategyTest {
   void shouldBuildWithUnmappedEventHandler() {
     BiConsumer<StateEvent<Void>, StateMachine<Void, Void>> unmappedEventHander = (se, sm) -> {
     };
-    Builder<Void, Void> builder = new DefaultEventStrategy.Builder<Void, Void>(new HashMap<>(),
+    Builder<Void, Void> builder = new DefaultEventStrategy.Builder<Void, Void>(
         executor).setUnmappedEventHandler(unmappedEventHander);
     assertSame(unmappedEventHander, builder.getUnmappedEventHandler());
   }

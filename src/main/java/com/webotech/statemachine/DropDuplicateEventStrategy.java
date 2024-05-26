@@ -48,13 +48,12 @@ public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy
   }
 
   @Override
-  public Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> getStates() {
-    return defaultStrategy.getStates();
+  public void setStates(Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states) {
+    defaultStrategy.setStates(states);
   }
 
   static class Builder<T, S> {
 
-    private final Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states;
     private final ExecutorService executor;
     private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
 
@@ -62,9 +61,7 @@ public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy
      * The {@link ExecutorService} passed in here will be responsible for processing events, a
      * single thread executor is needed to guarantee sequential processing.
      */
-    Builder(Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states,
-        ExecutorService executor) {
-      this.states = states;
+    Builder(ExecutorService executor) {
       this.executor = executor;
     }
 
@@ -83,9 +80,8 @@ public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy
         unmappedEventHandler = (ev, sm) -> logger.info(LOG_EVENT_NOT_MAPPED, ev.getName(),
             sm.getCurrentState().getName());
       }
-      DefaultEventStrategy<T, S> defaultEventStrategy = new DefaultEventStrategy.Builder<>(states,
-          executor)
-          .setUnmappedEventHandler(unmappedEventHandler).build();
+      DefaultEventStrategy<T, S> defaultEventStrategy = new DefaultEventStrategy.Builder<T, S>(
+          executor).setUnmappedEventHandler(unmappedEventHandler).build();
       return new DropDuplicateEventStrategy<>(defaultEventStrategy);
     }
   }

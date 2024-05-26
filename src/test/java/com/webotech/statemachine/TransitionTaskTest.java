@@ -40,7 +40,8 @@ class TransitionTaskTest {
     unmappedEventHandler = mock(BiConsumer.class);
     Map<State<Void, Void>, Map<StateEvent<Void>, State<Void, Void>>> states = Map.of(state1,
         Map.of(event1, state2), state2, Map.of(event1, noopState));
-    transitionTask = new TransitionTask<>(states, unmappedEventHandler);
+    transitionTask = new TransitionTask<>(unmappedEventHandler);
+    transitionTask.setStates(states);
 
     when(stateMachine.getNoopState()).thenReturn(noopState);
     when(stateMachine.getCurrentState()).thenReturn(state1);

@@ -29,12 +29,11 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
    * {@link StateEvent}s are processed. By default {@link StateEvent}s are processed in sequence, in
    * the order they were received.
    */
-  private DefaultEventStrategy(Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states,
-      BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler,
+  private DefaultEventStrategy(BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler,
       ExecutorService executor) {
     this.executor = executor;
     this.eventQueue = new ConcurrentLinkedQueue<>();
-    this.transitionTask = new TransitionTask<>(states, unmappedEventHandler);
+    this.transitionTask = new TransitionTask<>(unmappedEventHandler);
   }
 
   @Override
@@ -75,8 +74,8 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
   }
 
   @Override
-  public Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> getStates() {
-    return this.transitionTask.getStates();
+  public void setStates(Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states) {
+    this.transitionTask.setStates(states);
   }
 
   ConcurrentLinkedQueue<Entry<StateEvent<S>, GenericStateMachine<T, S>>> getEventQueue() {
@@ -85,7 +84,6 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
 
   public static class Builder<T, S> {
 
-    private final Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states;
     private final ExecutorService executor;
     private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
 
@@ -93,9 +91,7 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
      * The {@link ExecutorService} passed in here will be responsible for processing events, a
      * single thread executor is needed to guarantee sequential processing.
      */
-    public Builder(Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states,
-        ExecutorService executor) {
-      this.states = states;
+    public Builder(ExecutorService executor) {
       this.executor = executor;
     }
 
@@ -114,7 +110,7 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
         unmappedEventHandler = (ev, sm) -> logger.info(LOG_EVENT_NOT_MAPPED, ev.getName(),
             sm.getCurrentState().getName());
       }
-      return new DefaultEventStrategy<>(states, unmappedEventHandler, executor);
+      return new DefaultEventStrategy<>(unmappedEventHandler, executor);
     }
   }
 }

@@ -15,17 +15,15 @@ import java.util.function.BiConsumer;
  */
 public class TransitionTask<T, S> {
 
-  private final Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states;
   private final BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
+  private Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states;
 
-  public TransitionTask(Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states,
-      BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
-    this.states = states;
+  public TransitionTask(BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
     this.unmappedEventHandler = unmappedEventHandler;
   }
 
   void execute(StateEvent<S> event, GenericStateMachine<T, S> machine) {
-    State<T, S> toState = this.states.get(machine.getCurrentState()).get(event);
+    State<T, S> toState = states.get(machine.getCurrentState()).get(event);
     if (toState == null) {
       unmappedEventHandler.accept(event, machine);
       return;
@@ -48,8 +46,7 @@ public class TransitionTask<T, S> {
     }
   }
 
-  //TODO I don't like this, it's not intuitive, some through needs to be put into how to better handled it
-  public Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> getStates() {
-    return states;
+  public void setStates(Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states) {
+    this.states = states;
   }
 }

@@ -23,11 +23,10 @@ public interface EventProcessingStrategy<T, S> {
    * stateEvent. It will not be called if a stateEvent resulted in no transition.
    */
   void processEvent(StateEvent<S> stateEvent, GenericStateMachine<T, S> stateMachine);
-
+  
   /**
-   * @return the {@link Map} on configured states/events
-   * <p>
-   * TODO I don't like this, it's not intuitive, some through needs to be put into how to better handled it
+   * Sets the {@link Map} of states/event that are configured in the
+   * {@link com.webotech.statemachine.api.StateMachine}
    */
-  Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> getStates();
+  void setStates(Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states);
 }

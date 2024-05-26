@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import com.webotech.statemachine.DefaultEventStrategy.Builder;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateAction;
 import com.webotech.statemachine.api.StateEvent;
@@ -609,9 +610,11 @@ class StateMachineIntegrationTest {
     BiConsumer<StateEvent<Void>, StateMachine<Void, Void>> unmappedEventHandler = (se, sm) -> {
       unmappedData.set(new SimpleImmutableEntry<>(se, sm.getCurrentState()));
     };
+    DefaultEventStrategy<Void, Void> strategy = new Builder<Void, Void>(
+        executor).setUnmappedEventHandler(unmappedEventHandler).build();
+    strategy.setStates(states);
     StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().setEventProcessingStrategy(
-        new DefaultEventStrategy.Builder<>(states, executor).setUnmappedEventHandler(
-            unmappedEventHandler).build()).build();
+        strategy).build();
 
     stateMachine.initialSate(state1).receives(event1).itTransitionsTo(state2)
         .when(state1).receives(event2).itEnds()
