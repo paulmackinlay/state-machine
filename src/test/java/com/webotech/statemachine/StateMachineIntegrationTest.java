@@ -610,8 +610,9 @@ class StateMachineIntegrationTest {
     BiConsumer<StateEvent<Void>, StateMachine<Void, Void>> unmappedEventHandler = (se, sm) -> {
       unmappedData.set(new SimpleImmutableEntry<>(se, sm.getCurrentState()));
     };
+    UnexpectedFlowListener<Void, Void> unexpectedFlowListener = new DefaultUnexpectedFlowListener<>();
     DefaultEventStrategy<Void, Void> strategy = new Builder<Void, Void>(
-        executor).setUnmappedEventHandler(unmappedEventHandler).build();
+        executor, unexpectedFlowListener).setUnmappedEventHandler(unmappedEventHandler).build();
     strategy.setStates(states);
     StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().setEventProcessingStrategy(
         strategy).build();

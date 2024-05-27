@@ -377,7 +377,8 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
                     (t, e) -> logger.error("Unhandled exception in thread {}", t.getName(), e)));
       }
       if (eventProcessingStrategy == null) {
-        eventProcessingStrategy = new DefaultEventStrategy.Builder<T, S>(executor).build();
+        //TODO pass in a proper UnexpectedFlowListener
+        eventProcessingStrategy = new DefaultEventStrategy.Builder<T, S>(executor, null).build();
       }
       final Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states = new HashMap<>();
       eventProcessingStrategy.setStates(states);

@@ -55,14 +55,16 @@ public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy
   static class Builder<T, S> {
 
     private final ExecutorService executor;
+    private final UnexpectedFlowListener<T, S> unexpectedFlowListener;
     private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
 
     /**
      * The {@link ExecutorService} passed in here will be responsible for processing events, a
      * single thread executor is needed to guarantee sequential processing.
      */
-    Builder(ExecutorService executor) {
+    Builder(ExecutorService executor, UnexpectedFlowListener<T, S> unexpectedFlowListener) {
       this.executor = executor;
+      this.unexpectedFlowListener = unexpectedFlowListener;
     }
 
     public Builder<T, S> setUnmappedEventHandler(
@@ -81,7 +83,7 @@ public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy
             sm.getCurrentState().getName());
       }
       DefaultEventStrategy<T, S> defaultEventStrategy = new DefaultEventStrategy.Builder<T, S>(
-          executor).setUnmappedEventHandler(unmappedEventHandler).build();
+          executor, unexpectedFlowListener).setUnmappedEventHandler(unmappedEventHandler).build();
       return new DropDuplicateEventStrategy<>(defaultEventStrategy);
     }
   }

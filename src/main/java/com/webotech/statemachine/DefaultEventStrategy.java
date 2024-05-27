@@ -23,6 +23,7 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
   private final ConcurrentLinkedQueue<Entry<StateEvent<S>, GenericStateMachine<T, S>>> eventQueue;
   private final ExecutorService executor;
   private final TransitionTask<T, S> transitionTask;
+  private final UnexpectedFlowListener<T, S> unexpectedFlowListener;
 
   /**
    * The default {@link EventProcessingStrategy}, it transitions state atomically. All
@@ -30,10 +31,11 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
    * the order they were received.
    */
   private DefaultEventStrategy(BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler,
-      ExecutorService executor) {
+      ExecutorService executor, UnexpectedFlowListener<T, S> unexpectedFlowListener) {
     this.executor = executor;
     this.eventQueue = new ConcurrentLinkedQueue<>();
     this.transitionTask = new TransitionTask<>(unmappedEventHandler);
+    this.unexpectedFlowListener = unexpectedFlowListener;
   }
 
   @Override
@@ -51,14 +53,6 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
     } else {
       eventQueue.offer(new AbstractMap.SimpleEntry<>(stateEvent, stateMachine));
     }
-    /*
-    TODO catch exception and callback on a listener - should be like
-    UnexpectedFlowListener {
-      onExceptionDuringEventProcessing
-      onEventAfterMachineEnd
-      onEventBeforeMachineStart
-    }
-     */
     executor.execute(() -> {
       while (!eventQueue.isEmpty()) {
         Entry<StateEvent<S>, GenericStateMachine<T, S>> eventPair = eventQueue.peek();
@@ -66,6 +60,9 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
         GenericStateMachine<T, S> machine = eventPair.getValue();
         try {
           transitionTask.execute(event, machine);
+        } catch (Exception e) {
+          unexpectedFlowListener.onExceptionDuringEventProcessing(event, machine,
+              Thread.currentThread(), e);
         } finally {
           eventQueue.poll();
         }
@@ -85,14 +82,16 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
   public static class Builder<T, S> {
 
     private final ExecutorService executor;
+    private final UnexpectedFlowListener<T, S> unexpectedFlowListener;
     private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
 
     /**
      * The {@link ExecutorService} passed in here will be responsible for processing events, a
      * single thread executor is needed to guarantee sequential processing.
      */
-    public Builder(ExecutorService executor) {
+    public Builder(ExecutorService executor, UnexpectedFlowListener<T, S> unexpectedFlowListener) {
       this.executor = executor;
+      this.unexpectedFlowListener = unexpectedFlowListener;
     }
 
     public Builder<T, S> setUnmappedEventHandler(
@@ -110,7 +109,7 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
         unmappedEventHandler = (ev, sm) -> logger.info(LOG_EVENT_NOT_MAPPED, ev.getName(),
             sm.getCurrentState().getName());
       }
-      return new DefaultEventStrategy<>(unmappedEventHandler, executor);
+      return new DefaultEventStrategy<>(unmappedEventHandler, executor, unexpectedFlowListener);
     }
   }
 }

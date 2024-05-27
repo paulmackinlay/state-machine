@@ -49,7 +49,9 @@ class DropDuplicateEventStrategyTest {
     unmappedEventHandler = mock(BiConsumer.class);
     Map<State<Void, Void>, Map<StateEvent<Void>, State<Void, Void>>> states = Map.of(state1,
         Map.of(event1, state2), state2, Map.of(event1, noopState));
-    strategy = new DropDuplicateEventStrategy.Builder<Void, Void>(executor).setUnmappedEventHandler(
+    UnexpectedFlowListener<Void, Void> unexpectedFlowListener = mock(UnexpectedFlowListener.class);
+    strategy = new DropDuplicateEventStrategy.Builder<Void, Void>(executor,
+        unexpectedFlowListener).setUnmappedEventHandler(
         unmappedEventHandler).build();
     strategy.setStates(states);
 

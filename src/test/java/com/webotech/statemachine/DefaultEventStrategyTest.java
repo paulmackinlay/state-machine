@@ -5,21 +5,19 @@
 package com.webotech.statemachine;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.webotech.statemachine.DefaultEventStrategy.Builder;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
-import com.webotech.statemachine.util.Threads;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -35,9 +33,7 @@ import org.mockito.Mockito;
 class DefaultEventStrategyTest {
 
   private final static Logger logger = LogManager.getLogger(DefaultEventStrategyTest.class);
-  private final static ExecutorService executor = Executors.newSingleThreadExecutor(
-      Threads.newNamedDaemonThreadFactory("state-machine",
-          (t, e) -> logger.error("Unhandled exception in thread {}", t.getName(), e)));
+  private final static ExecutorService executor = Executors.newSingleThreadExecutor();
   private static final StateEvent<Void> event1 = new NamedStateEvent<>("event1");
   private static final State<Void, Void> state1 = new NamedState("STATE-1");
   private static final State<Void, Void> state2 = new NamedState("STATE-2");
@@ -45,6 +41,7 @@ class DefaultEventStrategyTest {
       GenericStateMachine.RESERVED_STATE_NAME_NOOP);
   private GenericStateMachine<Void, Void> stateMachine;
   private DefaultEventStrategy<Void, Void> strategy;
+  private UnexpectedFlowListener unexpectedFlowListener;
 
   @BeforeEach
   void setup() {
@@ -53,7 +50,9 @@ class DefaultEventStrategyTest {
         BiConsumer.class);
     Map<State<Void, Void>, Map<StateEvent<Void>, State<Void, Void>>> states = Map.of(state1,
         Map.of(event1, state2), state2, Map.of(event1, noopState));
-    strategy = new DefaultEventStrategy.Builder<Void, Void>(executor).setUnmappedEventHandler(
+    unexpectedFlowListener = mock(UnexpectedFlowListener.class);
+    strategy = new DefaultEventStrategy.Builder<Void, Void>(executor,
+        unexpectedFlowListener).setUnmappedEventHandler(
         unmappedEventHandler).build();
     strategy.setStates(states);
 
@@ -95,27 +94,14 @@ class DefaultEventStrategyTest {
   }
 
   @Test
-  void shouldHandleUncaughtException() throws IOException, InterruptedException {
-    CountDownLatch latch = new CountDownLatch(1);
-    when(stateMachine.getCurrentState()).thenAnswer(i -> {
-      try {
-        throw new IllegalStateException("test induced");
-      } finally {
-        latch.countDown();
-      }
-    });
-
-    try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
-      strategy.processEvent(event1, stateMachine);
-      if (!latch.await(1, TimeUnit.SECONDS)) {
-        fail("Timed out");
-      }
-      waitForEventsToProcess();
-      TimeUnit.MILLISECONDS.sleep(300);
-      String log = logStream.toString();
-      assertTrue(log.startsWith("Unhandled exception in thread state-machine-"));
-      assertTrue(log.contains("java.lang.IllegalStateException: test induced"));
-    }
+  void shouldHandleUncaughtException() {
+    IllegalStateException testInduced = new IllegalStateException("test induced");
+    when(stateMachine.getCurrentState()).thenThrow(testInduced);
+    verifyNoInteractions(unexpectedFlowListener);
+    strategy.processEvent(event1, stateMachine);
+    waitForEventsToProcess();
+    verify(unexpectedFlowListener, times(1)).onExceptionDuringEventProcessing(eq(event1),
+        eq(stateMachine), any(Thread.class), eq(testInduced));
   }
 
   @Test
@@ -123,7 +109,8 @@ class DefaultEventStrategyTest {
     BiConsumer<StateEvent<Void>, StateMachine<Void, Void>> unmappedEventHander = (se, sm) -> {
     };
     Builder<Void, Void> builder = new DefaultEventStrategy.Builder<Void, Void>(
-        executor).setUnmappedEventHandler(unmappedEventHander);
+        executor, new DefaultUnexpectedFlowListener<>()).setUnmappedEventHandler(
+        unmappedEventHander);
     assertSame(unmappedEventHander, builder.getUnmappedEventHandler());
   }
 
