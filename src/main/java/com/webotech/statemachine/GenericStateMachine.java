@@ -44,7 +44,8 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
   private GenericStateMachine(T context, Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states,
       StateMachineListener<T, S> stateMachineListener,
-      EventProcessingStrategy<T, S> eventProcessingStrategy) {
+      EventProcessingStrategy<T, S> eventProcessingStrategy,
+      UnexpectedFlowListener<T, S> unexpectedFlowListener) {
     this.states = states;
     this.immediateEvent = new NamedStateEvent<>(RESERVED_STATE_EVENT_NAME_IMMEDIATE);
     this.endState = new NamedState<>(RESERVED_STATE_NAME_END);
@@ -53,7 +54,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     this.context = context;
     this.stateMachineListener = stateMachineListener;
     this.eventProcessingStrategy = eventProcessingStrategy;
-    this.unexpectFlowListener = new DefaultUnexpectedFlowListener<>();
+    this.unexpectFlowListener = unexpectedFlowListener;
   }
 
   @SuppressWarnings("hiding")
@@ -376,14 +377,15 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
                 Threads.newNamedDaemonThreadFactory(name,
                     (t, e) -> logger.error("Unhandled exception in thread {}", t.getName(), e)));
       }
+      UnexpectedFlowListener<T, S> unexpectedFlowListener = new DefaultUnexpectedFlowListener<>();
       if (eventProcessingStrategy == null) {
-        //TODO pass in a proper UnexpectedFlowListener
-        eventProcessingStrategy = new DefaultEventStrategy.Builder<T, S>(executor, null).build();
+        eventProcessingStrategy = new DefaultEventStrategy.Builder<T, S>(executor,
+            unexpectedFlowListener).build();
       }
       final Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states = new HashMap<>();
       eventProcessingStrategy.setStates(states);
       return new GenericStateMachine<>(context, states, stateMachineListener,
-          eventProcessingStrategy);
+          eventProcessingStrategy, unexpectedFlowListener);
     }
   }
 }
