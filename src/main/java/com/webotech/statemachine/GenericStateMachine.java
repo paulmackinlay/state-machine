@@ -119,6 +119,8 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     assertMarkedStateDefined(true);
     assertEventNotMapped();
     this.states.get(this.markedState).put(this.markedEvent, this.noopState);
+    this.markedState = null;
+    this.markedEvent = null;
     return this;
   }
 

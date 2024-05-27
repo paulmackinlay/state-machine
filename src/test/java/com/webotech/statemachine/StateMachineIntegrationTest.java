@@ -180,9 +180,9 @@ class StateMachineIntegrationTest {
   DONE 7. context based
   DONE 8. events with payload
   DONE 9. fire many events concurrently
-  10. state machine that starts in a specific state
+  DONE 10. state machine that starts in a specific state
   DONE 11. Unmapped event handlers
-  12. no transition configuration
+  DONE 12. no transition configuration
   DONE 13. fire many events on many threads with actions that block for a random time, ensure it handles it gracefully
    */
 
@@ -630,6 +630,58 @@ class StateMachineIntegrationTest {
     State<Void, Void> unmappedState = unmappedData.get().getValue();
     assertEquals(event1, unmappedEvent);
     assertEquals(state2, unmappedState);
+  }
+
+  @Test
+  void shouldStartInSpecificState() {
+    StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().build();
+    stateMachine.initialSate(state1).receives(event1).itTransitionsTo(state2)
+        .when(state1).receives(event2).itEnds()
+        .when(state2).receives(event2).itTransitionsTo(state1);
+    assertFalse(stateMachine.isStarted());
+    assertFalse(stateMachine.isEnded());
+    stateMachine.startInState(state2);
+    assertTrue(stateMachine.isStarted());
+    assertFalse(stateMachine.isEnded());
+    assertEquals(state2, stateMachine.getCurrentState());
+    stateMachine.fire(event2);
+    stateMachine.fire(event2);
+    TestingUtil.waitForMachineToEnd(stateMachine);
+    assertTrue(stateMachine.isStarted());
+    assertTrue(stateMachine.isEnded());
+  }
+
+  @Test
+  void shouldSupportNoTransitionEvents() {
+    StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().setStateMachineListener(
+        collectorListener).build();
+    stateMachine.initialSate(state1).receives(event1).itTransitionsTo(state2)
+        .when(state1).receives(event2).itEnds()
+        .when(state2).receives(event1).itDoesNotTransition()
+        .when(state2).receives(event2).itTransitionsTo(state1);
+    stateMachine.start();
+    TestingUtil.waitForAllEventsToProcess(stateMachine);
+    assertEquals(state1, stateMachine.getCurrentState());
+    stateMachine.fire(event1);
+    TestingUtil.waitForAllEventsToProcess(stateMachine);
+    assertEquals(state2, stateMachine.getCurrentState());
+    assertEquals(2, beginUpdates.size());
+    assertEquals(2, endUpdates.size());
+    assertNotifiedRow(beginUpdates.get(1), state1.getName(), event1.getName(), state2.getName());
+    assertNotifiedRow(endUpdates.get(1), state1.getName(), event1.getName(), state2.getName());
+    stateMachine.fire(event1);
+    stateMachine.fire(event1);
+    TestingUtil.waitForAllEventsToProcess(stateMachine);
+    assertEquals(4, beginUpdates.size());
+    assertEquals(4, endUpdates.size());
+    assertNotifiedRow(beginUpdates.get(3), state2.getName(), event1.getName(),
+        GenericStateMachine.RESERVED_STATE_NAME_NOOP);
+    assertNotifiedRow(endUpdates.get(3), state2.getName(), event1.getName(),
+        GenericStateMachine.RESERVED_STATE_NAME_NOOP);
+    assertEquals(state2, stateMachine.getCurrentState());
+    stateMachine.fire(event2);
+    stateMachine.fire(event2);
+    TestingUtil.waitForMachineToEnd(stateMachine);
   }
 
   private void assertNotifiedRow(List<Object> row, String fromStateName, String eventName,
