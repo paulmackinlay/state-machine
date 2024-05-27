@@ -55,7 +55,7 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
     TODO catch exception and callback on a listener - should be like
     UnexpectedFlowListener {
       onExceptionDuringEventProcessing
-      onEventPostMachineEnd
+      onEventAfterMachineEnd
       onEventBeforeMachineStart
     }
      */

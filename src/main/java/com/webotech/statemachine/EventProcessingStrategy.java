@@ -10,6 +10,10 @@ import java.util.Map;
 
 /**
  * Encapsulates strategies for processing state machine transitions.
+ * <p>Generic types are
+ * <li>T - the context for the {@link com.webotech.statemachine.api.StateMachine}</li>
+ * <li>S - the payload of the {@link StateEvent}</li>
+ * </p>
  */
 public interface EventProcessingStrategy<T, S> {
 
@@ -23,7 +27,7 @@ public interface EventProcessingStrategy<T, S> {
    * stateEvent. It will not be called if a stateEvent resulted in no transition.
    */
   void processEvent(StateEvent<S> stateEvent, GenericStateMachine<T, S> stateMachine);
-  
+
   /**
    * Sets the {@link Map} of states/event that are configured in the
    * {@link com.webotech.statemachine.api.StateMachine}
