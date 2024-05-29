@@ -6,19 +6,15 @@ package com.webotech.statemachine;
 
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
-import com.webotech.statemachine.api.StateMachine;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.function.BiConsumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy<T, S> {
 
   private static final Logger logger = LogManager.getLogger(DropDuplicateEventStrategy.class);
-  private static final String LOG_EVENT_NOT_MAPPED = "StateEvent [{}] not mapped for state [{}], ignoring";
   public static final String EVENT_ALREADY_IN_QUEUE_WILL_DROP_IT = "Event [{}] already in queue, will drop it";
   private final DefaultEventStrategy<T, S> defaultStrategy;
 
@@ -28,7 +24,7 @@ public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy
    * dropped. {@link StateEvent}s in the queue are processed in sequence, in
    * the order they were received.
    */
-  private DropDuplicateEventStrategy(DefaultEventStrategy<T, S> defaultEventStrategy) {
+  public DropDuplicateEventStrategy(DefaultEventStrategy<T, S> defaultEventStrategy) {
     this.defaultStrategy = defaultEventStrategy;
   }
 
@@ -52,39 +48,4 @@ public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy
     defaultStrategy.setStates(states);
   }
 
-  static class Builder<T, S> {
-
-    private final ExecutorService executor;
-    private final UnexpectedFlowListener<T, S> unexpectedFlowListener;
-    private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
-
-    /**
-     * The {@link ExecutorService} passed in here will be responsible for processing events, a
-     * single thread executor is needed to guarantee sequential processing.
-     */
-    Builder(ExecutorService executor, UnexpectedFlowListener<T, S> unexpectedFlowListener) {
-      this.executor = executor;
-      this.unexpectedFlowListener = unexpectedFlowListener;
-    }
-
-    public Builder<T, S> setUnmappedEventHandler(
-        BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
-      this.unmappedEventHandler = unmappedEventHandler;
-      return this;
-    }
-
-    BiConsumer<StateEvent<S>, StateMachine<T, S>> getUnmappedEventHandler() {
-      return unmappedEventHandler;
-    }
-
-    public DropDuplicateEventStrategy<T, S> build() {
-      if (unmappedEventHandler == null) {
-        unmappedEventHandler = (ev, sm) -> logger.info(LOG_EVENT_NOT_MAPPED, ev.getName(),
-            sm.getCurrentState().getName());
-      }
-      DefaultEventStrategy<T, S> defaultEventStrategy = new DefaultEventStrategy.Builder<T, S>(
-          executor, unexpectedFlowListener).setUnmappedEventHandler(unmappedEventHandler).build();
-      return new DropDuplicateEventStrategy<>(defaultEventStrategy);
-    }
-  }
 }

@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.webotech.statemachine.DefaultEventStrategy.Builder;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateAction;
 import com.webotech.statemachine.api.StateEvent;
@@ -20,9 +19,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.StringJoiner;
@@ -606,14 +603,12 @@ class StateMachineIntegrationTest {
     AtomicReference<Entry<StateEvent<Void>, State<Void, Void>>> unmappedData = new AtomicReference<>();
     ExecutorService executor =
         Executors.newSingleThreadExecutor();
-    Map<State<Void, Void>, Map<StateEvent<Void>, State<Void, Void>>> states = new HashMap<>();
     BiConsumer<StateEvent<Void>, StateMachine<Void, Void>> unmappedEventHandler = (se, sm) -> {
       unmappedData.set(new SimpleImmutableEntry<>(se, sm.getCurrentState()));
     };
     UnexpectedFlowListener<Void, Void> unexpectedFlowListener = new DefaultUnexpectedFlowListener<>();
-    DefaultEventStrategy<Void, Void> strategy = new Builder<Void, Void>(
-        executor, unexpectedFlowListener).setUnmappedEventHandler(unmappedEventHandler).build();
-    strategy.setStates(states);
+    DefaultEventStrategy<Void, Void> strategy = new DefaultEventStrategy<>(unmappedEventHandler,
+        executor, unexpectedFlowListener);
     StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().setEventProcessingStrategy(
         strategy).build();
 

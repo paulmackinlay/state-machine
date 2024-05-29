@@ -4,7 +4,6 @@
 
 package com.webotech.statemachine;
 
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -14,7 +13,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.webotech.statemachine.DefaultEventStrategy.Builder;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
@@ -51,9 +49,8 @@ class DefaultEventStrategyTest {
     Map<State<Void, Void>, Map<StateEvent<Void>, State<Void, Void>>> states = Map.of(state1,
         Map.of(event1, state2), state2, Map.of(event1, noopState));
     unexpectedFlowListener = mock(UnexpectedFlowListener.class);
-    strategy = new DefaultEventStrategy.Builder<Void, Void>(executor,
-        unexpectedFlowListener).setUnmappedEventHandler(
-        unmappedEventHandler).build();
+    strategy = new DefaultEventStrategy<>(unmappedEventHandler, executor,
+        unexpectedFlowListener);
     strategy.setStates(states);
 
     when(stateMachine.getNoopState()).thenReturn(noopState);
@@ -102,16 +99,6 @@ class DefaultEventStrategyTest {
     waitForEventsToProcess();
     verify(unexpectedFlowListener, times(1)).onExceptionDuringEventProcessing(eq(event1),
         eq(stateMachine), any(Thread.class), eq(testInduced));
-  }
-
-  @Test
-  void shouldBuildWithUnmappedEventHandler() {
-    BiConsumer<StateEvent<Void>, StateMachine<Void, Void>> unmappedEventHander = (se, sm) -> {
-    };
-    Builder<Void, Void> builder = new DefaultEventStrategy.Builder<Void, Void>(
-        executor, new DefaultUnexpectedFlowListener<>()).setUnmappedEventHandler(
-        unmappedEventHander);
-    assertSame(unmappedEventHander, builder.getUnmappedEventHandler());
   }
 
 }

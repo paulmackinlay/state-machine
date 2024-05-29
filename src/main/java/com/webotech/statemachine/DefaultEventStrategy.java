@@ -19,7 +19,6 @@ import org.apache.logging.log4j.Logger;
 public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S> {
 
   private static final Logger logger = LogManager.getLogger(DefaultEventStrategy.class);
-  private static final String LOG_EVENT_NOT_MAPPED = "StateEvent [{}] not mapped for state [{}], ignoring";
   private final ConcurrentLinkedQueue<Entry<StateEvent<S>, GenericStateMachine<T, S>>> eventQueue;
   private final ExecutorService executor;
   private final TransitionTask<T, S> transitionTask;
@@ -30,7 +29,7 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
    * {@link StateEvent}s are processed. By default {@link StateEvent}s are processed in sequence, in
    * the order they were received.
    */
-  private DefaultEventStrategy(BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler,
+  public DefaultEventStrategy(BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler,
       ExecutorService executor, UnexpectedFlowListener<T, S> unexpectedFlowListener) {
     this.executor = executor;
     this.eventQueue = new ConcurrentLinkedQueue<>();
@@ -77,39 +76,5 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
 
   ConcurrentLinkedQueue<Entry<StateEvent<S>, GenericStateMachine<T, S>>> getEventQueue() {
     return eventQueue;
-  }
-
-  public static class Builder<T, S> {
-
-    private final ExecutorService executor;
-    private final UnexpectedFlowListener<T, S> unexpectedFlowListener;
-    private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
-
-    /**
-     * The {@link ExecutorService} passed in here will be responsible for processing events, a
-     * single thread executor is needed to guarantee sequential processing.
-     */
-    public Builder(ExecutorService executor, UnexpectedFlowListener<T, S> unexpectedFlowListener) {
-      this.executor = executor;
-      this.unexpectedFlowListener = unexpectedFlowListener;
-    }
-
-    public Builder<T, S> setUnmappedEventHandler(
-        BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
-      this.unmappedEventHandler = unmappedEventHandler;
-      return this;
-    }
-
-    BiConsumer<StateEvent<S>, StateMachine<T, S>> getUnmappedEventHandler() {
-      return unmappedEventHandler;
-    }
-
-    public DefaultEventStrategy<T, S> build() {
-      if (unmappedEventHandler == null) {
-        unmappedEventHandler = (ev, sm) -> logger.info(LOG_EVENT_NOT_MAPPED, ev.getName(),
-            sm.getCurrentState().getName());
-      }
-      return new DefaultEventStrategy<>(unmappedEventHandler, executor, unexpectedFlowListener);
-    }
   }
 }

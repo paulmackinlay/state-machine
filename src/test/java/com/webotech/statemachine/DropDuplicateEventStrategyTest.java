@@ -30,8 +30,8 @@ class DropDuplicateEventStrategyTest {
 
   private final static ExecutorService executor = Executors.newFixedThreadPool(1);
   private static final StateEvent<Void> event1 = new NamedStateEvent<>("event1");
-  private static final State<Void, Void> state1 = new NamedState("STATE-1");
-  private static final State<Void, Void> state2 = new NamedState("STATE-2");
+  private static final State<Void, Void> state1 = new NamedState<>("STATE-1");
+  private static final State<Void, Void> state2 = new NamedState<>("STATE-2");
   private static final State<Void, Void> noopState = new NamedState<>(
       GenericStateMachine.RESERVED_STATE_NAME_NOOP);
   private static final State<Void, Void> endState = new NamedState<>(
@@ -41,18 +41,17 @@ class DropDuplicateEventStrategyTest {
   private final static int timeoutSecs = 5;
   private GenericStateMachine<Void, Void> stateMachine;
   private DropDuplicateEventStrategy<Void, Void> strategy;
-  private BiConsumer<StateEvent<Void>, StateMachine<Void, Void>> unmappedEventHandler;
 
   @BeforeEach
   void setup() {
     stateMachine = mock(GenericStateMachine.class, Mockito.RETURNS_DEEP_STUBS);
-    unmappedEventHandler = mock(BiConsumer.class);
+    BiConsumer<StateEvent<Void>, StateMachine<Void, Void>> unmappedEventHandler = mock(
+        BiConsumer.class);
     Map<State<Void, Void>, Map<StateEvent<Void>, State<Void, Void>>> states = Map.of(state1,
         Map.of(event1, state2), state2, Map.of(event1, noopState));
     UnexpectedFlowListener<Void, Void> unexpectedFlowListener = mock(UnexpectedFlowListener.class);
-    strategy = new DropDuplicateEventStrategy.Builder<Void, Void>(executor,
-        unexpectedFlowListener).setUnmappedEventHandler(
-        unmappedEventHandler).build();
+    strategy = new DropDuplicateEventStrategy<>(
+        new DefaultEventStrategy<>(unmappedEventHandler, executor, unexpectedFlowListener));
     strategy.setStates(states);
 
     when(stateMachine.getNoopState()).thenReturn(noopState);

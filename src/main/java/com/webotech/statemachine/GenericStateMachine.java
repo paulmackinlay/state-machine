@@ -16,6 +16,7 @@ import java.util.Map.Entry;
 import java.util.StringJoiner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -55,6 +56,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     this.stateMachineListener = stateMachineListener;
     this.eventProcessingStrategy = eventProcessingStrategy;
     this.unexpectFlowListener = unexpectedFlowListener;
+    this.eventProcessingStrategy.setStates(this.states);
   }
 
   @SuppressWarnings("hiding")
@@ -319,11 +321,14 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
   public static class Builder<T, S> {
 
+    private static final String LOG_EVENT_NOT_MAPPED = "StateEvent [{}] not mapped for state [{}], ignoring";
     private String name;
     private T context;
     private StateMachineListener<T, S> stateMachineListener;
     private EventProcessingStrategy<T, S> eventProcessingStrategy;
     private ExecutorService executor;
+    private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
+    private UnexpectedFlowListener<T, S> unexpectedFlowListener;
 
     public Builder<T, S> setName(String name) {
       this.name = name;
@@ -367,6 +372,25 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       return eventProcessingStrategy;
     }
 
+    Builder<T, S> setUnmappedEventHandler(
+        BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
+      this.unmappedEventHandler = unmappedEventHandler;
+      return this;
+    }
+
+    BiConsumer<StateEvent<S>, StateMachine<T, S>> getUnmappedEventHandler() {
+      return this.unmappedEventHandler;
+    }
+
+    Builder<T, S> setUnexpectedFlowListener(UnexpectedFlowListener<T, S> unexpectedFlowListener) {
+      this.unexpectedFlowListener = unexpectedFlowListener;
+      return this;
+    }
+
+    UnexpectedFlowListener<T, S> getUnexpectedFlowListener() {
+      return this.unexpectedFlowListener;
+    }
+
     public GenericStateMachine<T, S> build() {
       if (name == null) {
         name = "state-machine";
@@ -377,14 +401,18 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
                 Threads.newNamedDaemonThreadFactory(name,
                     (t, e) -> logger.error("Unhandled exception in thread {}", t.getName(), e)));
       }
-      UnexpectedFlowListener<T, S> unexpectedFlowListener = new DefaultUnexpectedFlowListener<>();
-      if (eventProcessingStrategy == null) {
-        eventProcessingStrategy = new DefaultEventStrategy.Builder<T, S>(executor,
-            unexpectedFlowListener).build();
+      if (unexpectedFlowListener == null) {
+        unexpectedFlowListener = new DefaultUnexpectedFlowListener<>();
       }
-      final Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states = new HashMap<>();
-      eventProcessingStrategy.setStates(states);
-      return new GenericStateMachine<>(context, states, stateMachineListener,
+      if (unmappedEventHandler == null) {
+        unmappedEventHandler = (ev, sm) -> logger.info(LOG_EVENT_NOT_MAPPED, ev.getName(),
+            sm.getCurrentState().getName());
+      }
+      if (eventProcessingStrategy == null) {
+        eventProcessingStrategy = new DefaultEventStrategy<>(unmappedEventHandler, executor,
+            unexpectedFlowListener);
+      }
+      return new GenericStateMachine<>(context, new HashMap<>(), stateMachineListener,
           eventProcessingStrategy, unexpectedFlowListener);
     }
   }

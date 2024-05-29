@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -260,6 +261,23 @@ class GenericStateMachineTest {
     Builder<Void, Void> builder = new GenericStateMachine.Builder<Void, Void>().setStateMachineListener(
         listener);
     assertSame(listener, builder.getStateMachineListener());
+  }
+
+  @Test
+  void shouldBuildWithUnmappedEventHandler() {
+    BiConsumer<StateEvent<Void>, StateMachine<Void, Void>> unmappedEventHander = mock(
+        BiConsumer.class);
+    Builder<Void, Void> builder = new GenericStateMachine.Builder<Void, Void>().setUnmappedEventHandler(
+        unmappedEventHander);
+    assertSame(unmappedEventHander, builder.getUnmappedEventHandler());
+  }
+
+  @Test
+  void shouldBuildWithUnexpectedFlowListener() {
+    UnexpectedFlowListener<Void, Void> unexpectedFlowListener = mock(UnexpectedFlowListener.class);
+    Builder<Void, Void> builder = new GenericStateMachine.Builder<Void, Void>().setUnexpectedFlowListener(
+        unexpectedFlowListener);
+    assertSame(unexpectedFlowListener, builder.getUnexpectedFlowListener());
   }
 
   @Test
