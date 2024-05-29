@@ -35,7 +35,7 @@ class DefaultUnexpectedFlowListenerTest {
     try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
       unexpectedFlowListener.onExceptionDuringEventProcessing(event, stateMachine, thread, e);
       assertTrue(logStream.toString().startsWith(
-          "Unhandled exception while processing event NamedStateEvent[event] while in state null on thread test-thread\n"
+          "Unhandled exception while processing event NamedStateEvent[event] while in state null on thread [test-thread]\n"
               + "java.lang.IllegalStateException: test induced"));
     }
   }

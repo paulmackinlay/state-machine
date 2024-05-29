@@ -16,7 +16,7 @@ public class DefaultUnexpectedFlowListener<T, S> implements UnexpectedFlowListen
   @Override
   public void onExceptionDuringEventProcessing(StateEvent<S> stateEvent,
       StateMachine<T, S> stateMachine, Thread thread, Exception e) {
-    logger.error("Unhandled exception while processing event {} while in state {} on thread {}",
+    logger.error("Unhandled exception while processing event {} while in state {} on thread [{}]",
         stateEvent, stateMachine.getCurrentState(), thread.getName(), e);
   }
 
