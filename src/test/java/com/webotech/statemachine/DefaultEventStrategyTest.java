@@ -33,13 +33,13 @@ class DefaultEventStrategyTest {
   private final static Logger logger = LogManager.getLogger(DefaultEventStrategyTest.class);
   private final static ExecutorService executor = Executors.newSingleThreadExecutor();
   private static final StateEvent<Void> event1 = new NamedStateEvent<>("event1");
-  private static final State<Void, Void> state1 = new NamedState("STATE-1");
-  private static final State<Void, Void> state2 = new NamedState("STATE-2");
+  private static final State<Void, Void> state1 = new NamedState<>("STATE-1");
+  private static final State<Void, Void> state2 = new NamedState<>("STATE-2");
   private static final State<Void, Void> noopState = new NamedState<>(
       GenericStateMachine.RESERVED_STATE_NAME_NOOP);
   private GenericStateMachine<Void, Void> stateMachine;
   private DefaultEventStrategy<Void, Void> strategy;
-  private UnexpectedFlowListener unexpectedFlowListener;
+  private UnexpectedFlowListener<Void, Void> unexpectedFlowListener;
 
   @BeforeEach
   void setup() {

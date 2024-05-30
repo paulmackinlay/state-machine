@@ -13,12 +13,9 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S> {
 
-  private static final Logger logger = LogManager.getLogger(DefaultEventStrategy.class);
   private final ConcurrentLinkedQueue<Entry<StateEvent<S>, GenericStateMachine<T, S>>> eventQueue;
   private final ExecutorService executor;
   private final TransitionTask<T, S> transitionTask;

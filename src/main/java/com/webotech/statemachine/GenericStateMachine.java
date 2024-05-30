@@ -248,7 +248,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
   @Override
   public void startInState(State<T, S> state) {
-    if (!this.states.keySet().contains(state)) {
+    if (!this.states.containsKey(state)) {
       throw new IllegalStateException("State [" + state + "] has not been configured");
     }
     this.currentState = state;

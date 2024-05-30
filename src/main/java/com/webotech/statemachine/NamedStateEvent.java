@@ -44,6 +44,7 @@ public final class NamedStateEvent<S> implements StateEvent<S> {
     this.payload = payload;
   }
 
+  @SuppressWarnings({"unchecked", "rawtypes"})
   @Override
   public boolean equals(Object o) {
     if (this == o) {

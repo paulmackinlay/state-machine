@@ -51,14 +51,15 @@ class GenericStateMachineTest {
   }
 
   @Test
-  void shouldHandleUnsupportedEvent() {
+  void shouldHandleUnsupportedEvent() throws IOException {
     stateMachine.initialSate(state1).receives(event1).itEnds();
     stateMachine.start();
-    OutputStream logStream = TestingUtil.initLogCaptureStream();
-    stateMachine.fire(event2);
-    TestingUtil.waitForAllEventsToProcess(stateMachine);
-    assertEquals("StateEvent [event-2] not mapped for state [STATE-1], ignoring\n",
-        logStream.toString());
+    try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
+      stateMachine.fire(event2);
+      TestingUtil.waitForAllEventsToProcess(stateMachine);
+      assertEquals("StateEvent [event-2] not mapped for state [STATE-1], ignoring\n",
+          logStream.toString());
+    }
   }
 
   @Test
@@ -289,7 +290,7 @@ class GenericStateMachineTest {
 
   @Test
   void shouldPassEventToAction() {
-    AtomicReference<StateEvent> eventRef = new AtomicReference<>();
+    AtomicReference<StateEvent<Void>> eventRef = new AtomicReference<>();
     state1.appendExitActions((ev, sm) -> {
       eventRef.set(ev);
     });

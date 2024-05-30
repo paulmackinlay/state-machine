@@ -22,8 +22,8 @@ class TransitionTaskTest {
 
   private static final StateEvent<Void> event1 = new NamedStateEvent<>("event1");
   private static final StateEvent<Void> event2 = new NamedStateEvent<>("event2");
-  private static final State<Void, Void> state1 = new NamedState("STATE-1");
-  private static final State<Void, Void> state2 = new NamedState("STATE-2");
+  private static final State<Void, Void> state1 = new NamedState<>("STATE-1");
+  private static final State<Void, Void> state2 = new NamedState<>("STATE-2");
   private static final State<Void, Void> noopState = new NamedState<>(
       GenericStateMachine.RESERVED_STATE_NAME_NOOP);
   private static final State<Void, Void> endState = new NamedState<>(

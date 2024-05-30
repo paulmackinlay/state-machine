@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -62,7 +63,7 @@ class DropDuplicateEventStrategyTest {
   }
 
   @Test
-  void shouldDropDuplicateEvent() {
+  void shouldDropDuplicateEvent() throws IOException {
     CountDownLatch latch = new CountDownLatch(1);
     AtomicBoolean isFirstProcess = new AtomicBoolean();
     when(stateMachine.getCurrentState()).thenAnswer(i -> {
@@ -81,12 +82,13 @@ class DropDuplicateEventStrategyTest {
         * 1000)) {
       // niente
     }
-    OutputStream logStream = TestingUtil.initLogCaptureStream();
-    this.strategy.processEvent(event1, stateMachine);
-    latch.countDown();
-    TestingUtil.waitForAllEventsToProcess(stateMachine);
-    assertEquals("Event [NamedStateEvent[event1]] already in queue, will drop it\n",
-        logStream.toString());
-    verify(stateMachine, times(1)).setCurrentState(state2);
+    try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
+      this.strategy.processEvent(event1, stateMachine);
+      latch.countDown();
+      TestingUtil.waitForAllEventsToProcess(stateMachine);
+      assertEquals("Event [NamedStateEvent[event1]] already in queue, will drop it\n",
+          logStream.toString());
+      verify(stateMachine, times(1)).setCurrentState(state2);
+    }
   }
 }
