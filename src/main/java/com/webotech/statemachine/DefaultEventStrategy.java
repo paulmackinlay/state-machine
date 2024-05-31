@@ -51,7 +51,7 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
     }
     executor.execute(() -> {
       while (!eventQueue.isEmpty()) {
-        Entry<StateEvent<S>, GenericStateMachine<T, S>> eventPair = eventQueue.peek();
+        Entry<StateEvent<S>, GenericStateMachine<T, S>> eventPair = eventQueue.poll();
         StateEvent<S> event = eventPair.getKey();
         GenericStateMachine<T, S> machine = eventPair.getValue();
         try {
@@ -59,8 +59,6 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
         } catch (Exception e) {
           unexpectedFlowListener.onExceptionDuringEventProcessing(event, machine,
               Thread.currentThread(), e);
-        } finally {
-          eventQueue.poll();
         }
       }
     });
