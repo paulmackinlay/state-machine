@@ -492,41 +492,40 @@ class StateMachineIntegrationTest {
     int noEvents = 500;
     CountDownLatch latch = new CountDownLatch(1);
     AtomicInteger count = new AtomicInteger();
-    try (ExecutorService executor = Executors.newFixedThreadPool(30)) {
-      try {
-        for (int i = 0; i < noEvents; i++) {
-          executor.execute(() -> {
-            try {
-              latch.await(5, TimeUnit.SECONDS);
-              stateMachine.fire(event1);
-            } catch (InterruptedException e) {
-              throw new IllegalStateException(e);
-            } finally {
-              count.incrementAndGet();
-            }
-          });
-        }
-        stateMachine.start();
-        latch.countDown();
-        while (count.get() < noEvents) {
-          TestingUtil.sleep(50);
-        }
-        stateMachine.fire(event2);
-        TestingUtil.waitForMachineToEnd(stateMachine);
-
-        assertTrue(stateMachine.isEnded());
-        assertEquals(noEvents + 2, beginUpdates.size());
-        assertEquals(noEvents + 2, endUpdates.size());
-        for (int i = 0; i < beginUpdates.size() - 1; i++) {
-          if (i % 2 == 0) {
-            assertEquals(state1, beginUpdates.get(i).get(2));
-          } else {
-            assertEquals(state2, beginUpdates.get(i).get(2));
+    ExecutorService executor = Executors.newFixedThreadPool(30);
+    try {
+      for (int i = 0; i < noEvents; i++) {
+        executor.execute(() -> {
+          try {
+            latch.await(5, TimeUnit.SECONDS);
+            stateMachine.fire(event1);
+          } catch (InterruptedException e) {
+            throw new IllegalStateException(e);
+          } finally {
+            count.incrementAndGet();
           }
-        }
-      } finally {
-        executor.shutdownNow();
+        });
       }
+      stateMachine.start();
+      latch.countDown();
+      while (count.get() < noEvents) {
+        TestingUtil.sleep(50);
+      }
+      stateMachine.fire(event2);
+      TestingUtil.waitForMachineToEnd(stateMachine);
+
+      assertTrue(stateMachine.isEnded());
+      assertEquals(noEvents + 2, beginUpdates.size());
+      assertEquals(noEvents + 2, endUpdates.size());
+      for (int i = 0; i < beginUpdates.size() - 1; i++) {
+        if (i % 2 == 0) {
+          assertEquals(state1, beginUpdates.get(i).get(2));
+        } else {
+          assertEquals(state2, beginUpdates.get(i).get(2));
+        }
+      }
+    } finally {
+      executor.shutdownNow();
     }
   }
 
@@ -553,50 +552,49 @@ class StateMachineIntegrationTest {
 
     CountDownLatch latch = new CountDownLatch(1);
     AtomicInteger count = new AtomicInteger();
-    try (ExecutorService executor = Executors.newFixedThreadPool(30)) {
-      for (int i = 0; i < noEvents; i++) {
-        executor.execute(() -> {
-          try {
-            latch.await(5, TimeUnit.SECONDS);
-            TimeUnit.MILLISECONDS.sleep(randomMillis.removeFirst());
-            if (random.nextBoolean()) {
-              stateMachine.fire(event1);
-            } else {
-              stateMachine.fire(event2);
-            }
-          } catch (InterruptedException e) {
-            throw new IllegalStateException(e);
-          } finally {
-            count.incrementAndGet();
-          }
-        });
-      }
-      try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
-        stateMachine.start();
-        latch.countDown();
-        while (count.get() < noEvents) {
-          TestingUtil.sleep(50);
-        }
-        TestingUtil.waitForAllEventsToProcess(stateMachine);
-        stateMachine.stop();
-        TestingUtil.waitForMachineToEnd(stateMachine);
-        String log = logStream.toString();
-        assertTrue(log.contains("not mapped for state"));
-        assertTrue(log.contains("Starting transition:"));
-        assertTrue(stateMachine.isEnded());
-        assertFalse(beginUpdates.isEmpty());
-        assertEquals(endUpdates.size(), beginUpdates.size());
-        assertEquals(0, exceptions.size());
-        for (int i = 0; i < beginUpdates.size() - 1; i++) {
-          if (i % 2 == 0) {
-            assertEquals(state1, beginUpdates.get(i).get(2));
+    ExecutorService executor = Executors.newFixedThreadPool(30);
+    for (int i = 0; i < noEvents; i++) {
+      executor.execute(() -> {
+        try {
+          latch.await(5, TimeUnit.SECONDS);
+          TimeUnit.MILLISECONDS.sleep(randomMillis.remove(0));
+          if (random.nextBoolean()) {
+            stateMachine.fire(event1);
           } else {
-            assertEquals(state2, beginUpdates.get(i).get(2));
+            stateMachine.fire(event2);
           }
+        } catch (InterruptedException e) {
+          throw new IllegalStateException(e);
+        } finally {
+          count.incrementAndGet();
         }
-      } finally {
-        executor.shutdownNow();
+      });
+    }
+    try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
+      stateMachine.start();
+      latch.countDown();
+      while (count.get() < noEvents) {
+        TestingUtil.sleep(50);
       }
+      TestingUtil.waitForAllEventsToProcess(stateMachine);
+      stateMachine.stop();
+      TestingUtil.waitForMachineToEnd(stateMachine);
+      String log = logStream.toString();
+      assertTrue(log.contains("not mapped for state"));
+      assertTrue(log.contains("Starting transition:"));
+      assertTrue(stateMachine.isEnded());
+      assertFalse(beginUpdates.isEmpty());
+      assertEquals(endUpdates.size(), beginUpdates.size());
+      assertEquals(0, exceptions.size());
+      for (int i = 0; i < beginUpdates.size() - 1; i++) {
+        if (i % 2 == 0) {
+          assertEquals(state1, beginUpdates.get(i).get(2));
+        } else {
+          assertEquals(state2, beginUpdates.get(i).get(2));
+        }
+      }
+    } finally {
+      executor.shutdownNow();
     }
   }
 
