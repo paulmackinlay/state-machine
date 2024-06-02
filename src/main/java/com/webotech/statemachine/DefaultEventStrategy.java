@@ -22,8 +22,13 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
 
   /**
    * The default {@link EventProcessingStrategy}, it transitions state atomically. All
-   * {@link StateEvent}s are processed. By default {@link StateEvent}s are processed in sequence, in
-   * the order they were received.
+   * {@link StateEvent}s are processed. By default {@link StateEvent}s are processed in sequence,
+   * in the order they were received.
+   * <p>
+   * This {@link EventProcessingStrategy} is backed by an unbounded, lock-free and thread-safe
+   * queue. In the case where the sustained rate of {@link StateEvent}s received is higher than the
+   * rate they are being processed (slow consumption), it will ultimately lead to memory
+   * starvation and a possible our of memory error.
    */
   public DefaultEventStrategy(BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler,
       ExecutorService executor, UnexpectedFlowListener<T, S> unexpectedFlowListener,

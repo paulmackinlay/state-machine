@@ -22,6 +22,11 @@ public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy
    * that is received when the internal queue already contains the same {@link StateEvent} is
    * dropped. {@link StateEvent}s in the queue are processed in sequence, in
    * the order they were received.
+   * <p>
+   * This {@link EventProcessingStrategy} is backed by an unbounded, lock-free and thread-safe
+   * queue. In the case where the sustained rate of {@link StateEvent}s received is higher than the
+   * rate they are being processed (slow consumption), it will ultimately lead to memory
+   * starvation and a possible our of memory error.
    */
   public DropDuplicateEventStrategy(DefaultEventStrategy<T, S> defaultEventStrategy) {
     this.defaultStrategy = defaultEventStrategy;
