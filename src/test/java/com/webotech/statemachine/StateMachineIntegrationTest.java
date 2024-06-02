@@ -608,7 +608,7 @@ class StateMachineIntegrationTest {
     };
     UnexpectedFlowListener<Void, Void> unexpectedFlowListener = new DefaultUnexpectedFlowListener<>();
     DefaultEventStrategy<Void, Void> strategy = new DefaultEventStrategy<>(unmappedEventHandler,
-        executor, unexpectedFlowListener);
+        executor, unexpectedFlowListener, new EventMachinePairPool<>());
     StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().setEventProcessingStrategy(
         strategy).build();
 

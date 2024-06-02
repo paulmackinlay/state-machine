@@ -11,8 +11,6 @@ import static org.mockito.Mockito.when;
 import com.webotech.statemachine.api.StateEvent;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,9 +32,11 @@ class DropDuplicateEventStrategyTest {
 
   @Test
   void shouldDropDuplicateEvent() throws IOException {
-    ConcurrentLinkedQueue<Entry<StateEvent<Void>, GenericStateMachine<Void, Void>>> eventQueue = new ConcurrentLinkedQueue<>();
+    ConcurrentLinkedQueue<EventMachinePair<Void, Void>> eventQueue = new ConcurrentLinkedQueue<>();
     when(defaultStrategy.getEventQueue()).thenReturn(eventQueue);
-    eventQueue.offer(new SimpleImmutableEntry<>(event1, stateMachine));
+    EventMachinePair<Void, Void> eventMachinePair = new EventMachinePair<>();
+    eventMachinePair.setEventMachinePair(event1, stateMachine);
+    eventQueue.offer(eventMachinePair);
     try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
       this.strategy.processEvent(event1, stateMachine);
       assertEquals("Event [NamedStateEvent[event1]] already in queue, will drop it\n",

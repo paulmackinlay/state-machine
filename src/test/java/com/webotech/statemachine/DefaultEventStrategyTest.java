@@ -40,6 +40,7 @@ class DefaultEventStrategyTest {
   private GenericStateMachine<Void, Void> stateMachine;
   private DefaultEventStrategy<Void, Void> strategy;
   private UnexpectedFlowListener<Void, Void> unexpectedFlowListener;
+  private EventMachinePairPool<Void, Void> eventMachinePairPool;
 
   @BeforeEach
   void setup() {
@@ -49,12 +50,14 @@ class DefaultEventStrategyTest {
     Map<State<Void, Void>, Map<StateEvent<Void>, State<Void, Void>>> states = Map.of(state1,
         Map.of(event1, state2), state2, Map.of(event1, noopState));
     unexpectedFlowListener = mock(UnexpectedFlowListener.class);
+    eventMachinePairPool = mock(EventMachinePairPool.class);
     strategy = new DefaultEventStrategy<>(unmappedEventHandler, executor,
-        unexpectedFlowListener);
+        unexpectedFlowListener, eventMachinePairPool);
     strategy.setStates(states);
 
     when(stateMachine.getNoopState()).thenReturn(noopState);
     when(stateMachine.getCurrentState()).thenReturn(state1);
+    when(eventMachinePairPool.take()).thenReturn(new EventMachinePair<>());
   }
 
   @Test
@@ -99,6 +102,22 @@ class DefaultEventStrategyTest {
     waitForEventsToProcess();
     verify(unexpectedFlowListener, times(1)).onExceptionDuringEventProcessing(eq(event1),
         eq(stateMachine), any(Thread.class), eq(testInduced));
+  }
+
+  @Test
+  void shouldTakeAndGiveToPool() {
+    verify(eventMachinePairPool, times(0)).take();
+    verify(eventMachinePairPool, times(0)).give(any(EventMachinePair.class));
+    strategy.processEvent(event1, stateMachine);
+    waitForEventsToProcess();
+    verify(eventMachinePairPool, times(1)).take();
+    verify(eventMachinePairPool, times(1)).give(any(EventMachinePair.class));
+    IllegalStateException testInduced = new IllegalStateException("test induced");
+    when(stateMachine.getCurrentState()).thenThrow(testInduced);
+    strategy.processEvent(event1, stateMachine);
+    waitForEventsToProcess();
+    verify(eventMachinePairPool, times(2)).take();
+    verify(eventMachinePairPool, times(2)).give(any(EventMachinePair.class));
   }
 
 }
