@@ -78,7 +78,11 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
     this.transitionTask.setStates(states);
   }
 
-  ConcurrentLinkedQueue<EventMachinePair<T, S>> getEventQueue() {
+  protected ConcurrentLinkedQueue<EventMachinePair<T, S>> getEventQueue() {
     return eventQueue;
+  }
+
+  protected UnexpectedFlowListener<T, S> getUnexpectedFlowListener() {
+    return unexpectedFlowListener;
   }
 }
