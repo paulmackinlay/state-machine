@@ -19,6 +19,7 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
   private final TransitionTask<T, S> transitionTask;
   private final UnexpectedFlowListener<T, S> unexpectedFlowListener;
   private final EventMachinePairPool<T, S> eventMachinePairPool;
+  private final int maxQueueSize;
 
   /**
    * The default {@link EventProcessingStrategy}, it transitions state atomically. All
@@ -32,12 +33,13 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
    */
   public DefaultEventStrategy(BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler,
       ExecutorService executor, UnexpectedFlowListener<T, S> unexpectedFlowListener,
-      EventMachinePairPool<T, S> eventMachinePairPool) {
+      EventMachinePairPool<T, S> eventMachinePairPool, int maxQueueSize) {
     this.executor = executor;
     this.unexpectedFlowListener = unexpectedFlowListener;
     this.eventMachinePairPool = eventMachinePairPool;
     this.eventQueue = new ConcurrentLinkedQueue<>();
     this.transitionTask = new TransitionTask<>(unmappedEventHandler);
+    this.maxQueueSize = maxQueueSize;
   }
 
   @Override
@@ -47,6 +49,13 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
 
   @Override
   public void processEvent(StateEvent<S> stateEvent, GenericStateMachine<T, S> stateMachine) {
+    int queueSize = getEventQueueSize();
+    if (maxQueueSize > 0 && queueSize >= maxQueueSize) {
+      unexpectedFlowListener.onExceptionDuringEventProcessing(stateEvent, stateMachine,
+          Thread.currentThread(), new IllegalStateException(
+              String.format("Queue size is maxed out at %s - dropping event", queueSize)));
+      return;
+    }
     EventMachinePair<T, S> inboundPair = this.eventMachinePairPool.take();
     if (stateEvent.getPayload() != null) {
       /* Use a safe copy of the StateEvent in case the client is

@@ -7,6 +7,7 @@ package com.webotech.statemachine;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -22,15 +23,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 class DefaultEventStrategyTest {
 
-  private final static Logger logger = LogManager.getLogger(DefaultEventStrategyTest.class);
+  private static final int MAX_SIZE = 1;
   private final static ExecutorService executor = Executors.newSingleThreadExecutor();
   private static final StateEvent<Void> event1 = new NamedStateEvent<>("event1");
   private static final State<Void, Void> state1 = new NamedState<>("STATE-1");
@@ -39,6 +38,7 @@ class DefaultEventStrategyTest {
       GenericStateMachine.RESERVED_STATE_NAME_NOOP);
   private GenericStateMachine<Void, Void> stateMachine;
   private DefaultEventStrategy<Void, Void> strategy;
+  private DefaultEventStrategy<Void, Void> boundStrategy;
   private UnexpectedFlowListener<Void, Void> unexpectedFlowListener;
   private EventMachinePairPool<Void, Void> eventMachinePairPool;
 
@@ -52,8 +52,11 @@ class DefaultEventStrategyTest {
     unexpectedFlowListener = mock(UnexpectedFlowListener.class);
     eventMachinePairPool = mock(EventMachinePairPool.class);
     strategy = new DefaultEventStrategy<>(unmappedEventHandler, executor,
-        unexpectedFlowListener, eventMachinePairPool);
+        unexpectedFlowListener, eventMachinePairPool, -1);
     strategy.setStates(states);
+    boundStrategy = new DefaultEventStrategy<>(unmappedEventHandler, executor,
+        unexpectedFlowListener, eventMachinePairPool, MAX_SIZE);
+    boundStrategy.setStates(states);
 
     when(stateMachine.getNoopState()).thenReturn(noopState);
     when(stateMachine.getCurrentState()).thenReturn(state1);
@@ -72,11 +75,11 @@ class DefaultEventStrategyTest {
     strategy.processEvent(event1, stateMachine);
     strategy.processEvent(event1, stateMachine);
     latch.countDown();
-    waitForEventsToProcess();
+    waitForEventsToProcess(strategy);
     verify(stateMachine, times(2)).setCurrentState(any(State.class));
   }
 
-  private void waitForEventsToProcess() {
+  private void waitForEventsToProcess(DefaultEventStrategy<Void, Void> strategy) {
     try {
       int timeoutMillis = 5000;
       long startMillis = System.currentTimeMillis();
@@ -88,6 +91,8 @@ class DefaultEventStrategyTest {
       if (durationMillis > timeoutMillis) {
         fail("Timeout out");
       }
+      //TODO see if this can be improved
+      TestingUtil.sleep(100);
     } catch (InterruptedException e) {
       throw new IllegalStateException(e);
     }
@@ -99,7 +104,7 @@ class DefaultEventStrategyTest {
     when(stateMachine.getCurrentState()).thenThrow(testInduced);
     verifyNoInteractions(unexpectedFlowListener);
     strategy.processEvent(event1, stateMachine);
-    waitForEventsToProcess();
+    waitForEventsToProcess(strategy);
     verify(unexpectedFlowListener, times(1)).onExceptionDuringEventProcessing(eq(event1),
         eq(stateMachine), any(Thread.class), eq(testInduced));
   }
@@ -109,15 +114,43 @@ class DefaultEventStrategyTest {
     verify(eventMachinePairPool, times(0)).take();
     verify(eventMachinePairPool, times(0)).give(any(EventMachinePair.class));
     strategy.processEvent(event1, stateMachine);
-    waitForEventsToProcess();
+    waitForEventsToProcess(strategy);
     verify(eventMachinePairPool, times(1)).take();
     verify(eventMachinePairPool, times(1)).give(any(EventMachinePair.class));
     IllegalStateException testInduced = new IllegalStateException("test induced");
     when(stateMachine.getCurrentState()).thenThrow(testInduced);
     strategy.processEvent(event1, stateMachine);
-    waitForEventsToProcess();
+    waitForEventsToProcess(strategy);
     verify(eventMachinePairPool, times(2)).take();
     verify(eventMachinePairPool, times(2)).give(any(EventMachinePair.class));
   }
 
+  @Test
+  void shouldDropMaxedOutEvents() {
+    StateEvent<Void> event1 = mock(StateEvent.class);
+    GenericStateMachine<Void, Void> stateMachine = mock(GenericStateMachine.class);
+    CountDownLatch latch = new CountDownLatch(1);
+    when(stateMachine.getCurrentState()).thenAnswer(i -> {
+      if (!latch.await(1, TimeUnit.SECONDS)) {
+        fail("Timed out");
+      }
+      return state1;
+    });
+    verifyNoInteractions(unexpectedFlowListener);
+    boundStrategy.processEvent(event1, stateMachine);
+    verifyNoInteractions(unexpectedFlowListener);
+    boundStrategy.processEvent(event1, stateMachine);
+    waitForEventsToProcess(boundStrategy);
+    verify(stateMachine, times(1)).getCurrentState();
+    verify(unexpectedFlowListener, times(1)).onExceptionDuringEventProcessing(eq(event1),
+        eq(stateMachine), eq(Thread.currentThread()), any(IllegalStateException.class));
+  }
+
+  @Test
+  void shouldProcessEvent() {
+    boundStrategy.processEvent(event1, stateMachine);
+    waitForEventsToProcess(boundStrategy);
+    verifyNoInteractions(unexpectedFlowListener);
+    verify(stateMachine, atLeast(1)).getCurrentState();
+  }
 }

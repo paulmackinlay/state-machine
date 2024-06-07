@@ -48,6 +48,8 @@ public class TestingUtil {
           "Time out while waiting for all events to process, took longer than "
               + stateEventQueueTimeoutMills + " millis");
     }
+    //TODO this might need to be improved
+    sleep(100);
   }
 
   public static void waitForMachineToEnd(StateMachine<?, ?> stateMachine) {
