@@ -21,7 +21,7 @@ class BoundQueueEventStrategyTest {
   private static final int MAX_SIZE = 2;
   private BoundQueueEventStrategy<Void, Void> strategy;
   private DefaultEventStrategy<Void, Void> defaultEventStrategy;
-  private UnexpectedFlowListener unexpectedFlowListener;
+  private UnexpectedFlowListener<Void, Void> unexpectedFlowListener;
 
   @BeforeEach
   void setup() {
@@ -40,6 +40,8 @@ class BoundQueueEventStrategyTest {
     strategy.processEvent(event1, stateMachine);
     verify(unexpectedFlowListener, times(1)).onExceptionDuringEventProcessing(eq(event1),
         eq(stateMachine), eq(Thread.currentThread()), any(IllegalStateException.class));
+    verify(defaultEventStrategy, times(0)).processEvent(any(StateEvent.class),
+        any(GenericStateMachine.class));
   }
 
   @Test

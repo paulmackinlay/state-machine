@@ -46,6 +46,7 @@ public class BoundQueueEventStrategy<T, S> implements EventProcessingStrategy<T,
       unexpectedFlowListener.onExceptionDuringEventProcessing(stateEvent, stateMachine,
           Thread.currentThread(), new IllegalStateException(
               String.format("Queue size is maxed out at %s - dropping event", queueSize)));
+      return;
     }
     defaultEventStrategy.processEvent(stateEvent, stateMachine);
   }
