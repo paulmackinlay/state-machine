@@ -9,6 +9,7 @@ import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import java.util.Map;
 
+//TODO - delete this, the functionality has been put into the default strategy
 public class BoundQueueEventStrategy<T, S> implements EventProcessingStrategy<T, S> {
 
   private final DefaultEventStrategy<T, S> defaultEventStrategy;

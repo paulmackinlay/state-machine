@@ -409,6 +409,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
             sm.getCurrentState().getName());
       }
       if (eventProcessingStrategy == null) {
+        //TODO builder should be able to take maxQueueSize
         eventProcessingStrategy = new DefaultEventStrategy<>(unmappedEventHandler, executor,
             unexpectedFlowListener, new EventMachinePairPool<>(), -1);
       }
