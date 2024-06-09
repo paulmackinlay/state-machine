@@ -289,6 +289,14 @@ class GenericStateMachineTest {
   }
 
   @Test
+  void shouldBuildWithQueueSize() {
+    int queueSize = 123;
+    Builder<Void, Void> builder = new GenericStateMachine.Builder<Void, Void>().setMaxQueueSize(
+        queueSize);
+    assertEquals(queueSize, builder.getMaxQueueSize());
+  }
+
+  @Test
   void shouldPassEventToAction() {
     AtomicReference<StateEvent<Void>> eventRef = new AtomicReference<>();
     state1.appendExitActions((ev, sm) -> {

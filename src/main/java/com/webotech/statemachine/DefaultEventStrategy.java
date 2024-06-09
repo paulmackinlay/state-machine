@@ -26,10 +26,18 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
    * {@link StateEvent}s are processed. By default {@link StateEvent}s are processed in sequence,
    * in the order they were received.
    * <p>
-   * This {@link EventProcessingStrategy} is backed by an unbounded, lock-free and thread-safe
-   * queue. In the case where the sustained rate of {@link StateEvent}s received is higher than the
-   * rate they are being processed (slow consumption), it will ultimately lead to memory
-   * starvation and a possible our of memory error.
+   * This {@link EventProcessingStrategy} is backed by a lock-free and thread-safe queue. The
+   * maxQueueSize parameter is used control how many events can queue up for processing.
+   * <p>
+   * If the parameter is negative, the queue is unbound and in the case where the sustained rate of
+   * {@link StateEvent}s received is higher than the rate they are being processed (slow
+   * consumption), it will ultimately lead to memory starvation and a possible our of memory error.
+   * <p>
+   * If the maxQueueSize is positive it will bound the queue's size and in the case where the
+   * sustained rate of {@link StateEvent}s received is higher than the rate they are being processed
+   * (slow consumption), it will ultimately lead to {@link IllegalStateException}s being called back
+   * on {@link UnexpectedFlowListener#onExceptionDuringEventProcessing(StateEvent, StateMachine,
+   * Thread, Exception)} and the {@link StateEvent} will not be processed.
    */
   public DefaultEventStrategy(BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler,
       ExecutorService executor, UnexpectedFlowListener<T, S> unexpectedFlowListener,

@@ -329,6 +329,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     private ExecutorService executor;
     private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
     private UnexpectedFlowListener<T, S> unexpectedFlowListener;
+    private int maxQueueSize = -1;
 
     public Builder<T, S> setName(String name) {
       this.name = name;
@@ -344,18 +345,18 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       return this;
     }
 
-    Builder<T, S> setStateMachineListener(StateMachineListener<T, S> stateMachineListener) {
+    public Builder<T, S> setStateMachineListener(StateMachineListener<T, S> stateMachineListener) {
       this.stateMachineListener = stateMachineListener;
       return this;
     }
 
-    Builder<T, S> setEventProcessingStrategy(
+    public Builder<T, S> setEventProcessingStrategy(
         EventProcessingStrategy<T, S> eventProcessingStrategy) {
       this.eventProcessingStrategy = eventProcessingStrategy;
       return this;
     }
 
-    Builder<T, S> setExecutor(ExecutorService executor) {
+    public Builder<T, S> setExecutor(ExecutorService executor) {
       this.executor = executor;
       return this;
     }
@@ -372,7 +373,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       return eventProcessingStrategy;
     }
 
-    Builder<T, S> setUnmappedEventHandler(
+    public Builder<T, S> setUnmappedEventHandler(
         BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
       this.unmappedEventHandler = unmappedEventHandler;
       return this;
@@ -382,13 +383,23 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       return this.unmappedEventHandler;
     }
 
-    Builder<T, S> setUnexpectedFlowListener(UnexpectedFlowListener<T, S> unexpectedFlowListener) {
+    public Builder<T, S> setUnexpectedFlowListener(
+        UnexpectedFlowListener<T, S> unexpectedFlowListener) {
       this.unexpectedFlowListener = unexpectedFlowListener;
       return this;
     }
 
     UnexpectedFlowListener<T, S> getUnexpectedFlowListener() {
       return this.unexpectedFlowListener;
+    }
+
+    public Builder<T, S> setMaxQueueSize(int maxQueueSize) {
+      this.maxQueueSize = maxQueueSize;
+      return this;
+    }
+
+    int getMaxQueueSize() {
+      return this.maxQueueSize;
     }
 
     public GenericStateMachine<T, S> build() {
@@ -409,9 +420,8 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
             sm.getCurrentState().getName());
       }
       if (eventProcessingStrategy == null) {
-        //TODO builder should be able to take maxQueueSize
         eventProcessingStrategy = new DefaultEventStrategy<>(unmappedEventHandler, executor,
-            unexpectedFlowListener, new EventMachinePairPool<>(), -1);
+            unexpectedFlowListener, new EventMachinePairPool<>(), maxQueueSize);
       }
       return new GenericStateMachine<>(context, new HashMap<>(), stateMachineListener,
           eventProcessingStrategy, unexpectedFlowListener);
