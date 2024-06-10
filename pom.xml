@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.webotech</groupId>
   <artifactId>state-machine</artifactId>
-  <version>0.10.3</version>
+  <version>0.10.4-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>${project.groupId}:${project.artifactId}</name>
   <description>A thread-safe, general purpose state machine written in core java.</description>
@@ -30,7 +30,7 @@
       scm:git:https://github.com/paulmackinlay/state-machine.git
     </developerConnection>
     <url>https://github.com/paulmackinlay/state-machine</url>
-    <tag>state-machine-0.10.3</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <properties>
