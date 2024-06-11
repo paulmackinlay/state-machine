@@ -8,13 +8,14 @@ import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
 
 public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S> {
 
-  private final ConcurrentLinkedQueue<EventMachinePair<T, S>> eventQueue;
+  private final Queue<EventMachinePair<T, S>> eventQueue;
   private final ExecutorService executor;
   private final TransitionTask<T, S> transitionTask;
   private final UnexpectedFlowListener<T, S> unexpectedFlowListener;
@@ -95,7 +96,7 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
     this.transitionTask.setStates(states);
   }
 
-  protected ConcurrentLinkedQueue<EventMachinePair<T, S>> getEventQueue() {
+  protected Queue<EventMachinePair<T, S>> getEventQueue() {
     return eventQueue;
   }
 

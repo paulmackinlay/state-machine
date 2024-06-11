@@ -7,7 +7,7 @@ package com.webotech.statemachine;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
 import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Queue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -39,7 +39,7 @@ public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy
 
   @Override
   public void processEvent(StateEvent<S> stateEvent, GenericStateMachine<T, S> stateMachine) {
-    ConcurrentLinkedQueue<EventMachinePair<T, S>> eventQueue = defaultStrategy.getEventQueue();
+    Queue<EventMachinePair<T, S>> eventQueue = defaultStrategy.getEventQueue();
     if (eventQueue.stream().anyMatch(en -> en.getStateEvent().equals(stateEvent))) {
       logger.info(EVENT_ALREADY_IN_QUEUE_WILL_DROP_IT, stateEvent);
       return;
