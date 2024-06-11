@@ -55,7 +55,7 @@ class DefaultEventStrategyTest {
         unexpectedFlowListener, eventMachinePairPool, -1);
     strategy.setStates(states);
     boundStrategy = new DefaultEventStrategy<>(unmappedEventHandler, executor,
-        unexpectedFlowListener, eventMachinePairPool, MAX_SIZE);
+        unexpectedFlowListener, MAX_SIZE);
     boundStrategy.setStates(states);
 
     when(stateMachine.getNoopState()).thenReturn(noopState);

@@ -421,7 +421,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       }
       if (eventProcessingStrategy == null) {
         eventProcessingStrategy = new DefaultEventStrategy<>(unmappedEventHandler, executor,
-            unexpectedFlowListener, new EventMachinePairPool<>(), maxQueueSize);
+            unexpectedFlowListener, maxQueueSize);
       }
       return new GenericStateMachine<>(context, new HashMap<>(), stateMachineListener,
           eventProcessingStrategy, unexpectedFlowListener);

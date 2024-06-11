@@ -42,6 +42,13 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
    */
   public DefaultEventStrategy(BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler,
       ExecutorService executor, UnexpectedFlowListener<T, S> unexpectedFlowListener,
+      int maxQueueSize) {
+    this(unmappedEventHandler, executor, unexpectedFlowListener, new EventMachinePairPool<>(),
+        maxQueueSize);
+  }
+
+  DefaultEventStrategy(BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler,
+      ExecutorService executor, UnexpectedFlowListener<T, S> unexpectedFlowListener,
       EventMachinePairPool<T, S> eventMachinePairPool, int maxQueueSize) {
     this.executor = executor;
     this.unexpectedFlowListener = unexpectedFlowListener;
