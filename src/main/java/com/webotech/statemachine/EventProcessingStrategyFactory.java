@@ -37,12 +37,21 @@ public class EventProcessingStrategyFactory<T, S> {
 
    */
 
-  public EventProcessingStrategy<T, S> createStrategy(Config<T, S> config) {
-   return new DefaultEventStrategy<T, S>(config.getUnmappedEventHandler(), config.getExecutor(),
+  public EventProcessingStrategy<T, S> createDefaultStrategy(Config<T, S> config) {
+    return newDefaultStrategy(config);
+  }
+
+  public EventProcessingStrategy<T, S> createDropDuplicateStrategy(Config<T, S> config) {
+    return new DropDuplicateEventStrategy<>(newDefaultStrategy(config));
+  }
+
+  private DefaultEventStrategy<T, S> newDefaultStrategy(Config<T, S> config) {
+    return new DefaultEventStrategy<>(config.getUnmappedEventHandler(), config.getExecutor(),
         config.getUnexpectedFlowListener(), config.getMaxQueueSize());
   }
 
-  public class Config<T, S> {
+
+  public static class Config<T, S> {
 
     private static final String LOG_EVENT_NOT_MAPPED = "StateEvent [{}] not mapped for state [{}], ignoring";
     private static final String LOG_UNHANDLED_EXCEPTION = "Unhandled exception in thread {}";
@@ -51,7 +60,7 @@ public class EventProcessingStrategyFactory<T, S> {
     private Queue eventQueue;
     private int maxQueueSize = -1;
     private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
-    private String threadName = "state-machine"
+    private String threadName;
 
     public Config<T, S> withExecutor(ExecutorService executor) {
       this.executor = executor;
