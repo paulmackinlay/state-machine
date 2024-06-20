@@ -324,10 +324,15 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     private String name;
     private T context;
     private StateMachineListener<T, S> stateMachineListener;
+    // TODO make final
     private EventProcessingStrategy<T, S> eventProcessingStrategy;
+    // TODO factor out
     private ExecutorService executor;
+    // TODO factor out
     private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
+    // TODO factor out
     private UnexpectedFlowListener<T, S> unexpectedFlowListener;
+    // TODO factor out
     private int maxQueueSize = -1;
 
     public Builder<T, S> setName(String name) {
