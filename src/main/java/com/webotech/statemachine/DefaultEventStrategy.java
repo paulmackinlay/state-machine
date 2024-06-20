@@ -107,7 +107,8 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
     return eventQueue;
   }
 
-  protected UnexpectedFlowListener<T, S> getUnexpectedFlowListener() {
+  @Override
+  public UnexpectedFlowListener<T, S> getUnexpectedFlowListener() {
     return unexpectedFlowListener;
   }
 }

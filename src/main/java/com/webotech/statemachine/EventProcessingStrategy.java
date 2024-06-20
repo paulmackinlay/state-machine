@@ -33,4 +33,9 @@ public interface EventProcessingStrategy<T, S> {
    * {@link com.webotech.statemachine.api.StateMachine}
    */
   void setStates(Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states);
+
+  /**
+   * @return the {@link UnexpectedFlowListener} so it can be shared with other subsystems.
+   */
+  UnexpectedFlowListener<T, S> getUnexpectedFlowListener();
 }

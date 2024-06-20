@@ -52,4 +52,9 @@ public class DropDuplicateEventStrategy<T, S> implements EventProcessingStrategy
     defaultStrategy.setStates(states);
   }
 
+  @Override
+  public UnexpectedFlowListener<T, S> getUnexpectedFlowListener() {
+    return defaultStrategy.getUnexpectedFlowListener();
+  }
+
 }
