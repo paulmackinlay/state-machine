@@ -45,8 +45,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
   private GenericStateMachine(T context, Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states,
       StateMachineListener<T, S> stateMachineListener,
-      EventProcessingStrategy<T, S> eventProcessingStrategy,
-      UnexpectedFlowListener<T, S> unexpectedFlowListener) {
+      EventProcessingStrategy<T, S> eventProcessingStrategy) {
     this.states = states;
     this.immediateEvent = new NamedStateEvent<>(RESERVED_STATE_EVENT_NAME_IMMEDIATE);
     this.endState = new NamedState<>(RESERVED_STATE_NAME_END);
@@ -55,7 +54,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     this.context = context;
     this.stateMachineListener = stateMachineListener;
     this.eventProcessingStrategy = eventProcessingStrategy;
-    this.unexpectFlowListener = unexpectedFlowListener;
+    this.unexpectFlowListener = eventProcessingStrategy.getUnexpectedFlowListener();
     this.eventProcessingStrategy.setStates(this.states);
   }
 
@@ -424,7 +423,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
             unexpectedFlowListener, maxQueueSize);
       }
       return new GenericStateMachine<>(context, new HashMap<>(), stateMachineListener,
-          eventProcessingStrategy, unexpectedFlowListener);
+          eventProcessingStrategy);
     }
   }
 }
