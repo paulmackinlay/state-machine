@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import com.webotech.statemachine.EventProcessingStrategyFactory.Config;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateAction;
 import com.webotech.statemachine.api.StateEvent;
@@ -101,8 +102,10 @@ class StateMachineIntegrationTest {
     String name = "a-test-state-machine";
     StateMachineListener<Void, Void> loggingStateMachineListener = new LoggingStateMachineListener<>(
         name);
+    EventProcessingStrategy<Void, Void> strategy = new EventProcessingStrategyFactory().createDefaultStrategy(
+        new Config<Void, Void>().withThreadName(name));
     StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().setStateMachineListener(
-        loggingStateMachineListener).setName(name).build();
+        loggingStateMachineListener).setEventProcessingStrategy(strategy).build();
     stateMachine.initialSate(state1).receives(event1).itTransitionsTo(state2).when(state2)
         .receives(event1).itEnds();
 
@@ -396,9 +399,9 @@ class StateMachineIntegrationTest {
     try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
       stateMachine.start();
       stateMachine.fire(event1);
+      TestingUtil.waitForMachineToEnd(stateMachine);
       log = logStream.toString();
     }
-    TestingUtil.waitForMachineToEnd(stateMachine);
 
     assertEquals(2, beginUpdates.size());
     assertNotifiedRow(beginUpdates.get(0), "_UNINITIALISED_", "_immediate_", state1.getName());
@@ -409,7 +412,8 @@ class StateMachineIntegrationTest {
     assertNotifiedRow(endUpdates.get(1), state1.getName(), event1.getName(), state2.getName());
 
     assertEquals("Starting transition: _UNINITIALISED_ + _immediate_ = STATE-1\n"
-        + "Transitioned to STATE-1\n", log);
+        + "Transitioned to STATE-1\nStarting transition: STATE-1 + event-1 = STATE-2\n"
+        + "Transitioned to STATE-2\n", log);
   }
 
   @Test
@@ -538,15 +542,16 @@ class StateMachineIntegrationTest {
     for (int i = 0; i < noEvents; i++) {
       randomMillis.add(random.nextInt(50));
     }
-
+    EventProcessingStrategy<Void, Void> strategy = new EventProcessingStrategyFactory().createDefaultStrategy(
+        new Config<Void, Void>().withExecutor(
+            Executors.newSingleThreadExecutor(Threads.newNamedDaemonThreadFactory("sm", (t, e) -> {
+              System.err.print(t.getName() + ": ");
+              e.printStackTrace();
+              exceptions.add(e);
+            }))));
     StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().setStateMachineListener(
         new MultiConsumerStateMachineListener<>(new LoggingStateMachineListener<>(),
-            collectorListener)).setExecutor(Executors.newSingleThreadExecutor(
-        Threads.newNamedDaemonThreadFactory("sm", (t, e) -> {
-          System.err.print(t.getName() + ": ");
-          e.printStackTrace();
-          exceptions.add(e);
-        }))).build();
+            collectorListener)).setEventProcessingStrategy(strategy).build();
     stateMachine.initialSate(state1).receives(event1).itTransitionsTo(state2)
         .when(state2).receives(event2).itTransitionsTo(state1);
 

@@ -24,9 +24,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiConsumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -241,14 +239,6 @@ class GenericStateMachineTest {
   }
 
   @Test
-  void shouldBuildWithExecutorService() {
-    ExecutorService executor = mock(ExecutorService.class);
-    Builder<Void, Void> builder = new GenericStateMachine.Builder<Void, Void>().setExecutor(
-        executor);
-    assertSame(executor, builder.getExecutor());
-  }
-
-  @Test
   void shouldBuildWithMutableContext() {
     Object obj = new Object();
     StateMachine<Object, Void> objContextStateMachine = (new GenericStateMachine.Builder<Object, Void>().setContext(
@@ -263,39 +253,7 @@ class GenericStateMachineTest {
         listener);
     assertSame(listener, builder.getStateMachineListener());
   }
-
-  @Test
-  void shouldBuildWithUnmappedEventHandler() {
-    BiConsumer<StateEvent<Void>, StateMachine<Void, Void>> unmappedEventHander = mock(
-        BiConsumer.class);
-    Builder<Void, Void> builder = new GenericStateMachine.Builder<Void, Void>().setUnmappedEventHandler(
-        unmappedEventHander);
-    assertSame(unmappedEventHander, builder.getUnmappedEventHandler());
-  }
-
-  @Test
-  void shouldBuildWithUnexpectedFlowListener() {
-    UnexpectedFlowListener<Void, Void> unexpectedFlowListener = mock(UnexpectedFlowListener.class);
-    Builder<Void, Void> builder = new GenericStateMachine.Builder<Void, Void>().setUnexpectedFlowListener(
-        unexpectedFlowListener);
-    assertSame(unexpectedFlowListener, builder.getUnexpectedFlowListener());
-  }
-
-  @Test
-  void shouldBuildWithName() {
-    String name = "my-state-machine";
-    Builder<Void, Void> builder = new GenericStateMachine.Builder<Void, Void>().setName(name);
-    assertSame(name, builder.getName());
-  }
-
-  @Test
-  void shouldBuildWithQueueSize() {
-    int queueSize = 123;
-    Builder<Void, Void> builder = new GenericStateMachine.Builder<Void, Void>().setMaxQueueSize(
-        queueSize);
-    assertEquals(queueSize, builder.getMaxQueueSize());
-  }
-
+  
   @Test
   void shouldPassEventToAction() {
     AtomicReference<StateEvent<Void>> eventRef = new AtomicReference<>();

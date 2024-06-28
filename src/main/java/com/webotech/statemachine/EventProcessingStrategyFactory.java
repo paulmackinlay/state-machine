@@ -14,12 +14,14 @@ import java.util.function.BiConsumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-//TODO
-public class EventProcessingStrategyFactory<T, S> {
+public class EventProcessingStrategyFactory {
 
   private static final Logger logger = LogManager.getLogger(EventProcessingStrategyFactory.class);
+  @SuppressWarnings("rawtypes")
+  private static final Config basicConfig = new Config<>();
 
   /*
+  TODO
   needs some kind of builder and factory pattern
 
   - queue size
@@ -37,15 +39,20 @@ public class EventProcessingStrategyFactory<T, S> {
 
    */
 
-  public EventProcessingStrategy<T, S> createDefaultStrategy(Config<T, S> config) {
+  @SuppressWarnings("unchecked")
+  public <T, S> EventProcessingStrategy<T, S> createDefaultStrategy() {
+    return createDefaultStrategy(basicConfig);
+  }
+
+  public <T, S> EventProcessingStrategy<T, S> createDefaultStrategy(Config<T, S> config) {
     return newDefaultStrategy(config);
   }
 
-  public EventProcessingStrategy<T, S> createDropDuplicateStrategy(Config<T, S> config) {
+  public <T, S> EventProcessingStrategy<T, S> createDropDuplicateStrategy(Config<T, S> config) {
     return new DropDuplicateEventStrategy<>(newDefaultStrategy(config));
   }
 
-  private DefaultEventStrategy<T, S> newDefaultStrategy(Config<T, S> config) {
+  private <T, S> DefaultEventStrategy<T, S> newDefaultStrategy(Config<T, S> config) {
     return new DefaultEventStrategy<>(config.getUnmappedEventHandler(), config.getExecutor(),
         config.getUnexpectedFlowListener(), config.getMaxQueueSize());
   }
@@ -57,7 +64,7 @@ public class EventProcessingStrategyFactory<T, S> {
     private static final String LOG_UNHANDLED_EXCEPTION = "Unhandled exception in thread {}";
     private ExecutorService executor;
     private UnexpectedFlowListener<T, S> unexpectedFlowListener;
-    private Queue eventQueue;
+    private Queue<EventMachinePair<T, S>> eventQueue;
     private int maxQueueSize = -1;
     private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
     private String threadName;
@@ -79,7 +86,7 @@ public class EventProcessingStrategyFactory<T, S> {
       return this;
     }
 
-    public Config<T, S> withEventQueue(Queue eventQueue) {
+    public Config<T, S> withEventQueue(Queue<EventMachinePair<T, S>> eventQueue) {
       this.eventQueue = eventQueue;
       return this;
     }
@@ -102,7 +109,7 @@ public class EventProcessingStrategyFactory<T, S> {
       return unmappedEventHandler;
     }
 
-    public ExecutorService getExecutor() {
+    ExecutorService getExecutor() {
       if (executor == null) {
         executor = Executors.newSingleThreadExecutor(
             Threads.newNamedDaemonThreadFactory(threadName == null ? "state-machine" : threadName,
@@ -111,15 +118,23 @@ public class EventProcessingStrategyFactory<T, S> {
       return executor;
     }
 
-    public UnexpectedFlowListener<T, S> getUnexpectedFlowListener() {
+    UnexpectedFlowListener<T, S> getUnexpectedFlowListener() {
       if (unexpectedFlowListener == null) {
         unexpectedFlowListener = new DefaultUnexpectedFlowListener<>();
       }
       return unexpectedFlowListener;
     }
 
-    public int getMaxQueueSize() {
+    int getMaxQueueSize() {
       return maxQueueSize;
+    }
+
+    String getThreadName() {
+      return threadName;
+    }
+
+    Queue<EventMachinePair<T, S>> getEventQueue() {
+      return eventQueue;
     }
   }
 }

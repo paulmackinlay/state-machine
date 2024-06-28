@@ -8,15 +8,11 @@ import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
-import com.webotech.statemachine.util.Threads;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringJoiner;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.BiConsumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -320,29 +316,9 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
   public static class Builder<T, S> {
 
-    private static final String LOG_EVENT_NOT_MAPPED = "StateEvent [{}] not mapped for state [{}], ignoring";
-    private String name;
     private T context;
     private StateMachineListener<T, S> stateMachineListener;
-    // TODO make final
     private EventProcessingStrategy<T, S> eventProcessingStrategy;
-    // TODO factor out
-    private ExecutorService executor;
-    // TODO factor out
-    private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
-    // TODO factor out
-    private UnexpectedFlowListener<T, S> unexpectedFlowListener;
-    // TODO factor out
-    private int maxQueueSize = -1;
-
-    public Builder<T, S> setName(String name) {
-      this.name = name;
-      return this;
-    }
-
-    String getName() {
-      return this.name;
-    }
 
     public Builder<T, S> setContext(T context) {
       this.context = context;
@@ -360,15 +336,6 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       return this;
     }
 
-    public Builder<T, S> setExecutor(ExecutorService executor) {
-      this.executor = executor;
-      return this;
-    }
-
-    ExecutorService getExecutor() {
-      return executor;
-    }
-
     StateMachineListener<T, S> getStateMachineListener() {
       return stateMachineListener;
     }
@@ -377,55 +344,9 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
       return eventProcessingStrategy;
     }
 
-    public Builder<T, S> setUnmappedEventHandler(
-        BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler) {
-      this.unmappedEventHandler = unmappedEventHandler;
-      return this;
-    }
-
-    BiConsumer<StateEvent<S>, StateMachine<T, S>> getUnmappedEventHandler() {
-      return this.unmappedEventHandler;
-    }
-
-    public Builder<T, S> setUnexpectedFlowListener(
-        UnexpectedFlowListener<T, S> unexpectedFlowListener) {
-      this.unexpectedFlowListener = unexpectedFlowListener;
-      return this;
-    }
-
-    UnexpectedFlowListener<T, S> getUnexpectedFlowListener() {
-      return this.unexpectedFlowListener;
-    }
-
-    public Builder<T, S> setMaxQueueSize(int maxQueueSize) {
-      this.maxQueueSize = maxQueueSize;
-      return this;
-    }
-
-    int getMaxQueueSize() {
-      return this.maxQueueSize;
-    }
-
     public GenericStateMachine<T, S> build() {
-      if (name == null) {
-        name = "state-machine";
-      }
-      if (executor == null) {
-        executor =
-            Executors.newSingleThreadExecutor(
-                Threads.newNamedDaemonThreadFactory(name,
-                    (t, e) -> logger.error("Unhandled exception in thread {}", t.getName(), e)));
-      }
-      if (unexpectedFlowListener == null) {
-        unexpectedFlowListener = new DefaultUnexpectedFlowListener<>();
-      }
-      if (unmappedEventHandler == null) {
-        unmappedEventHandler = (ev, sm) -> logger.info(LOG_EVENT_NOT_MAPPED, ev.getName(),
-            sm.getCurrentState().getName());
-      }
       if (eventProcessingStrategy == null) {
-        eventProcessingStrategy = new DefaultEventStrategy<>(unmappedEventHandler, executor,
-            unexpectedFlowListener, maxQueueSize);
+        eventProcessingStrategy = new EventProcessingStrategyFactory().createDefaultStrategy();
       }
       return new GenericStateMachine<>(context, new HashMap<>(), stateMachineListener,
           eventProcessingStrategy);

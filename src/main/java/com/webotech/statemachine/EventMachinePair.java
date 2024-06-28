@@ -11,7 +11,7 @@ import com.webotech.statemachine.api.StateEvent;
  * {@link GenericStateMachine} objects that are exchanged between publisher
  * and consumer threads. This is intentionally mutable as it used for object pooling.
  */
-class EventMachinePair<T, S> {
+public class EventMachinePair<T, S> {
 
   private StateEvent<S> stateEvent;
   private GenericStateMachine<T, S> stateMachine;
