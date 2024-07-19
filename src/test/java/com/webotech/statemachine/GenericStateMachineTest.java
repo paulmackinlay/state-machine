@@ -19,6 +19,7 @@ import com.webotech.statemachine.api.StateAction;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
+import com.webotech.statemachine.strategy.EventProcessingStrategy;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -253,7 +254,7 @@ class GenericStateMachineTest {
         listener);
     assertSame(listener, builder.getStateMachineListener());
   }
-  
+
   @Test
   void shouldPassEventToAction() {
     AtomicReference<StateEvent<Void>> eventRef = new AtomicReference<>();

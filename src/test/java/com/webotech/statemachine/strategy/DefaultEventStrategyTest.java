@@ -2,7 +2,7 @@
  * Copyright (c) 2024 Paul Mackinlay <paul.mackinlay@gmail.com>
  */
 
-package com.webotech.statemachine;
+package com.webotech.statemachine.strategy;
 
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
@@ -14,6 +14,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.webotech.statemachine.GenericStateMachine;
+import com.webotech.statemachine.NamedState;
+import com.webotech.statemachine.NamedStateEvent;
+import com.webotech.statemachine.TestingUtil;
+import com.webotech.statemachine.UnexpectedFlowListener;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;

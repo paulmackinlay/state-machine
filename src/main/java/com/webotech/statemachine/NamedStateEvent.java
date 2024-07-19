@@ -20,7 +20,7 @@ public final class NamedStateEvent<S> implements StateEvent<S> {
     this(name, null);
   }
 
-  NamedStateEvent(StateEvent<S> stateEvent) {
+  public NamedStateEvent(StateEvent<S> stateEvent) {
     this(stateEvent.getName(), stateEvent.getPayload());
   }
 

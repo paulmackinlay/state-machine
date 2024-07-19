@@ -2,12 +2,15 @@
  * Copyright (c) 2024 Paul Mackinlay <paul.mackinlay@gmail.com>
  */
 
-package com.webotech.statemachine;
+package com.webotech.statemachine.strategy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.webotech.statemachine.GenericStateMachine;
+import com.webotech.statemachine.NamedStateEvent;
+import com.webotech.statemachine.TestingUtil;
 import com.webotech.statemachine.api.StateEvent;
 import java.io.IOException;
 import java.io.OutputStream;

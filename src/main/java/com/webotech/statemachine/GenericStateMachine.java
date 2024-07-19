@@ -8,6 +8,8 @@ import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
+import com.webotech.statemachine.strategy.EventProcessingStrategy;
+import com.webotech.statemachine.strategy.EventProcessingStrategyFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,10 +21,10 @@ import org.apache.logging.log4j.Logger;
 public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
   private static final Logger logger = LogManager.getLogger(GenericStateMachine.class);
-  static final String RESERVED_STATE_NAME_END = "_END_";
+  public static final String RESERVED_STATE_NAME_END = "_END_";
   private static final String RESERVED_STATE_NAME_UNINITIALISED = "_UNINITIALISED_";
-  static final String RESERVED_STATE_NAME_NOOP = "_NOOP_";
-  static final String RESERVED_STATE_EVENT_NAME_IMMEDIATE = "_immediate_";
+  public static final String RESERVED_STATE_NAME_NOOP = "_NOOP_";
+  public static final String RESERVED_STATE_EVENT_NAME_IMMEDIATE = "_immediate_";
   static final List<String> reservedStateNames = List.of(RESERVED_STATE_NAME_UNINITIALISED,
       RESERVED_STATE_NAME_END, RESERVED_STATE_NAME_NOOP);
   private final StateEvent<S> immediateEvent;
@@ -174,7 +176,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     }
   }
 
-  void notifyStateMachineListener(boolean isComplete, State<T, S> fromState,
+  public void notifyStateMachineListener(boolean isComplete, State<T, S> fromState,
       StateEvent<S> stateEvent, State<T, S> toState) {
     if (this.stateMachineListener != null) {
       if (fromState == null) {
@@ -194,11 +196,11 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     }
   }
 
-  StateEvent<S> getImmediateEvent() {
+  public StateEvent<S> getImmediateEvent() {
     return this.immediateEvent;
   }
 
-  State<T, S> getEndState() {
+  public State<T, S> getEndState() {
     return this.endState;
   }
 
@@ -298,11 +300,11 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     this.stateMachineListener = stateMachineListener;
   }
 
-  void setCurrentState(State<T, S> state) {
+  public void setCurrentState(State<T, S> state) {
     this.currentState = state;
   }
 
-  State<T, S> getNoopState() {
+  public State<T, S> getNoopState() {
     return this.noopState;
   }
 

@@ -9,12 +9,16 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.webotech.statemachine.EventProcessingStrategyFactory.Config;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateAction;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
+import com.webotech.statemachine.strategy.DefaultEventStrategy;
+import com.webotech.statemachine.strategy.DefaultUnexpectedFlowListener;
+import com.webotech.statemachine.strategy.EventProcessingStrategy;
+import com.webotech.statemachine.strategy.EventProcessingStrategyFactory;
+import com.webotech.statemachine.strategy.EventProcessingStrategyFactory.Config;
 import com.webotech.statemachine.util.Threads;
 import java.io.IOException;
 import java.io.OutputStream;

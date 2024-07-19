@@ -2,16 +2,17 @@
  * Copyright (c) 2024 Paul Mackinlay <paul.mackinlay@gmail.com>
  */
 
-package com.webotech.statemachine;
+package com.webotech.statemachine.strategy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 
-import com.webotech.statemachine.EventProcessingStrategyFactory.Config;
+import com.webotech.statemachine.UnexpectedFlowListener;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
+import com.webotech.statemachine.strategy.EventProcessingStrategyFactory.Config;
 import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;

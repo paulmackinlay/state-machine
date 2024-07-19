@@ -2,8 +2,9 @@
  * Copyright (c) 2024 Paul Mackinlay <paul.mackinlay@gmail.com>
  */
 
-package com.webotech.statemachine;
+package com.webotech.statemachine.strategy;
 
+import com.webotech.statemachine.UnexpectedFlowListener;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.util.Threads;
@@ -58,6 +59,12 @@ public class EventProcessingStrategyFactory {
   }
 
 
+  /**
+   * Encapsulates data than can be used for configuring an {@link EventProcessingStrategy}.
+   * Knowledge of specific strategy implementations is needed in order to understand how each
+   * member of the {@link Config} is used. It is possible that an implementation ignores some of the
+   * configuration options.
+   */
   public static class Config<T, S> {
 
     private static final String LOG_EVENT_NOT_MAPPED = "StateEvent [{}] not mapped for state [{}], ignoring";
