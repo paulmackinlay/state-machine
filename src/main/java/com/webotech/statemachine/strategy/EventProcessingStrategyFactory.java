@@ -21,25 +21,6 @@ public class EventProcessingStrategyFactory {
   @SuppressWarnings("rawtypes")
   private static final Config basicConfig = new Config<>();
 
-  /*
-  TODO
-  needs some kind of builder and factory pattern
-
-  - queue size
-  - with unmappedEvent
-
-      this.executor = executor;
-      this.unexpectedFlowListener = unexpectedFlowListener;
-      this.eventMachinePairPool = eventMachinePairPool;
-      this.eventQueue = new ConcurrentLinkedQueue<>();
-      this.maxQueueSize = maxQueueSize;
-
-
-  factory.getDefaultBuilder.withX(),withY().build();
-  factory.getStrategy(Config)
-
-   */
-
   @SuppressWarnings("unchecked")
   public <T, S> EventProcessingStrategy<T, S> createDefaultStrategy() {
     return createDefaultStrategy(basicConfig);
@@ -57,7 +38,6 @@ public class EventProcessingStrategyFactory {
     return new DefaultEventStrategy<>(config.getUnmappedEventHandler(), config.getExecutor(),
         config.getUnexpectedFlowListener(), config.getMaxQueueSize());
   }
-
 
   /**
    * Encapsulates data than can be used for configuring an {@link EventProcessingStrategy}.
