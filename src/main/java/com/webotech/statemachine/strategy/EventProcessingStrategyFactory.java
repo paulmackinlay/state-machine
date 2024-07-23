@@ -36,11 +36,9 @@ public class EventProcessingStrategyFactory {
     return new DropDuplicateEventStrategy<>(newDefaultStrategy(config));
   }
 
-  //TODO needs a way to pass in EventQueue
   private <T, S> DefaultEventStrategy<T, S> newDefaultStrategy(Config<T, S> config) {
     return new DefaultEventStrategy<>(config.getUnmappedEventHandler(), config.getExecutor(),
-        config.getUnexpectedFlowListener(), config.getMaxQueueSize(),
-        new ConcurrentLinkedQueue<>());
+        config.getUnexpectedFlowListener(), config.getMaxQueueSize(), config.getEventQueue());
   }
 
   /**
@@ -58,7 +56,6 @@ public class EventProcessingStrategyFactory {
     private UnexpectedFlowListener<T, S> unexpectedFlowListener;
     private int maxQueueSize = -1;
     private String threadName;
-    //TODO - these are not used in newDefaultStrategy above. They need to be included and tested.
     private Queue<EventMachinePair<T, S>> eventQueue;
 
     public Config<T, S> withExecutor(ExecutorService executor) {
@@ -131,6 +128,9 @@ public class EventProcessingStrategyFactory {
     }
 
     Queue<EventMachinePair<T, S>> getEventQueue() {
+      if (eventQueue == null) {
+        eventQueue = new ConcurrentLinkedQueue<>();
+      }
       return eventQueue;
     }
   }
