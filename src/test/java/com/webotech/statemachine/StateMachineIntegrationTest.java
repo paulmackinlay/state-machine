@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.StringJoiner;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -617,7 +618,7 @@ class StateMachineIntegrationTest {
     };
     UnexpectedFlowListener<Void, Void> unexpectedFlowListener = new DefaultUnexpectedFlowListener<>();
     DefaultEventStrategy<Void, Void> strategy = new DefaultEventStrategy<>(unmappedEventHandler,
-        executor, unexpectedFlowListener, -1);
+        executor, unexpectedFlowListener, -1, new ConcurrentLinkedQueue<>());
     StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().setEventProcessingStrategy(
         strategy).build();
 

@@ -12,7 +12,6 @@ import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
 
@@ -45,18 +44,19 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
    */
   public DefaultEventStrategy(BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler,
       ExecutorService executor, UnexpectedFlowListener<T, S> unexpectedFlowListener,
-      int maxQueueSize) {
+      int maxQueueSize, Queue<EventMachinePair<T, S>> eventQueue) {
     this(unmappedEventHandler, executor, unexpectedFlowListener, new EventMachinePairPool<>(),
-        maxQueueSize);
+        maxQueueSize, eventQueue);
   }
 
   DefaultEventStrategy(BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler,
       ExecutorService executor, UnexpectedFlowListener<T, S> unexpectedFlowListener,
-      EventMachinePairPool<T, S> eventMachinePairPool, int maxQueueSize) {
+      EventMachinePairPool<T, S> eventMachinePairPool, int maxQueueSize,
+      Queue<EventMachinePair<T, S>> eventQueue) {
     this.executor = executor;
     this.unexpectedFlowListener = unexpectedFlowListener;
     this.eventMachinePairPool = eventMachinePairPool;
-    this.eventQueue = new ConcurrentLinkedQueue<>();
+    this.eventQueue = eventQueue;
     this.transitionTask = new TransitionTask<>(unmappedEventHandler);
     this.maxQueueSize = maxQueueSize;
   }

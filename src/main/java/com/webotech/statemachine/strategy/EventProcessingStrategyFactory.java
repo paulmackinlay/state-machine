@@ -9,6 +9,7 @@ import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.util.Threads;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
@@ -30,13 +31,16 @@ public class EventProcessingStrategyFactory {
     return newDefaultStrategy(config);
   }
 
+  //TODO needs testing
   public <T, S> EventProcessingStrategy<T, S> createDropDuplicateStrategy(Config<T, S> config) {
     return new DropDuplicateEventStrategy<>(newDefaultStrategy(config));
   }
 
+  //TODO needs a way to pass in EventQueue
   private <T, S> DefaultEventStrategy<T, S> newDefaultStrategy(Config<T, S> config) {
     return new DefaultEventStrategy<>(config.getUnmappedEventHandler(), config.getExecutor(),
-        config.getUnexpectedFlowListener(), config.getMaxQueueSize());
+        config.getUnexpectedFlowListener(), config.getMaxQueueSize(),
+        new ConcurrentLinkedQueue<>());
   }
 
   /**
@@ -49,12 +53,13 @@ public class EventProcessingStrategyFactory {
 
     private static final String LOG_EVENT_NOT_MAPPED = "StateEvent [{}] not mapped for state [{}], ignoring";
     private static final String LOG_UNHANDLED_EXCEPTION = "Unhandled exception in thread {}";
+    private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
     private ExecutorService executor;
     private UnexpectedFlowListener<T, S> unexpectedFlowListener;
-    private Queue<EventMachinePair<T, S>> eventQueue;
     private int maxQueueSize = -1;
-    private BiConsumer<StateEvent<S>, StateMachine<T, S>> unmappedEventHandler;
     private String threadName;
+    //TODO - these are not used in newDefaultStrategy above. They need to be included and tested.
+    private Queue<EventMachinePair<T, S>> eventQueue;
 
     public Config<T, S> withExecutor(ExecutorService executor) {
       this.executor = executor;
@@ -73,6 +78,11 @@ public class EventProcessingStrategyFactory {
       return this;
     }
 
+    /**
+     * <b>Note</b> the event queue used in the {@link DefaultEventStrategy} and
+     * {@link DropDuplicateEventStrategy} should be a thread-safe implementation for generic use
+     * since typically events are fired by threads owned by third party subsystems.
+     */
     public Config<T, S> withEventQueue(Queue<EventMachinePair<T, S>> eventQueue) {
       this.eventQueue = eventQueue;
       return this;

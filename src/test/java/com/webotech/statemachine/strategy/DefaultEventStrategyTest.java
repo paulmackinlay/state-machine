@@ -23,6 +23,7 @@ import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -57,10 +58,10 @@ class DefaultEventStrategyTest {
     unexpectedFlowListener = mock(UnexpectedFlowListener.class);
     eventMachinePairPool = mock(EventMachinePairPool.class);
     strategy = new DefaultEventStrategy<>(unmappedEventHandler, executor,
-        unexpectedFlowListener, eventMachinePairPool, -1);
+        unexpectedFlowListener, eventMachinePairPool, -1, new ConcurrentLinkedQueue<>());
     strategy.setStates(states);
     boundStrategy = new DefaultEventStrategy<>(unmappedEventHandler, executor,
-        unexpectedFlowListener, MAX_SIZE);
+        unexpectedFlowListener, MAX_SIZE, new ConcurrentLinkedQueue<>());
     boundStrategy.setStates(states);
 
     when(stateMachine.getNoopState()).thenReturn(noopState);
