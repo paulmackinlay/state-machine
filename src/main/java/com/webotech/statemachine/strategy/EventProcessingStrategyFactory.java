@@ -31,7 +31,11 @@ public class EventProcessingStrategyFactory {
     return newDefaultStrategy(config);
   }
 
-  //TODO needs testing
+  @SuppressWarnings("unchecked")
+  public <T, S> EventProcessingStrategy<T, S> createDropDuplicateStrategy() {
+    return createDropDuplicateStrategy(basicConfig);
+  }
+
   public <T, S> EventProcessingStrategy<T, S> createDropDuplicateStrategy(Config<T, S> config) {
     return new DropDuplicateEventStrategy<>(newDefaultStrategy(config));
   }
