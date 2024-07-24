@@ -82,6 +82,7 @@
           <version>${maven-surefire-plugin.version}</version>
           <configuration>
             <reuseForks>false</reuseForks>
+            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
           </configuration>
         </plugin>
       </plugins>
