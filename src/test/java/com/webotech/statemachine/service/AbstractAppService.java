@@ -46,10 +46,10 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
     this.appStateMachine = new GenericStateMachine.Builder<C, Void>().setContext(appContext)
         .build();
     this.appContext = appContext;
-    configureAndStartAppStateMachine();
+    configureAppStateMachine();
   }
 
-  private void configureAndStartAppStateMachine() {
+  private void configureAppStateMachine() {
     setStateMachineListener(LifecycleStateMachineFactory.stateMachineLogger());
     ExceptionHandler<C, Void> exceptionHandler = (se, sa, e) -> {
       //TODO
@@ -63,8 +63,8 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
         new HandleExceptionAction<>((ev, sm) -> {
           this.logger.info(STARTING_APP_WITH_ARGS,
               Arrays.toString(sm.getContext().getInitArgs()));
-          for (Component<C> component : this.appContext.getComponents()) {
-            component.start(this.appContext);
+          for (Subsystem<C> subsystem : this.appContext.getSubsystems()) {
+            subsystem.start(this.appContext);
           }
           AbstractAppService.this.appStateMachine.fire(evtComplete);
         }, exceptionHandler));
@@ -74,8 +74,8 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
     State<C, Void> stopping = LifecycleStateMachineFactory.newStoppingState(
         new HandleExceptionAction<>((ev, sm) -> {
           this.logger.info(STOPPING_APP);
-          List<Component<C>> components = this.appContext.getComponents();
-          ListIterator<Component<C>> listIterator = components.listIterator(components.size());
+          List<Subsystem<C>> subsystems = this.appContext.getSubsystems();
+          ListIterator<Subsystem<C>> listIterator = subsystems.listIterator(subsystems.size());
           while (listIterator.hasPrevious()) {
             listIterator.previous().stop(this.appContext);
           }
@@ -86,16 +86,15 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
       this.appLatch.countDown();
     });
 
-    LifecycleStateMachineFactory.configureAndStartAppStateMachine(this.appStateMachine,
-        uninitialised,
-        starting, started, stopping, this.stopped);
+    LifecycleStateMachineFactory.configureAppStateMachine(this.appStateMachine,
+        uninitialised, starting, started, stopping, this.stopped);
   }
 
   public final void start() {
-    //TODO start the state machine here
-    this.appStateMachine.fire(evtStart);
+    appStateMachine.start();
+    appStateMachine.fire(evtStart);
     try {
-      this.appLatch.await();
+      appLatch.await();
     } catch (InterruptedException e) {
       //TODO
       this.logger.error(MAIN_LATCH_WAS_INTERRUPTED, e);

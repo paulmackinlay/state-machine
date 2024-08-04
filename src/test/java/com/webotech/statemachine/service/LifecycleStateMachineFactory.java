@@ -61,8 +61,7 @@ public final class LifecycleStateMachineFactory {
     return newState(STATE_STOPPED, entryActions);
   }
 
-  //TODO rename
-  public static <T> void configureAndStartAppStateMachine(StateMachine<T, Void> stateMachine,
+  public static <T> void configureAppStateMachine(StateMachine<T, Void> stateMachine,
       State<T, Void> uninitialised, State<T, Void> starting,
       State<T, Void> started, State<T, Void> stopping, State<T, Void> stopped) {
     stateMachine.initialSate(uninitialised).receives(evtStart).itTransitionsTo(starting);
@@ -73,8 +72,6 @@ public final class LifecycleStateMachineFactory {
     stateMachine.when(stopping).receives(evtComplete).itTransitionsTo(stopped);
     stateMachine.when(stopping).receives(evtError).itTransitionsTo(stopped);
     stateMachine.when(stopped).itEnds();
-    //TODO don't start the statemachine, let the app do that
-    stateMachine.start();
   }
 
   @SuppressWarnings("unchecked")

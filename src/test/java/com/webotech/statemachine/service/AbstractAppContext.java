@@ -11,17 +11,17 @@ public abstract class AbstractAppContext<C extends AbstractAppContext<C>> {
 
   private final String[] initArgs;
   private final String appName;
-  private final AtomicReference<List<Component<C>>> componentsRef;
+  private final AtomicReference<List<Subsystem<C>>> subsytemsRef;
 
   protected AbstractAppContext(String appName, String[] initArgs) {
     this.appName = appName;
     this.initArgs = initArgs;
-    this.componentsRef = new AtomicReference<>(List.of());
+    this.subsytemsRef = new AtomicReference<>(List.of());
   }
 
   @SuppressWarnings("unchecked")
-  public final C withComponents(List<Component<C>> components) {
-    this.componentsRef.set(components);
+  public final C withSubsytems(List<Subsystem<C>> subsystems) {
+    this.subsytemsRef.set(subsystems);
     return (C) this;
   }
 
@@ -33,7 +33,7 @@ public abstract class AbstractAppContext<C extends AbstractAppContext<C>> {
     return this.appName;
   }
 
-  public final List<Component<C>> getComponents() {
-    return this.componentsRef.get();
+  public final List<Subsystem<C>> getSubsystems() {
+    return this.subsytemsRef.get();
   }
 }
