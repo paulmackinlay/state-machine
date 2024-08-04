@@ -4,14 +4,12 @@
 
 package com.webotech.statemachine.service;
 
-import com.webotech.statemachine.LoggingStateMachineListener;
 import com.webotech.statemachine.NamedState;
 import com.webotech.statemachine.NamedStateEvent;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateAction;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
-import com.webotech.statemachine.api.StateMachineListener;
 
 /**
  * Useful for a {@link StateMachine} that backs an app.
@@ -23,14 +21,11 @@ public final class LifecycleStateMachineFactory {
   public static final StateEvent<Void> evtComplete = new NamedStateEvent<>("complete");
   public static final StateEvent<Void> evtStop = new NamedStateEvent<>("stop");
   public static final StateEvent<Void> evtError = new NamedStateEvent<>("error");
-
   public static final String STATE_UNINITIALISED = "UNINITIALISED";
   public static final String STATE_STARTING = "STARTING";
   public static final String STATE_STARTED = "STARTED";
   public static final String STATE_STOPPING = "STOPPING";
   public static final String STATE_STOPPED = "STOPPED";
-  @SuppressWarnings("rawtypes")
-  private static LoggingStateMachineListener loggingStateMachineListener;
 
   private LifecycleStateMachineFactory() {
     // Not for instanciation outside this class
@@ -72,14 +67,6 @@ public final class LifecycleStateMachineFactory {
     stateMachine.when(stopping).receives(evtComplete).itTransitionsTo(stopped);
     stateMachine.when(stopping).receives(evtError).itTransitionsTo(stopped);
     stateMachine.when(stopped).itEnds();
-  }
-
-  @SuppressWarnings("unchecked")
-  public static <T, S> StateMachineListener<T, S> stateMachineLogger() {
-    if (loggingStateMachineListener == null) {
-      loggingStateMachineListener = new LoggingStateMachineListener<>();
-    }
-    return loggingStateMachineListener;
   }
 
   @SafeVarargs
