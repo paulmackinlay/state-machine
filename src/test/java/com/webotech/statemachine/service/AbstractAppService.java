@@ -4,10 +4,10 @@
 
 package com.webotech.statemachine.service;
 
-import static com.webotech.statemachine.service.LifecycleStateMachineFactory.completeEvt;
-import static com.webotech.statemachine.service.LifecycleStateMachineFactory.errorEvt;
-import static com.webotech.statemachine.service.LifecycleStateMachineFactory.startEvt;
-import static com.webotech.statemachine.service.LifecycleStateMachineFactory.stopEvt;
+import static com.webotech.statemachine.service.LifecycleStateMachineFactory.evtComplete;
+import static com.webotech.statemachine.service.LifecycleStateMachineFactory.evtError;
+import static com.webotech.statemachine.service.LifecycleStateMachineFactory.evtStart;
+import static com.webotech.statemachine.service.LifecycleStateMachineFactory.evtStop;
 
 import com.webotech.statemachine.GenericStateMachine;
 import com.webotech.statemachine.HandleExceptionAction;
@@ -34,8 +34,8 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
   //TODO review the logging
   private final Logger logger;
   private final StateMachine<C, Void> appStateMachine;
+  //TODO is this needed?
   private final CountDownLatch appLatch;
-  private final EventManager<C, Void> appOperator;
   private final C appContext;
   private State<C, Void> stopped;
 
@@ -43,20 +43,19 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
     this.logger = LogManager.getLogger(
         AbstractAppService.class); // Do this here so that logging can be re-initialised statically by concrete class
     this.appLatch = new CountDownLatch(1);
-    this.appStateMachine = (new GenericStateMachine.Builder<C, Void>().setContext(
-        appContext)).build();
-    this.appOperator = new EventManager<>(this.appStateMachine, appContext.getAppName());
+    this.appStateMachine = new GenericStateMachine.Builder<C, Void>().setContext(appContext)
+        .build();
     this.appContext = appContext;
-    configureAppStateMachine();
+    configureAndStartAppStateMachine();
   }
 
-  private void configureAppStateMachine() {
+  private void configureAndStartAppStateMachine() {
     setStateMachineListener(LifecycleStateMachineFactory.stateMachineLogger());
     ExceptionHandler<C, Void> exceptionHandler = (se, sa, e) -> {
       //TODO
       this.logger.error(ERROR_WHILE_APP_IS_IN + sa.getClass().getSimpleName() + STATE,
           e);
-      AbstractAppService.this.appOperator.fireAsync(errorEvt);
+      AbstractAppService.this.appStateMachine.fire(evtError);
     };
 
     State<C, Void> uninitialised = LifecycleStateMachineFactory.newUnitialisedState();
@@ -67,7 +66,7 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
           for (Component<C> component : this.appContext.getComponents()) {
             component.start(this.appContext);
           }
-          AbstractAppService.this.appOperator.fireAsync(completeEvt);
+          AbstractAppService.this.appStateMachine.fire(evtComplete);
         }, exceptionHandler));
     State<C, Void> started = LifecycleStateMachineFactory
         .newStartedState(new HandleExceptionAction<>((ev, sm) -> this.logger.info(APP_STARTED),
@@ -80,20 +79,21 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
           while (listIterator.hasPrevious()) {
             listIterator.previous().stop(this.appContext);
           }
-          AbstractAppService.this.appOperator.fireAsync(completeEvt);
+          AbstractAppService.this.appStateMachine.fire(evtComplete);
         }, exceptionHandler));
     this.stopped = LifecycleStateMachineFactory.newStoppedState((stopEvt, stateMachine) -> {
       this.logger.info(APP_STOPPED);
       this.appLatch.countDown();
     });
 
-    LifecycleStateMachineFactory.configureAppStateMachine(this.appStateMachine, uninitialised,
-        starting, started, stopping,
-        this.stopped);
+    LifecycleStateMachineFactory.configureAndStartAppStateMachine(this.appStateMachine,
+        uninitialised,
+        starting, started, stopping, this.stopped);
   }
 
   public final void start() {
-    this.appOperator.fireAsync(startEvt);
+    //TODO start the state machine here
+    this.appStateMachine.fire(evtStart);
     try {
       this.appLatch.await();
     } catch (InterruptedException e) {
@@ -108,7 +108,7 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
   }
 
   public final void stop() {
-    this.appOperator.fireAsync(stopEvt);
+    this.appStateMachine.fire(evtStop);
   }
 
   public final State<C, Void> getLifecycleState() {

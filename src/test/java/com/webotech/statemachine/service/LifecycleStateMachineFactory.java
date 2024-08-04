@@ -16,12 +16,13 @@ import com.webotech.statemachine.api.StateMachineListener;
 /**
  * Useful for a {@link StateMachine} that backs an app.
  */
+//TODO review the name of this
 public final class LifecycleStateMachineFactory {
 
-  public static final StateEvent<Void> startEvt = new NamedStateEvent<>("start");
-  public static final StateEvent<Void> completeEvt = new NamedStateEvent<>("complete");
-  public static final StateEvent<Void> stopEvt = new NamedStateEvent<>("stop");
-  public static final StateEvent<Void> errorEvt = new NamedStateEvent<>("error");
+  public static final StateEvent<Void> evtStart = new NamedStateEvent<>("start");
+  public static final StateEvent<Void> evtComplete = new NamedStateEvent<>("complete");
+  public static final StateEvent<Void> evtStop = new NamedStateEvent<>("stop");
+  public static final StateEvent<Void> evtError = new NamedStateEvent<>("error");
 
   public static final String STATE_UNINITIALISED = "UNINITIALISED";
   public static final String STATE_STARTING = "STARTING";
@@ -60,17 +61,19 @@ public final class LifecycleStateMachineFactory {
     return newState(STATE_STOPPED, entryActions);
   }
 
-  public static <T> void configureAppStateMachine(StateMachine<T, Void> stateMachine,
+  //TODO rename
+  public static <T> void configureAndStartAppStateMachine(StateMachine<T, Void> stateMachine,
       State<T, Void> uninitialised, State<T, Void> starting,
       State<T, Void> started, State<T, Void> stopping, State<T, Void> stopped) {
-    stateMachine.initialSate(uninitialised).receives(startEvt).itTransitionsTo(starting);
-    stateMachine.when(starting).receives(completeEvt).itTransitionsTo(started);
-    stateMachine.when(starting).receives(errorEvt).itTransitionsTo(stopped);
-    stateMachine.when(started).receives(stopEvt).itTransitionsTo(stopping);
-    stateMachine.when(started).receives(errorEvt).itTransitionsTo(stopped);
-    stateMachine.when(stopping).receives(completeEvt).itTransitionsTo(stopped);
-    stateMachine.when(stopping).receives(errorEvt).itTransitionsTo(stopped);
+    stateMachine.initialSate(uninitialised).receives(evtStart).itTransitionsTo(starting);
+    stateMachine.when(starting).receives(evtComplete).itTransitionsTo(started);
+    stateMachine.when(starting).receives(evtError).itTransitionsTo(stopped);
+    stateMachine.when(started).receives(evtStop).itTransitionsTo(stopping);
+    stateMachine.when(started).receives(evtError).itTransitionsTo(stopped);
+    stateMachine.when(stopping).receives(evtComplete).itTransitionsTo(stopped);
+    stateMachine.when(stopping).receives(evtError).itTransitionsTo(stopped);
     stateMachine.when(stopped).itEnds();
+    //TODO don't start the statemachine, let the app do that
     stateMachine.start();
   }
 

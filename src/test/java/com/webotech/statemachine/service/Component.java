@@ -4,6 +4,7 @@
 
 package com.webotech.statemachine.service;
 
+//TODO review the name
 public interface Component<C extends AbstractAppContext<C>> {
 
   void start(C context);
