@@ -55,7 +55,7 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
     ExceptionHandler<C, Void> exceptionHandler = (se, sa, e) -> {
       //TODO
       logger.error(ERROR_WHILE_APP_IS_IN + sa.getClass().getSimpleName() + STATE, e);
-      AbstractAppService.this.appStateMachine.fire(evtError);
+      appStateMachine.fire(evtError);
     };
 
     State<C, Void> uninitialised = LifecycleStateMachineFactory.newUnitialisedState();
@@ -66,7 +66,7 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
           for (Subsystem<C> subsystem : appContext.getSubsystems()) {
             subsystem.start(appContext);
           }
-          AbstractAppService.this.appStateMachine.fire(evtComplete);
+          appStateMachine.fire(evtComplete);
         }, exceptionHandler));
     State<C, Void> started = LifecycleStateMachineFactory
         .newStartedState(new HandleExceptionAction<>((ev, sm) -> logger.info(APP_STARTED),
@@ -79,7 +79,7 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
           while (listIterator.hasPrevious()) {
             listIterator.previous().stop(appContext);
           }
-          AbstractAppService.this.appStateMachine.fire(evtComplete);
+          appStateMachine.fire(evtComplete);
         }, exceptionHandler));
     stopped = LifecycleStateMachineFactory.newStoppedState((stopEvt, stateMachine) -> {
       logger.info(APP_STOPPED);
