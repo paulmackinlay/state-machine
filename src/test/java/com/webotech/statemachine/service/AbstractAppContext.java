@@ -16,7 +16,7 @@ public abstract class AbstractAppContext<C extends AbstractAppContext<C>> {
   protected AbstractAppContext(String appName, String[] initArgs) {
     this.appName = appName;
     this.initArgs = initArgs;
-    this.componentsRef = new AtomicReference<>();
+    this.componentsRef = new AtomicReference<>(List.of());
   }
 
   @SuppressWarnings("unchecked")
