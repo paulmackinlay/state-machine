@@ -24,6 +24,7 @@ import org.apache.logging.log4j.Logger;
 
 public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
 
+  //TODO review these
   private static final String MAIN_LATCH_WAS_INTERRUPTED = "Main latch was interrupted";
   private static final String APP_STOPPED = "App stopped";
   private static final String STOPPING_APP = "Stopping app";
@@ -40,11 +41,11 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
   private State<C, Void> stopped;
 
   protected AbstractAppService(C appContext) {
-    this.logger = LogManager.getLogger(
-        AbstractAppService.class); // Do this here so that logging can be re-initialised statically by concrete class
-    this.appLatch = new CountDownLatch(1);
-    this.appStateMachine = new GenericStateMachine.Builder<C, Void>().setContext(appContext)
-        .build();
+    // Construct logger here so that logging can be re-initialised statically by concrete class
+    logger = LogManager.getLogger(AbstractAppService.class);
+    appLatch = new CountDownLatch(1);
+    //TODO add statemachine logger here?
+    appStateMachine = new GenericStateMachine.Builder<C, Void>().setContext(appContext).build();
     this.appContext = appContext;
     configureAppStateMachine();
   }
@@ -53,41 +54,40 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
     setStateMachineListener(LifecycleStateMachineFactory.stateMachineLogger());
     ExceptionHandler<C, Void> exceptionHandler = (se, sa, e) -> {
       //TODO
-      this.logger.error(ERROR_WHILE_APP_IS_IN + sa.getClass().getSimpleName() + STATE,
-          e);
+      logger.error(ERROR_WHILE_APP_IS_IN + sa.getClass().getSimpleName() + STATE, e);
       AbstractAppService.this.appStateMachine.fire(evtError);
     };
 
     State<C, Void> uninitialised = LifecycleStateMachineFactory.newUnitialisedState();
     State<C, Void> starting = LifecycleStateMachineFactory.newStartingState(
         new HandleExceptionAction<>((ev, sm) -> {
-          this.logger.info(STARTING_APP_WITH_ARGS,
+          logger.info(STARTING_APP_WITH_ARGS,
               Arrays.toString(sm.getContext().getInitArgs()));
-          for (Subsystem<C> subsystem : this.appContext.getSubsystems()) {
-            subsystem.start(this.appContext);
+          for (Subsystem<C> subsystem : appContext.getSubsystems()) {
+            subsystem.start(appContext);
           }
           AbstractAppService.this.appStateMachine.fire(evtComplete);
         }, exceptionHandler));
     State<C, Void> started = LifecycleStateMachineFactory
-        .newStartedState(new HandleExceptionAction<>((ev, sm) -> this.logger.info(APP_STARTED),
+        .newStartedState(new HandleExceptionAction<>((ev, sm) -> logger.info(APP_STARTED),
             exceptionHandler));
     State<C, Void> stopping = LifecycleStateMachineFactory.newStoppingState(
         new HandleExceptionAction<>((ev, sm) -> {
-          this.logger.info(STOPPING_APP);
-          List<Subsystem<C>> subsystems = this.appContext.getSubsystems();
+          logger.info(STOPPING_APP);
+          List<Subsystem<C>> subsystems = appContext.getSubsystems();
           ListIterator<Subsystem<C>> listIterator = subsystems.listIterator(subsystems.size());
           while (listIterator.hasPrevious()) {
-            listIterator.previous().stop(this.appContext);
+            listIterator.previous().stop(appContext);
           }
           AbstractAppService.this.appStateMachine.fire(evtComplete);
         }, exceptionHandler));
-    this.stopped = LifecycleStateMachineFactory.newStoppedState((stopEvt, stateMachine) -> {
-      this.logger.info(APP_STOPPED);
-      this.appLatch.countDown();
+    stopped = LifecycleStateMachineFactory.newStoppedState((stopEvt, stateMachine) -> {
+      logger.info(APP_STOPPED);
+      appLatch.countDown();
     });
 
-    LifecycleStateMachineFactory.configureAppStateMachine(this.appStateMachine,
-        uninitialised, starting, started, stopping, this.stopped);
+    LifecycleStateMachineFactory.configureAppStateMachine(appStateMachine, uninitialised, starting,
+        started, stopping, stopped);
   }
 
   public final void start() {
@@ -97,24 +97,24 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
       appLatch.await();
     } catch (InterruptedException e) {
       //TODO
-      this.logger.error(MAIN_LATCH_WAS_INTERRUPTED, e);
+      logger.error(MAIN_LATCH_WAS_INTERRUPTED, e);
       Thread.currentThread().interrupt();
     } finally {
-      if (!getLifecycleState().equals(this.stopped)) {
+      if (!getLifecycleState().equals(stopped)) {
         stop();
       }
     }
   }
 
   public final void stop() {
-    this.appStateMachine.fire(evtStop);
+    appStateMachine.fire(evtStop);
   }
 
   public final State<C, Void> getLifecycleState() {
-    return this.appStateMachine.getCurrentState();
+    return appStateMachine.getCurrentState();
   }
 
   public final void setStateMachineListener(StateMachineListener<C, Void> stateMachineListener) {
-    this.appStateMachine.setStateMachineListener(stateMachineListener);
+    appStateMachine.setStateMachineListener(stateMachineListener);
   }
 }
