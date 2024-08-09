@@ -12,10 +12,9 @@ import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 
 /**
- * Useful for a {@link StateMachine} that backs an app.
+ * Utils to help create, setup and configure a {@link StateMachine} that follows a basic lifecycle.
  */
-//TODO review the name of this
-public final class LifecycleStateMachineFactory {
+public final class LifecycleStateMachineUtil {
 
   public static final StateEvent<Void> evtStart = new NamedStateEvent<>("start");
   public static final StateEvent<Void> evtComplete = new NamedStateEvent<>("complete");
@@ -27,7 +26,7 @@ public final class LifecycleStateMachineFactory {
   public static final String STATE_STOPPING = "STOPPING";
   public static final String STATE_STOPPED = "STOPPED";
 
-  private LifecycleStateMachineFactory() {
+  private LifecycleStateMachineUtil() {
     // Not for instanciation outside this class
   }
 
@@ -56,9 +55,22 @@ public final class LifecycleStateMachineFactory {
     return newState(STATE_STOPPED, entryActions);
   }
 
+  /**
+   * Configures the {@link StateMachine} with these states and transitions:
+   *
+   * <tr><th>From State</th><th>Event</th><th>To State</th></tr>
+   * <tr><td>uninitialised</td><td>start</td><td>starting</td></tr>
+   * <tr><td>starting</td><td>complete</td><td>started</td></tr>
+   * <tr><td>starting</td><td>error</td><td>stopped</td></tr>
+   * <tr><td>started</td><td>stop</td><td>stopping</td></tr>
+   * <tr><td>started</td><td>error</td><td>stopped</td></tr>
+   * <tr><td>stopping</td><td>complete</td><td>stopped</td></tr>
+   * <tr><td>stopping</td><td>error</td><td>stopped</td></tr>
+   * <tr><td>stopped</td><td>_immediate_</td><td>it ends</td></tr>
+   */
   public static <T> void configureAppStateMachine(StateMachine<T, Void> stateMachine,
-      State<T, Void> uninitialised, State<T, Void> starting,
-      State<T, Void> started, State<T, Void> stopping, State<T, Void> stopped) {
+      State<T, Void> uninitialised, State<T, Void> starting, State<T, Void> started,
+      State<T, Void> stopping, State<T, Void> stopped) {
     stateMachine.initialSate(uninitialised).receives(evtStart).itTransitionsTo(starting);
     stateMachine.when(starting).receives(evtComplete).itTransitionsTo(started);
     stateMachine.when(starting).receives(evtError).itTransitionsTo(stopped);

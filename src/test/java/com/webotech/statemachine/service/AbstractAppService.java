@@ -4,10 +4,10 @@
 
 package com.webotech.statemachine.service;
 
-import static com.webotech.statemachine.service.LifecycleStateMachineFactory.evtComplete;
-import static com.webotech.statemachine.service.LifecycleStateMachineFactory.evtError;
-import static com.webotech.statemachine.service.LifecycleStateMachineFactory.evtStart;
-import static com.webotech.statemachine.service.LifecycleStateMachineFactory.evtStop;
+import static com.webotech.statemachine.service.LifecycleStateMachineUtil.evtComplete;
+import static com.webotech.statemachine.service.LifecycleStateMachineUtil.evtError;
+import static com.webotech.statemachine.service.LifecycleStateMachineUtil.evtStart;
+import static com.webotech.statemachine.service.LifecycleStateMachineUtil.evtStop;
 
 import com.webotech.statemachine.GenericStateMachine;
 import com.webotech.statemachine.HandleExceptionAction;
@@ -47,8 +47,8 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
       logger.error("Error while {} is in [{}] state", appName, sm.getCurrentState(), e);
       appStateMachine.fire(evtError);
     };
-    State<C, Void> uninitialised = LifecycleStateMachineFactory.newUnitialisedState();
-    State<C, Void> starting = LifecycleStateMachineFactory.newStartingState(
+    State<C, Void> uninitialised = LifecycleStateMachineUtil.newUnitialisedState();
+    State<C, Void> starting = LifecycleStateMachineUtil.newStartingState(
         new HandleExceptionAction<>((ev, sm) -> {
           logger.info("Starting {} with args {}", appName, appContext.getInitArgs());
           for (Subsystem<C> subsystem : appContext.getSubsystems()) {
@@ -56,10 +56,10 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
           }
           appStateMachine.fire(evtComplete);
         }, exceptionHandler));
-    State<C, Void> started = LifecycleStateMachineFactory.newStartedState(
+    State<C, Void> started = LifecycleStateMachineUtil.newStartedState(
         new HandleExceptionAction<>((ev, sm) -> {
         }, exceptionHandler));
-    State<C, Void> stopping = LifecycleStateMachineFactory.newStoppingState(
+    State<C, Void> stopping = LifecycleStateMachineUtil.newStoppingState(
         new HandleExceptionAction<>((ev, sm) -> {
           List<Subsystem<C>> subsystems = appContext.getSubsystems();
           ListIterator<Subsystem<C>> listIterator = subsystems.listIterator(subsystems.size());
@@ -68,11 +68,11 @@ public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
           }
           appStateMachine.fire(evtComplete);
         }, exceptionHandler));
-    stopped = LifecycleStateMachineFactory.newStoppedState((stopEvt, stateMachine) -> {
+    stopped = LifecycleStateMachineUtil.newStoppedState((stopEvt, stateMachine) -> {
       appLatch.countDown();
     });
 
-    LifecycleStateMachineFactory.configureAppStateMachine(appStateMachine, uninitialised, starting,
+    LifecycleStateMachineUtil.configureAppStateMachine(appStateMachine, uninitialised, starting,
         started, stopping, stopped);
   }
 
