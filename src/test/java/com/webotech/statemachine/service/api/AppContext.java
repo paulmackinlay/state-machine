@@ -10,7 +10,7 @@ import java.util.List;
  * Minimal API for an application context. Real world implementations are likely to have many more
  * getter methods.
  */
-public interface AppContext<C extends AppContext> {
+public interface AppContext<C extends AppContext<?>> {
 
   /**
    * @return initialisation arguments - analagous to the args parameter in a main method.
