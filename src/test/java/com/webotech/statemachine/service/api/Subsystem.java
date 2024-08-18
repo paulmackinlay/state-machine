@@ -2,9 +2,11 @@
  * Copyright (c) 2024 Paul Mackinlay <paul.mackinlay@gmail.com>
  */
 
-package com.webotech.statemachine.service;
+package com.webotech.statemachine.service.api;
 
 //TODO - review move out of test src
+
+import com.webotech.statemachine.service.AbstractAppService;
 
 /**
  * API for a subsystem in an {@link AbstractAppService} where an app starts and stops a collection

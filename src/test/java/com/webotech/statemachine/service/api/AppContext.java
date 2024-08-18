@@ -2,7 +2,7 @@
  * Copyright (c) 2024 Paul Mackinlay <paul.mackinlay@gmail.com>
  */
 
-package com.webotech.statemachine.service;
+package com.webotech.statemachine.service.api;
 
 import java.util.List;
 

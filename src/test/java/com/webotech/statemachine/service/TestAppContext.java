@@ -4,6 +4,8 @@
 
 package com.webotech.statemachine.service;
 
+import com.webotech.statemachine.service.api.AppContext;
+
 public class TestAppContext extends AbstractAppContext<TestAppContext> implements
     AppContext<TestAppContext> {
 

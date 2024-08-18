@@ -4,6 +4,8 @@
 
 package com.webotech.statemachine.service;
 
+import com.webotech.statemachine.service.api.AppContext;
+import com.webotech.statemachine.service.api.Subsystem;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
