@@ -10,8 +10,7 @@ package com.webotech.statemachine.service;
  * API for a subsystem in an {@link AbstractAppService} where an app starts and stops a collection
  * of {@link Subsystem}s in a controlled manner when the app starts and stops.
  */
-//TODO replace AbstractAppContet with interface called AppContext
-public interface Subsystem<C extends AbstractAppContext<?>> {
+public interface Subsystem<C extends AppContext> {
 
   /**
    * Starts the subsystem

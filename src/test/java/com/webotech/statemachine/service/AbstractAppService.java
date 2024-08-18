@@ -23,7 +23,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 //TODO - review move out of test src
-public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
+public abstract class AbstractAppService<C extends AppContext<C>> {
 
   private final Logger logger;
   private final StateMachine<C, Void> appStateMachine;

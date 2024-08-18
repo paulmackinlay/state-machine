@@ -8,8 +8,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 //TODO - review move out of test src
-//TODO make an insterface from this so that there can be a service API
-public abstract class AbstractAppContext<C extends AbstractAppContext<C>> {
+public abstract class AbstractAppContext<C extends AbstractAppContext<C>> implements AppContext<C> {
 
   private final String[] initArgs;
   private final String appName;
@@ -27,14 +26,17 @@ public abstract class AbstractAppContext<C extends AbstractAppContext<C>> {
     return (C) this;
   }
 
+  @Override
   public final String[] getInitArgs() {
     return this.initArgs;
   }
 
+  @Override
   public final String getAppName() {
     return this.appName;
   }
 
+  @Override
   public final List<Subsystem<C>> getSubsystems() {
     return this.subsytemsRef.get();
   }
