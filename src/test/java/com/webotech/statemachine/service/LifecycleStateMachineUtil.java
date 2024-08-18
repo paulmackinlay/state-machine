@@ -11,6 +11,8 @@ import com.webotech.statemachine.api.StateAction;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 
+//TODO - review move out of test src
+
 /**
  * Utils to help create, setup and configure a {@link StateMachine} that follows a basic lifecycle.
  */

@@ -14,6 +14,7 @@ import com.webotech.statemachine.api.StateAction;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
+import com.webotech.statemachine.service.TestApp;
 import com.webotech.statemachine.strategy.DefaultEventStrategy;
 import com.webotech.statemachine.strategy.DefaultUnexpectedFlowListener;
 import com.webotech.statemachine.strategy.EventProcessingStrategy;
@@ -37,6 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class StateMachineIntegrationTest {
@@ -190,6 +192,14 @@ class StateMachineIntegrationTest {
   DONE 12. no transition configuration
   DONE 13. fire many events on many threads with actions that block for a random time, ensure it handles it gracefully
    */
+
+  @Test
+  @Disabled
+  void shouldTestStateMachineBackedApp() {
+    TestApp testApp = new TestApp(new String[0]);
+    //TODO
+    fail();
+  }
 
   @Test
   void shouldUseEventPayloadsOnIndividualEventInstancesToControlFlow() {

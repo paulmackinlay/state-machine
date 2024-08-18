@@ -22,6 +22,7 @@ import java.util.concurrent.CountDownLatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+//TODO - review move out of test src
 public abstract class AbstractAppService<C extends AbstractAppContext<C>> {
 
   private final Logger logger;
