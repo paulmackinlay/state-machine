@@ -6,6 +6,7 @@ package com.webotech.statemachine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -14,7 +15,9 @@ import com.webotech.statemachine.api.StateAction;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
+import com.webotech.statemachine.service.LifecycleStateMachineUtil;
 import com.webotech.statemachine.service.TestApp;
+import com.webotech.statemachine.service.TestAppContext;
 import com.webotech.statemachine.strategy.DefaultEventStrategy;
 import com.webotech.statemachine.strategy.DefaultUnexpectedFlowListener;
 import com.webotech.statemachine.strategy.EventProcessingStrategy;
@@ -38,7 +41,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class StateMachineIntegrationTest {
@@ -194,11 +196,39 @@ class StateMachineIntegrationTest {
    */
 
   @Test
-  @Disabled
-  void shouldTestStateMachineBackedApp() {
+  void shouldTestStateMachineBackedApp() throws InterruptedException {
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    CountDownLatch startLatch = new CountDownLatch(1);
     TestApp testApp = new TestApp(new String[0]);
-    //TODO
-    fail();
+    testApp.setStateMachineListener(new StateMachineListener<TestAppContext, Void>() {
+      @Override
+      public void onStateChangeBegin(State<TestAppContext, Void> fromState, StateEvent<Void> event,
+          State<TestAppContext, Void> toState) {
+        if (toState.getName().equals(LifecycleStateMachineUtil.STATE_STARTED)) {
+          startLatch.countDown();
+        }
+      }
+
+      @Override
+      public void onStateChangeEnd(State<TestAppContext, Void> fromState, StateEvent<Void> event,
+          State<TestAppContext, Void> toState) {
+        // Niente
+      }
+    });
+
+    State<TestAppContext, Void> state = testApp.getLifecycleState();
+    assertNull(state);
+    executor.execute(() -> testApp.start());
+    boolean success = startLatch.await(2, TimeUnit.SECONDS);
+    if (!success) {
+      fail("Did not start in time");
+    }
+    //TODO think of a better way
+    TimeUnit.MILLISECONDS.sleep(100);
+    state = testApp.getLifecycleState();
+    assertEquals(LifecycleStateMachineUtil.STATE_STARTED, state.getName());
+    //TODO - improve this test
+    //fail();
   }
 
   @Test
@@ -621,8 +651,7 @@ class StateMachineIntegrationTest {
   @Test
   void shouldUseUnmappedEventHandler() {
     AtomicReference<Entry<StateEvent<Void>, State<Void, Void>>> unmappedData = new AtomicReference<>();
-    ExecutorService executor =
-        Executors.newSingleThreadExecutor();
+    ExecutorService executor = Executors.newSingleThreadExecutor();
     BiConsumer<StateEvent<Void>, StateMachine<Void, Void>> unmappedEventHandler = (se, sm) -> {
       unmappedData.set(new SimpleImmutableEntry<>(se, sm.getCurrentState()));
     };
