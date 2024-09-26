@@ -182,24 +182,7 @@ class StateMachineIntegrationTest {
           + "NamedStateEvent[continue] caused transition to NamedState[SECOND-STATE]\n", stdOut);
     }
   }
-
-  /*
-  TODO
-  DONE 1. state machine that ends in a state
-  DONE 2. state machine that ends on event
-  DONE 3. state machine that goes in circles and then ends on event
-  DONE 4. state machine that logs
-  DONE 5. state machine that notifies
-  6. state machine that can be used to start an app
-  DONE 7. context based
-  DONE 8. events with payload
-  DONE 9. fire many events concurrently
-  DONE 10. state machine that starts in a specific state
-  DONE 11. Unmapped event handlers
-  DONE 12. no transition configuration
-  DONE 13. fire many events on many threads with actions that block for a random time, ensure it handles it gracefully
-   */
-
+  
   @Test
   void shouldTestStateMachineBackedApp() throws InterruptedException {
     ExecutorService executor = Executors.newSingleThreadExecutor();
