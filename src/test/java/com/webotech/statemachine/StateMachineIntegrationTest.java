@@ -7,8 +7,11 @@ package com.webotech.statemachine;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateAction;
@@ -18,6 +21,7 @@ import com.webotech.statemachine.api.StateMachineListener;
 import com.webotech.statemachine.service.LifecycleStateMachineUtil;
 import com.webotech.statemachine.service.TestApp;
 import com.webotech.statemachine.service.TestAppContext;
+import com.webotech.statemachine.service.api.Subsystem;
 import com.webotech.statemachine.strategy.DefaultEventStrategy;
 import com.webotech.statemachine.strategy.DefaultUnexpectedFlowListener;
 import com.webotech.statemachine.strategy.EventProcessingStrategy;
@@ -42,6 +46,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 
 class StateMachineIntegrationTest {
 
@@ -199,7 +204,9 @@ class StateMachineIntegrationTest {
   void shouldTestStateMachineBackedApp() throws InterruptedException {
     ExecutorService executor = Executors.newSingleThreadExecutor();
     CountDownLatch startLatch = new CountDownLatch(1);
-    TestApp testApp = new TestApp(new String[0]);
+    CountDownLatch stopLatch = new CountDownLatch(1);
+    String[] args = {"an-arg"};
+    TestApp testApp = new TestApp(args);
     testApp.setStateMachineListener(new StateMachineListener<TestAppContext, Void>() {
       @Override
       public void onStateChangeBegin(State<TestAppContext, Void> fromState, StateEvent<Void> event,
@@ -212,7 +219,9 @@ class StateMachineIntegrationTest {
       @Override
       public void onStateChangeEnd(State<TestAppContext, Void> fromState, StateEvent<Void> event,
           State<TestAppContext, Void> toState) {
-        // Niente
+        if (toState.getName().equals(LifecycleStateMachineUtil.STATE_STOPPED)) {
+          stopLatch.countDown();
+        }
       }
     });
 
@@ -227,8 +236,30 @@ class StateMachineIntegrationTest {
     TimeUnit.MILLISECONDS.sleep(100);
     state = testApp.getLifecycleState();
     assertEquals(LifecycleStateMachineUtil.STATE_STARTED, state.getName());
-    //TODO - improve this test
-    //fail();
+    assertThrows(IllegalStateException.class, () -> testApp.start());
+    TestAppContext appContext = testApp.getAppContext();
+    assertEquals("TestApp", appContext.getAppName());
+    assertEquals(2, appContext.getSubsystems().size());
+    Subsystem<TestAppContext> subsystem1 = appContext.getSubsystems().get(0);
+    Subsystem<TestAppContext> subsystem2 = appContext.getSubsystems().get(1);
+    assertEquals(args, appContext.getInitArgs());
+
+    InOrder inOrder = inOrder(subsystem1, subsystem2);
+    inOrder.verify(subsystem1, times(1)).start(appContext);
+    inOrder.verify(subsystem2, times(1)).start(appContext);
+
+    testApp.stop();
+    success = stopLatch.await(2, TimeUnit.SECONDS);
+    if (!success) {
+      fail("Did not stop in time");
+    }
+    state = testApp.getLifecycleState();
+    List<String> stopedStates = List.of(GenericStateMachine.RESERVED_STATE_NAME_END,
+        LifecycleStateMachineUtil.STATE_STOPPED);
+    assertTrue(stopedStates.contains(state.getName()));
+    //Stops in reverse order from how is started
+    inOrder.verify(subsystem2, times(1)).stop(appContext);
+    inOrder.verify(subsystem1, times(1)).stop(appContext);
   }
 
   @Test

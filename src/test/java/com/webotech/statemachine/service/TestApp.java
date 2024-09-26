@@ -4,7 +4,11 @@
 
 package com.webotech.statemachine.service;
 
+import static org.mockito.Mockito.mock;
+
+import com.webotech.statemachine.service.api.Subsystem;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -12,7 +16,8 @@ import java.util.concurrent.TimeUnit;
 public class TestApp extends AbstractAppService<TestAppContext> {
 
   public TestApp(String[] args) {
-    super(new TestAppContext(TestApp.class.getSimpleName(), args));
+    super(new TestAppContext(TestApp.class.getSimpleName(), args).withSubsytems(
+        List.of(mock(Subsystem.class), mock(Subsystem.class))));
   }
 
   public static void main(String[] args) {
@@ -26,5 +31,9 @@ public class TestApp extends AbstractAppService<TestAppContext> {
     } finally {
       scheduledExecutorService.shutdownNow();
     }
+  }
+
+  public TestAppContext getAppContext() {
+    return super.getAppContext();
   }
 }

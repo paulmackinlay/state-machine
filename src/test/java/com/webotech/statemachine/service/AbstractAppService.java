@@ -64,6 +64,7 @@ public abstract class AbstractAppService<C extends AppContext<C>> {
         }, exceptionHandler));
     State<C, Void> stopping = LifecycleStateMachineUtil.newStoppingState(
         new HandleExceptionAction<>((ev, sm) -> {
+          logger.info("Stopping {}", appName);
           List<Subsystem<C>> subsystems = appContext.getSubsystems();
           ListIterator<Subsystem<C>> listIterator = subsystems.listIterator(subsystems.size());
           while (listIterator.hasPrevious()) {
@@ -72,11 +73,16 @@ public abstract class AbstractAppService<C extends AppContext<C>> {
           appStateMachine.fire(evtComplete);
         }, exceptionHandler));
     stopped = LifecycleStateMachineUtil.newStoppedState((stopEvt, stateMachine) -> {
+      logger.info("Stopped {}", appName);
       appLatch.countDown();
     });
 
     LifecycleStateMachineUtil.configureAppStateMachine(appStateMachine, uninitialised, starting,
         started, stopping, stopped);
+  }
+
+  protected C getAppContext() {
+    return appContext;
   }
 
   public final void start() {
