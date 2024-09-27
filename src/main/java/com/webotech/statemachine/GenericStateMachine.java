@@ -15,12 +15,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringJoiner;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
-  private static final Logger logger = LogManager.getLogger(GenericStateMachine.class);
   public static final String RESERVED_STATE_NAME_END = "_END_";
   private static final String RESERVED_STATE_NAME_UNINITIALISED = "_UNINITIALISED_";
   public static final String RESERVED_STATE_NAME_NOOP = "_NOOP_";

@@ -26,7 +26,6 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
   private final StateMachine<C, Void> appStateMachine;
   private final CountDownLatch appLatch;
   private final C appContext;
-  private State<C, Void> stopped;
 
   protected AbstractAppService(C appContext) {
     // Construct logger here so that logging can be re-initialised statically by concrete class
@@ -67,7 +66,7 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
           }
           appStateMachine.fire(LifecycleStateMachineUtil.evtComplete);
         }, exceptionHandler));
-    stopped = LifecycleStateMachineUtil.newStoppedState((stopEvt, stateMachine) -> {
+    State<C, Void> stopped = LifecycleStateMachineUtil.newStoppedState((stopEvt, stateMachine) -> {
       logger.info("Stopped {}", appName);
       appLatch.countDown();
     });
