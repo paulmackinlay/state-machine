@@ -94,7 +94,7 @@ public abstract class AbstractAppService<C extends AppContext<C>> {
       logger.error("Main latch was interrupted", e);
       Thread.currentThread().interrupt();
     } finally {
-      if (!getLifecycleState().equals(stopped)) {
+      if (!appStateMachine.isEnded()) {
         stop();
       }
     }

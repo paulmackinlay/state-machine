@@ -182,67 +182,75 @@ class StateMachineIntegrationTest {
           + "NamedStateEvent[continue] caused transition to NamedState[SECOND-STATE]\n", stdOut);
     }
   }
-  
+
   @Test
-  void shouldTestStateMachineBackedApp() throws InterruptedException {
-    ExecutorService executor = Executors.newSingleThreadExecutor();
-    CountDownLatch startLatch = new CountDownLatch(1);
-    CountDownLatch stopLatch = new CountDownLatch(1);
-    String[] args = {"an-arg"};
-    TestApp testApp = new TestApp(args);
-    testApp.setStateMachineListener(new StateMachineListener<TestAppContext, Void>() {
-      @Override
-      public void onStateChangeBegin(State<TestAppContext, Void> fromState, StateEvent<Void> event,
-          State<TestAppContext, Void> toState) {
-        if (toState.getName().equals(LifecycleStateMachineUtil.STATE_STARTED)) {
-          startLatch.countDown();
+  void shouldTestStateMachineBackedApp() throws InterruptedException, IOException {
+    try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
+      ExecutorService executor = Executors.newSingleThreadExecutor();
+      CountDownLatch startLatch = new CountDownLatch(1);
+      CountDownLatch stopLatch = new CountDownLatch(1);
+      String[] args = {"an-arg"};
+      TestApp testApp = new TestApp(args);
+      testApp.setStateMachineListener(new StateMachineListener<TestAppContext, Void>() {
+        @Override
+        public void onStateChangeBegin(State<TestAppContext, Void> fromState,
+            StateEvent<Void> event,
+            State<TestAppContext, Void> toState) {
+          if (toState.getName().equals(LifecycleStateMachineUtil.STATE_STARTED)) {
+            startLatch.countDown();
+          }
         }
-      }
 
-      @Override
-      public void onStateChangeEnd(State<TestAppContext, Void> fromState, StateEvent<Void> event,
-          State<TestAppContext, Void> toState) {
-        if (toState.getName().equals(LifecycleStateMachineUtil.STATE_STOPPED)) {
-          stopLatch.countDown();
+        @Override
+        public void onStateChangeEnd(State<TestAppContext, Void> fromState, StateEvent<Void> event,
+            State<TestAppContext, Void> toState) {
+          if (toState.getName().equals(LifecycleStateMachineUtil.STATE_STOPPED)) {
+            stopLatch.countDown();
+          }
         }
+      });
+
+      State<TestAppContext, Void> state = testApp.getLifecycleState();
+      assertNull(state);
+      executor.execute(() -> testApp.start());
+      boolean success = startLatch.await(2, TimeUnit.SECONDS);
+      if (!success) {
+        fail("Did not start in time");
       }
-    });
+      //TODO think of a better way
+      TimeUnit.MILLISECONDS.sleep(100);
+      state = testApp.getLifecycleState();
+      assertEquals(LifecycleStateMachineUtil.STATE_STARTED, state.getName());
+      assertThrows(IllegalStateException.class, () -> testApp.start());
+      TestAppContext appContext = testApp.getAppContext();
+      assertEquals("TestApp", appContext.getAppName());
+      assertEquals(2, appContext.getSubsystems().size());
+      Subsystem<TestAppContext> subsystem1 = appContext.getSubsystems().get(0);
+      Subsystem<TestAppContext> subsystem2 = appContext.getSubsystems().get(1);
+      assertEquals(args, appContext.getInitArgs());
 
-    State<TestAppContext, Void> state = testApp.getLifecycleState();
-    assertNull(state);
-    executor.execute(() -> testApp.start());
-    boolean success = startLatch.await(2, TimeUnit.SECONDS);
-    if (!success) {
-      fail("Did not start in time");
+      InOrder inOrder = inOrder(subsystem1, subsystem2);
+      inOrder.verify(subsystem1, times(1)).start(appContext);
+      inOrder.verify(subsystem2, times(1)).start(appContext);
+
+      testApp.stop();
+      success = stopLatch.await(2, TimeUnit.SECONDS);
+      if (!success) {
+        fail("Did not stop in time");
+      }
+      state = testApp.getLifecycleState();
+      List<String> stopedStates = List.of(GenericStateMachine.RESERVED_STATE_NAME_END,
+          LifecycleStateMachineUtil.STATE_STOPPED);
+      assertTrue(stopedStates.contains(state.getName()));
+      //Stops in reverse order from how is started
+      inOrder.verify(subsystem2, times(1)).stop(appContext);
+      inOrder.verify(subsystem1, times(1)).stop(appContext);
+
+      String log = logStream.toString();
+      assertEquals("Starting TestApp with args [an-arg]\n"
+          + "Stopping TestApp\n"
+          + "Stopped TestApp\n", log);
     }
-    //TODO think of a better way
-    TimeUnit.MILLISECONDS.sleep(100);
-    state = testApp.getLifecycleState();
-    assertEquals(LifecycleStateMachineUtil.STATE_STARTED, state.getName());
-    assertThrows(IllegalStateException.class, () -> testApp.start());
-    TestAppContext appContext = testApp.getAppContext();
-    assertEquals("TestApp", appContext.getAppName());
-    assertEquals(2, appContext.getSubsystems().size());
-    Subsystem<TestAppContext> subsystem1 = appContext.getSubsystems().get(0);
-    Subsystem<TestAppContext> subsystem2 = appContext.getSubsystems().get(1);
-    assertEquals(args, appContext.getInitArgs());
-
-    InOrder inOrder = inOrder(subsystem1, subsystem2);
-    inOrder.verify(subsystem1, times(1)).start(appContext);
-    inOrder.verify(subsystem2, times(1)).start(appContext);
-
-    testApp.stop();
-    success = stopLatch.await(2, TimeUnit.SECONDS);
-    if (!success) {
-      fail("Did not stop in time");
-    }
-    state = testApp.getLifecycleState();
-    List<String> stopedStates = List.of(GenericStateMachine.RESERVED_STATE_NAME_END,
-        LifecycleStateMachineUtil.STATE_STOPPED);
-    assertTrue(stopedStates.contains(state.getName()));
-    //Stops in reverse order from how is started
-    inOrder.verify(subsystem2, times(1)).stop(appContext);
-    inOrder.verify(subsystem1, times(1)).stop(appContext);
   }
 
   @Test
