@@ -23,7 +23,7 @@ public interface AppContext<C extends AppContext<?>> {
   String getAppName();
 
   /**
-   * @return
+   * @return the {@link Subsystem}s for the {@link AppService}
    */
   List<Subsystem<C>> getSubsystems();
 }
