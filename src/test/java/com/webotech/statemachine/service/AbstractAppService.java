@@ -17,6 +17,7 @@ import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
 import com.webotech.statemachine.service.api.AppContext;
+import com.webotech.statemachine.service.api.AppService;
 import com.webotech.statemachine.service.api.Subsystem;
 import java.util.List;
 import java.util.ListIterator;
@@ -25,7 +26,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 //TODO - review move out of test src
-public abstract class AbstractAppService<C extends AppContext<C>> {
+public abstract class AbstractAppService<C extends AppContext<C>> implements AppService<C> {
 
   private final Logger logger;
   private final StateMachine<C, Void> appStateMachine;
@@ -81,7 +82,7 @@ public abstract class AbstractAppService<C extends AppContext<C>> {
         started, stopping, stopped);
   }
 
-  protected C getAppContext() {
+  public C getAppContext() {
     return appContext;
   }
 

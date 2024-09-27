@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * Minimal API for an application context. Real world implementations are likely to have many more
- * getter methods.
+ * getters.
  */
 public interface AppContext<C extends AppContext<?>> {
 

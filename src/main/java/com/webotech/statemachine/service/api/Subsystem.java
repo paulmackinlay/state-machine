@@ -4,13 +4,9 @@
 
 package com.webotech.statemachine.service.api;
 
-//TODO - review move out of test src
-
-import com.webotech.statemachine.service.AbstractAppService;
-
 /**
- * API for a subsystem in an {@link AbstractAppService} where an app starts and stops a collection
- * of {@link Subsystem}s in a controlled manner when the app starts and stops.
+ * API for a subsystem in an {@link AppService} where an app starts and stops a collection
+ * of {@link Subsystem}s in a controlled manner when the app itself starts and stops.
  */
 public interface Subsystem<C extends AppContext<?>> {
 
