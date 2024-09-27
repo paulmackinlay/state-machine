@@ -4,11 +4,6 @@
 
 package com.webotech.statemachine.service;
 
-import static com.webotech.statemachine.service.LifecycleStateMachineUtil.evtComplete;
-import static com.webotech.statemachine.service.LifecycleStateMachineUtil.evtError;
-import static com.webotech.statemachine.service.LifecycleStateMachineUtil.evtStart;
-import static com.webotech.statemachine.service.LifecycleStateMachineUtil.evtStop;
-
 import com.webotech.statemachine.GenericStateMachine;
 import com.webotech.statemachine.HandleExceptionAction;
 import com.webotech.statemachine.HandleExceptionAction.ExceptionHandler;
@@ -25,7 +20,6 @@ import java.util.concurrent.CountDownLatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-//TODO - review move out of test src
 public abstract class AbstractAppService<C extends AppContext<C>> implements AppService<C> {
 
   private final Logger logger;
@@ -49,7 +43,7 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
     setStateMachineListener(stateMachineLogger);
     ExceptionHandler<C, Void> exceptionHandler = (evt, sm, e) -> {
       logger.error("Error while {} is in [{}] state", appName, sm.getCurrentState(), e);
-      appStateMachine.fire(evtError);
+      appStateMachine.fire(LifecycleStateMachineUtil.evtError);
     };
     State<C, Void> uninitialised = LifecycleStateMachineUtil.newUnitialisedState();
     State<C, Void> starting = LifecycleStateMachineUtil.newStartingState(
@@ -58,7 +52,7 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
           for (Subsystem<C> subsystem : appContext.getSubsystems()) {
             subsystem.start(appContext);
           }
-          appStateMachine.fire(evtComplete);
+          appStateMachine.fire(LifecycleStateMachineUtil.evtComplete);
         }, exceptionHandler));
     State<C, Void> started = LifecycleStateMachineUtil.newStartedState(
         new HandleExceptionAction<>((ev, sm) -> {
@@ -71,7 +65,7 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
           while (listIterator.hasPrevious()) {
             listIterator.previous().stop(appContext);
           }
-          appStateMachine.fire(evtComplete);
+          appStateMachine.fire(LifecycleStateMachineUtil.evtComplete);
         }, exceptionHandler));
     stopped = LifecycleStateMachineUtil.newStoppedState((stopEvt, stateMachine) -> {
       logger.info("Stopped {}", appName);
@@ -88,7 +82,7 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
 
   public final void start() {
     appStateMachine.start();
-    appStateMachine.fire(evtStart);
+    appStateMachine.fire(LifecycleStateMachineUtil.evtStart);
     try {
       appLatch.await();
     } catch (InterruptedException e) {
@@ -102,7 +96,7 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
   }
 
   public final void stop() {
-    appStateMachine.fire(evtStop);
+    appStateMachine.fire(LifecycleStateMachineUtil.evtStop);
   }
 
   public final State<C, Void> getLifecycleState() {

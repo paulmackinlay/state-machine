@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 public class TestApp extends AbstractAppService<TestAppContext> {
 
   public TestApp(String[] args) {
-    super(new TestAppContext(TestApp.class.getSimpleName(), args).withSubsytems(
+    super(new TestAppContext(TestApp.class.getSimpleName(), args).withSubsystems(
         List.of(mock(Subsystem.class), mock(Subsystem.class))));
   }
 
