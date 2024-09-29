@@ -75,11 +75,13 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
         started, stopping, stopped);
   }
 
+  @Override
   public C getAppContext() {
     return appContext;
   }
 
-  public final void start() {
+  @Override
+  public void start() {
     appStateMachine.start();
     appStateMachine.fire(LifecycleStateMachineUtil.evtStart);
     try {
@@ -94,7 +96,8 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
     }
   }
 
-  public final void stop() {
+  @Override
+  public void stop() {
     appStateMachine.fire(LifecycleStateMachineUtil.evtStop);
   }
 

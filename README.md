@@ -6,6 +6,7 @@ java that is thread safe.
 
 - State machine API with comprehensive javadoc
 - Generic implementation
+- Service API & app starter implementation for state machine backed microservice
 - Core java: no dependencies (other than a logging API)
 - Thread safe
 - Extensively tested
