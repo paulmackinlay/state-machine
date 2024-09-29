@@ -18,7 +18,7 @@ predictable and graceful manner. It will transition from a STOPPED state to a ST
 then to a STARTED state.
 
 During the STARTING state, constructed subsystems are started in a sequential manner. Once all have
-started the app transitions to a STARTED state. The app in the STARTED state will run indefinitely
+started the app transitions to a STARTED state. The app in the STARTED state will run indefinitely,
 servicing any operations that are needed and will also process a STOP event which will cause it to
 gracefully wind down.
 
