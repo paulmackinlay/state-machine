@@ -14,6 +14,7 @@ import com.webotech.statemachine.api.StateMachine;
 /**
  * Utils to help create, setup and configure a {@link StateMachine} that follows a basic lifecycle.
  */
+//TODO test this
 public final class LifecycleStateMachineUtil {
 
   public static final StateEvent<Void> evtStart = new NamedStateEvent<>("start");
