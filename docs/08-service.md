@@ -30,4 +30,4 @@ behaviour. For example, you may wish to leave the app running as a warm standby 
 and transition to the STARTED state again).
 
 Here is the app's state diagram:
-TODO
+![](media/State_diagram_4.png)

@@ -20,6 +20,7 @@ public final class LifecycleStateMachineUtil {
   public static final StateEvent<Void> evtComplete = new NamedStateEvent<>("complete");
   public static final StateEvent<Void> evtStop = new NamedStateEvent<>("stop");
   public static final StateEvent<Void> evtError = new NamedStateEvent<>("error");
+  public static final StateEvent<Void> evtExit = new NamedStateEvent<>("exit");
   public static final String STATE_UNINITIALISED = "UNINITIALISED";
   public static final String STATE_STARTING = "STARTING";
   public static final String STATE_STARTED = "STARTED";
@@ -58,15 +59,18 @@ public final class LifecycleStateMachineUtil {
   /**
    * Configures the {@link StateMachine} with these states and transitions:
    *
+   * <table>
    * <tr><th>From State</th><th>Event</th><th>To State</th></tr>
-   * <tr><td>uninitialised</td><td>start</td><td>starting</td></tr>
-   * <tr><td>starting</td><td>complete</td><td>started</td></tr>
-   * <tr><td>starting</td><td>error</td><td>stopped</td></tr>
-   * <tr><td>started</td><td>stop</td><td>stopping</td></tr>
-   * <tr><td>started</td><td>error</td><td>stopped</td></tr>
-   * <tr><td>stopping</td><td>complete</td><td>stopped</td></tr>
-   * <tr><td>stopping</td><td>error</td><td>stopped</td></tr>
-   * <tr><td>stopped</td><td>_immediate_</td><td>it ends</td></tr>
+   * <tr><td>UNINITIALISED</td><td>start</td><td>STARTING</td></tr>
+   * <tr><td>STARTING</td><td>complete</td><td>STARTED</td></tr>
+   * <tr><td>STARTING</td><td>error</td><td>STOPPED</td></tr>
+   * <tr><td>STARTED</td><td>stop</td><td>STOPPING</td></tr>
+   * <tr><td>STARTED</td><td>error</td><td>STOPPED</td></tr>
+   * <tr><td>STOPPING</td><td>complete</td><td>STOPPED</td></tr>
+   * <tr><td>STOPPING</td><td>error</td><td>STOPPED</td></tr>
+   * <tr><td>STOPPED</td><td>start</td><td>STARTING</td></tr>
+   * <tr><td>STOPPED</td><td>exit</td><td>it ends</td></tr>
+   * </table>
    */
   public static <T> void configureAppStateMachine(StateMachine<T, Void> stateMachine,
       State<T, Void> uninitialised, State<T, Void> starting, State<T, Void> started,
@@ -78,7 +82,8 @@ public final class LifecycleStateMachineUtil {
     stateMachine.when(started).receives(evtError).itTransitionsTo(stopped);
     stateMachine.when(stopping).receives(evtComplete).itTransitionsTo(stopped);
     stateMachine.when(stopping).receives(evtError).itTransitionsTo(stopped);
-    stateMachine.when(stopped).itEnds();
+    stateMachine.when(stopped).receives(evtStart).itTransitionsTo(starting);
+    stateMachine.when(stopped).receives(evtExit).itEnds();
   }
 
   @SafeVarargs
