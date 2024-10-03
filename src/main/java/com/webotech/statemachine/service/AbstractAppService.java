@@ -26,13 +26,36 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
   private final StateMachine<C, Void> appStateMachine;
   private final CountDownLatch appLatch;
   private final C appContext;
+  private final boolean isExitOnStop;
 
+  /**
+   * Construct an app whose process will exit when it is stopped.
+   *
+   * @param appContext the application context
+   */
   protected AbstractAppService(C appContext) {
+    this(appContext, true);
+  }
+
+  /**
+   * The app can be in one of two modes. In the first process exits when the app has been stopped
+   * (isExitOnStop is true). In the second (isExitOnStop is false) the process won't exit until the
+   * app has been stopped and it receives an exit event. In this second mode an app can be stopped
+   * and started again (when it has been stopped and it receives a start event).
+   *
+   * @param appContext   the application context
+   * @param isExitOnStop when true the app process will exit immediately when the app is in the
+   *                     <i>stopped</i> state otherwise it an <i>exit</i> event will cause the
+   *                     process to exit when in the stopped state.
+   */
+  //TODO test when isExitOnStop has different values
+  protected AbstractAppService(C appContext, boolean isExitOnStop) {
     // Construct logger here so that logging can be re-initialised statically by concrete class
     logger = LogManager.getLogger(AbstractAppService.class);
     appLatch = new CountDownLatch(1);
     appStateMachine = new GenericStateMachine.Builder<C, Void>().setContext(appContext).build();
     this.appContext = appContext;
+    this.isExitOnStop = isExitOnStop;
     configureAppStateMachine();
   }
 
@@ -68,7 +91,10 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
         }, exceptionHandler));
     State<C, Void> stopped = LifecycleStateMachineUtil.newStoppedState((stopEvt, stateMachine) -> {
       logger.info("Stopped {}", appName);
-      appLatch.countDown();
+      if (isExitOnStop) {
+        appStateMachine.fire(LifecycleStateMachineUtil.evtExit);
+        appLatch.countDown();
+      }
     });
 
     LifecycleStateMachineUtil.configureAppStateMachine(appStateMachine, uninitialised, starting,
