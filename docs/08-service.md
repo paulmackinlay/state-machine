@@ -18,13 +18,13 @@ predictable and graceful manner. Here is the state diagram:
 
 Note that in the **STOPPED** state, it can exit immediately (denoted in green) or can process
 **start** and **exit** events (denoted in blue). These two modes of operation are controlled at
-construction with a _isExitOnStop_ flag.
+construction with an _isExitOnStop_ flag.
 
 Once an _AppService_ is constructed, it will transition from an **UNINITIALISED** state to a
 **STARTING** state and then to a **STARTED** state. During the **STARTING** state, constructed
 subsystems are started in a sequential manner. Once all have started the app transitions to a
-**STARTED** state. It will runn indefinitely in the **STARTED** state, servicing any operations that
-are needed and will also process a **stop** event which will cause it to gracefully wind down.
+**STARTED** state. It will run indefinitely, servicing any operations that are needed and will also
+process a **stop** event which will cause it to gracefully wind down.
 
 During wind down, the app transitions to a **STOPPING** state and all subsystems are stopped in
 reverse order to how they were started. When subsystems are stopped they return to their constructed
