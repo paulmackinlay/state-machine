@@ -17,7 +17,7 @@ predictable and graceful manner. Here is the state diagram:
 ![](media/State_diagram_4.png)
 
 Note that in the **STOPPED** state, it can exit immediately (denoted in green) or can process
-**start** and **exit** events (denoted in blue). These two modes of operation are controlled at
+**start** and **stop** events (denoted in blue). These two modes of operation are controlled at
 construction with an _isExitOnStop_ flag.
 
 Once an _AppService_ is constructed, it will transition from an **UNINITIALISED** state to a
