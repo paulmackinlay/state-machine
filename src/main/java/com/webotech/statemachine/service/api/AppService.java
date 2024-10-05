@@ -24,4 +24,9 @@ public interface AppService<C> {
    * Stops the {@link AppService}
    */
   void stop();
+
+  /**
+   * Causes the {@link AppService} to error.
+   */
+  void error(Exception e);
 }

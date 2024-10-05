@@ -9,6 +9,7 @@ import com.webotech.statemachine.HandleExceptionAction;
 import com.webotech.statemachine.HandleExceptionAction.ExceptionHandler;
 import com.webotech.statemachine.LoggingStateMachineListener;
 import com.webotech.statemachine.api.State;
+import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
 import com.webotech.statemachine.service.api.AppContext;
@@ -125,6 +126,13 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
   @Override
   public void stop() {
     appStateMachine.fire(LifecycleStateMachineUtil.evtStop);
+  }
+
+  @Override
+  public void error(Exception e) {
+    StateEvent<Void> evtError = LifecycleStateMachineUtil.evtError;
+    logger.error("{} has an error", appContext.getAppName(), e);
+    appStateMachine.fire(evtError);
   }
 
   public final State<C, Void> getLifecycleState() {
