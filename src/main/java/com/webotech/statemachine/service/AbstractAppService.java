@@ -93,7 +93,7 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
     State<C, Void> stopped = LifecycleStateMachineUtil.newStoppedState((stopEvt, stateMachine) -> {
       logger.info("Stopped {}", appName);
       if (isExitOnStop) {
-        appStateMachine.fire(LifecycleStateMachineUtil.evtExit);
+        appStateMachine.fire(LifecycleStateMachineUtil.evtStop);
         appLatch.countDown();
       }
     });
@@ -109,16 +109,20 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
 
   @Override
   public void start() {
-    appStateMachine.start();
+    if (!appStateMachine.isStarted()) {
+      appStateMachine.start();
+    }
     appStateMachine.fire(LifecycleStateMachineUtil.evtStart);
-    try {
-      appLatch.await();
-    } catch (InterruptedException e) {
-      logger.error("Main latch was interrupted", e);
-      Thread.currentThread().interrupt();
-    } finally {
-      if (!appStateMachine.isEnded()) {
-        stop();
+    if (!appStateMachine.isStarted()) {
+      try {
+        appLatch.await();
+      } catch (InterruptedException e) {
+        logger.error("Main latch was interrupted", e);
+        Thread.currentThread().interrupt();
+      } finally {
+        if (!appStateMachine.isEnded()) {
+          stop();
+        }
       }
     }
   }
