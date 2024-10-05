@@ -21,7 +21,6 @@ public final class LifecycleStateMachineUtil {
   public static final StateEvent<Void> evtComplete = new NamedStateEvent<>("complete");
   public static final StateEvent<Void> evtStop = new NamedStateEvent<>("stop");
   public static final StateEvent<Void> evtError = new NamedStateEvent<>("error");
-  public static final StateEvent<Void> evtExit = new NamedStateEvent<>("exit");
   public static final String STATE_UNINITIALISED = "UNINITIALISED";
   public static final String STATE_STARTING = "STARTING";
   public static final String STATE_STARTED = "STARTED";
@@ -70,7 +69,7 @@ public final class LifecycleStateMachineUtil {
    * <tr><td>STOPPING</td><td>complete</td><td>STOPPED</td></tr>
    * <tr><td>STOPPING</td><td>error</td><td>STOPPED</td></tr>
    * <tr><td>STOPPED</td><td>start</td><td>STARTING</td></tr>
-   * <tr><td>STOPPED</td><td>exit</td><td>it ends</td></tr>
+   * <tr><td>STOPPED</td><td>stop</td><td>it ends</td></tr>
    * </table>
    */
   public static <T> void configureAppStateMachine(StateMachine<T, Void> stateMachine,
@@ -84,7 +83,7 @@ public final class LifecycleStateMachineUtil {
     stateMachine.when(stopping).receives(evtComplete).itTransitionsTo(stopped);
     stateMachine.when(stopping).receives(evtError).itTransitionsTo(stopped);
     stateMachine.when(stopped).receives(evtStart).itTransitionsTo(starting);
-    stateMachine.when(stopped).receives(evtExit).itEnds();
+    stateMachine.when(stopped).receives(evtStop).itEnds();
   }
 
   @SafeVarargs
