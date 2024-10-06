@@ -20,11 +20,12 @@ Note that in the **STOPPED** state, it can exit immediately (denoted in green) o
 **start** and **stop** events (denoted in blue). These two modes of operation are controlled at
 construction with an _isExitOnStop_ flag.
 
-Once an _AppService_ is constructed, it will transition from an **UNINITIALISED** state to a
-**STARTING** state and then to a **STARTED** state. During the **STARTING** state, constructed
-subsystems are started in a sequential manner. Once all have started the app transitions to a
-**STARTED** state. It will run indefinitely, servicing any operations that are needed and will also
-process a **stop** event which will cause it to gracefully wind down.
+Once an [AppService](../src/main/java/com/webotech/statemachine/service/api/AppService.java) is
+constructed, it will transition from an **UNINITIALISED** state to a **STARTING** state and then to
+a **STARTED** state. During the **STARTING** state, constructed subsystems are started in a
+sequential manner. Once all have started, the app transitions to a **STARTED** state. It will run
+indefinitely, servicing any operations that are needed and will also process a **stop** event which
+will cause it to gracefully wind down.
 
 During wind down, the app transitions to a **STOPPING** state and all subsystems are stopped in
 reverse order to how they were started. When subsystems are stopped they return to their constructed
@@ -39,11 +40,11 @@ revived when it will transition to the **STARTED** state again.
 
 The core API for an app is defined in
 [AppService](../src/main/java/com/webotech/statemachine/service/api/AppService.java) which has
-_start_ and _stop_ lifecycle methods that are analogous to the _start_ and _stop_ events in the
+_start_ and _stop_ lifecycle methods that are analogous to the **start** and **stop** events in the
 state diagram. There is also an _error_ method which can be used to propagate unhandled exceptions
-so that the app will wind down. The framework takes care of the _complete_ events that are used to
-drive the predictable stating and stopping of the app. The API also has a _getAppContext_ method
-that provides access the context of the app.
+so that the app will transition to **STOPPED**. The framework takes care of the **complete** events
+that are used to drive the predictable starting and stopping of the app. The API also has a
+_getAppContext_ method that provides access to the context of the app.
 
 The [AppContext](../src/main/java/com/webotech/statemachine/service/api/AppContext.java) is used to
 store the app level state, it has the app name, the arguments used to start the app (analogous to
@@ -60,18 +61,48 @@ subsystem.
 The framework consists of 2 classes that should be extended
 
 - [AbstractAppService](../src/main/java/com/webotech/statemachine/service/AbstractAppService.java)
-  which implements AppService and should be extended to include bespoke business logic and a main
+  implements AppService and should be extended to include bespoke business logic as well as a main
   method used for bootstrapping
-- [AbstractContext](../src/main/java/com/webotech/statemachine/service/AbstractAppContext.java)
-  which implements AppContext and should be extended to house any app level state needed by bespoke
+- [AbstractAppContext](../src/main/java/com/webotech/statemachine/service/AbstractAppContext.java)
+  implements AppContext and should be extended to house any app level state needed by bespoke
   business logic
 
 There are no implementations
 of [Subsystem](../src/main/java/com/webotech/statemachine/service/api/Subsystem.java) since each app
-will need bespoke implementations which house start and stop logic. It is up to app developers to
+will need bespoke implementations that house start and stop logic. It is up to app developers to
 ensure that the stop logic is the inverse of the start logic, the intention being that the stop
 logic will re-establish the subystem's state to what it was before the start logic was called.
 
 ### Steps to create an app
 
-These are the typical steps needed to create an app. TODO
+These are the typical steps needed to create an app.
+
+1. Create a concrete class that
+   extends [AbstractAppService](../src/main/java/com/webotech/statemachine/service/AbstractAppService.java)
+   this should contain a simple main method for bootstrapping.
+   The [ExampleApp](../src/test/java/com/webotech/statemachine/service/ExampleApp.java) shows you
+   how.
+2. Create a concrete class that
+   extends [AbstractAppContext](../src/main/java/com/webotech/statemachine/service/AbstractAppContext.java).
+   You can see
+   how [ExampleAppContext](../src/test/java/com/webotech/statemachine/service/ExampleAppContext.java)
+   does it.
+3. Create as many implementations
+   of [Subsystem](../src/main/java/com/webotech/statemachine/service/api/Subsystem.java) as
+   required. It is a good idea for each subsytem to have a single responsibility for example 'setup
+   application properties' or 'connect to a database'. Ensure that the stop method re-establishes
+   the state of the subsystem to what it was after construction.
+
+As you can see in [ExampleApp](../src/test/java/com/webotech/statemachine/service/ExampleApp.java),
+bootstrapping an application requires you to construct it like
+
+```java
+ExampleApp app = new ExampleApp(new ExampleAppContext().withSubsystems(
+                  List.of(new ExampleSubsystem())));
+```
+
+and then start it like
+
+```java
+app.start();
+```
