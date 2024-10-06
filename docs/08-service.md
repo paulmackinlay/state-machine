@@ -35,10 +35,43 @@ dictates it's mode of operation. In the 'exit on stop' mode, the app will exit i
 is in the **STOPPED** state. Otherwise the app will continue to run as a warm standby that can be
 revived when it will transition to the **STARTED** state again.
 
-## API and core classes
+### API
 
-TODO - AppService, AppContext and Subsystem - AbstractAppService, AbstractAppContext
+The core API for an app is defined in
+[AppService](../src/main/java/com/webotech/statemachine/service/api/AppService.java) which has
+_start_ and _stop_ lifecycle methods that are analogous to the _start_ and _stop_ events in the
+state diagram. There is also an _error_ method which can be used to propagate unhandled exceptions
+so that the app will wind down. The framework takes care of the _complete_ events that are used to
+drive the predictable stating and stopping of the app. The API also has a _getAppContext_ method
+that provides access the context of the app.
+
+The [AppContext](../src/main/java/com/webotech/statemachine/service/api/AppContext.java) is used to
+store the app level state, it has the app name, the arguments used to start the app (analogous to
+the args in a main method) and the list of
+[Subsystems](../src/main/java/com/webotech/statemachine/service/api/Subsystem.java) that are used to
+build the app's business logic.
+
+Finally, a [Subsystem](../src/main/java/com/webotech/statemachine/service/api/Subsystem.java) has
+lifecycle _start_ and _stop_ methods that need to contain logic for starting and stopping the
+subsystem.
+
+### Core classes
+
+The framework consists of 2 classes that should be extended
+
+- [AbstractAppService](../src/main/java/com/webotech/statemachine/service/AbstractAppService.java)
+  which implements AppService and should be extended to include bespoke business logic and a main
+  method used for bootstrapping
+- [AbstractContext](../src/main/java/com/webotech/statemachine/service/AbstractAppContext.java)
+  which implements AppContext and should be extended to house any app level state needed by bespoke
+  business logic
+
+There are no implementations
+of [Subsystem](../src/main/java/com/webotech/statemachine/service/api/Subsystem.java) since each app
+will need bespoke implementations which house start and stop logic. It is up to app developers to
+ensure that the stop logic is the inverse of the start logic, the intention being that the stop
+logic will re-establish the subystem's state to what it was before the start logic was called.
 
 ### Steps to create an app
 
-TODO
+These are the typical steps needed to create an app. TODO
