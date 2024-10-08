@@ -86,22 +86,12 @@ class DefaultEventStrategyTest {
   }
 
   private void waitForEventsToProcess(DefaultEventStrategy<Void, Void> strategy) {
-    try {
-      int timeoutMillis = 5000;
-      long startMillis = System.currentTimeMillis();
-      long durationMillis = 0;
-      while (strategy.getEventQueueSize() > 0 && durationMillis < timeoutMillis) {
-        TimeUnit.MILLISECONDS.sleep(50);
-        durationMillis = System.currentTimeMillis() - startMillis;
-      }
-      if (durationMillis > timeoutMillis) {
-        fail("Timeout out");
-      }
-      //TODO see if this can be improved
-      TestingUtil.sleep(100);
-    } catch (InterruptedException e) {
-      throw new IllegalStateException(e);
+    boolean success = TestingUtil.awaitCondition(5000, TimeUnit.MILLISECONDS,
+        () -> strategy.getEventQueueSize() == 0);
+    if (!success) {
+      fail("Timed out");
     }
+    TestingUtil.sleep(100);
   }
 
   @Test

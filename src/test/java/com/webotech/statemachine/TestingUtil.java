@@ -4,12 +4,16 @@
 
 package com.webotech.statemachine;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.webotech.statemachine.api.StateMachine;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Filter;
@@ -18,6 +22,7 @@ import org.apache.logging.log4j.core.appender.OutputStreamAppender;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.layout.PatternLayout;
+import org.junit.jupiter.api.Test;
 
 public class TestingUtil {
 
@@ -37,32 +42,22 @@ public class TestingUtil {
   }
 
   public static void waitForAllEventsToProcess(StateMachine<?, ?> stateMachine) {
-    long millisStart = System.currentTimeMillis();
-    long runningTimeMills = 0;
-    while (stateMachine.getEventQueueSize() > 0 && runningTimeMills < stateEventQueueTimeoutMills) {
-      sleep(50);
-      runningTimeMills = System.currentTimeMillis() - millisStart;
-    }
-    if (runningTimeMills > stateEventQueueTimeoutMills) {
+    boolean success = awaitCondition(stateEventQueueTimeoutMills, TimeUnit.MILLISECONDS,
+        () -> stateMachine.getEventQueueSize() == 0);
+    if (!success) {
       throw new IllegalStateException(
-          "Time out while waiting for all events to process, took longer than "
+          "Timed out while waiting for all events to process, took longer than "
               + stateEventQueueTimeoutMills + " millis");
     }
-    //TODO this might need to be improved
-    sleep(100);
+    sleep(200);
   }
 
   public static void waitForMachineToEnd(StateMachine<?, ?> stateMachine) {
-    long millisStart = System.currentTimeMillis();
-    long runningTimeMills = 0;
-    while (stateMachine.isStarted() && !stateMachine.isEnded()
-        && runningTimeMills < machineEndTimeoutMills) {
-      runningTimeMills = System.currentTimeMillis() - millisStart;
-      sleep(50);
-    }
-    if (runningTimeMills > machineEndTimeoutMills) {
+    boolean success = awaitCondition(stateEventQueueTimeoutMills, TimeUnit.MILLISECONDS,
+        () -> stateMachine.isEnded());
+    if (!success) {
       throw new IllegalStateException(
-          "Time out while waiting for state machine to end, took longer than "
+          "Timed out while waiting for state machine to end, took longer than "
               + machineEndTimeoutMills + " millis");
     }
   }
@@ -79,6 +74,31 @@ public class TestingUtil {
     } catch (InterruptedException e) {
       throw new IllegalStateException(e);
     }
+  }
+
+  /**
+   * @return true if the condition becames true before the timeout
+   */
+  public static boolean awaitCondition(long timeout, TimeUnit timeUnit,
+      Supplier<Boolean> condition) {
+    long epochNow = System.currentTimeMillis();
+    long timeoutMillis = timeUnit.toMillis(timeout);
+    long epochEval = epochNow;
+    while (!condition.get() && epochEval <= epochNow + timeoutMillis) {
+      try {
+        TimeUnit.MILLISECONDS.sleep(50);
+      } catch (InterruptedException e) {
+        throw new IllegalStateException(e);
+      }
+      epochEval = System.currentTimeMillis();
+    }
+    return epochEval <= epochNow + timeoutMillis;
+  }
+
+  @Test
+  void shouldAwaitCondition() {
+    assertTrue(awaitCondition(200, TimeUnit.MILLISECONDS, () -> 1 > 0));
+    assertFalse(awaitCondition(200, TimeUnit.MILLISECONDS, () -> 1 < 0));
   }
 
   private static void addOutputStreamLogAppender(OutputStream logStream, String streamName) {

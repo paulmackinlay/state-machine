@@ -325,13 +325,11 @@ class StateMachineIntegrationTest {
       state = restartableApp.getLifecycleState();
       assertEquals(LifecycleStateMachineUtil.STATE_STARTED, state.getName());
       restartableApp.stop();
-      epochStart = System.currentTimeMillis();
-      while (!restartableApp.getLifecycleState().getName()
-          .equals(LifecycleStateMachineUtil.STATE_STOPPED)) {
-        TestingUtil.sleep(50);
-        if (System.currentTimeMillis() - epochStart > 2000) {
-          fail("Did not restop in time");
-        }
+      success = TestingUtil.awaitCondition(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS,
+          () -> restartableApp.getLifecycleState().getName()
+              .equals(LifecycleStateMachineUtil.STATE_STOPPED));
+      if (!success) {
+        fail("Did not restop in time");
       }
       restartableApp.stop();
       success = endLatch.await(2, TimeUnit.SECONDS);
@@ -602,13 +600,10 @@ class StateMachineIntegrationTest {
     int minTransitions = 50;
 
     paStateMachine.start();
-    long initMillis = System.currentTimeMillis();
-    long maxMillis = 0;
-    while (paStateMachine.getContext().get() <= minTransitions && maxMillis < TIMEOUT_MILLIS) {
-      maxMillis = System.currentTimeMillis() - initMillis;
-    }
+    boolean success = TestingUtil.awaitCondition(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS,
+        () -> paStateMachine.getContext().get() > minTransitions);
     paStateMachine.stop();
-    if (maxMillis > TIMEOUT_MILLIS) {
+    if (!success) {
       fail("Timed out");
     }
     TestingUtil.waitForMachineToEnd(paStateMachine);
@@ -637,13 +632,10 @@ class StateMachineIntegrationTest {
 
     int minTransitions = 50;
     paStateMachine.start();
-    long initMillis = System.currentTimeMillis();
-    long maxMillis = 0;
-    while (paStateMachine.getContext().get() <= minTransitions && maxMillis < TIMEOUT_MILLIS) {
-      maxMillis = System.currentTimeMillis() - initMillis;
-    }
+    boolean success = TestingUtil.awaitCondition(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS,
+        () -> paStateMachine.getContext().get() > minTransitions);
     paStateMachine.fire(event2);
-    if (maxMillis > TIMEOUT_MILLIS) {
+    if (!success) {
       fail("Timed out");
     }
     TestingUtil.waitForMachineToEnd(paStateMachine);

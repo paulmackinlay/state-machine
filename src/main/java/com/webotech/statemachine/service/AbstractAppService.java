@@ -49,7 +49,6 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
    *                     <i>stopped</i> state otherwise it an <i>exit</i> event will cause the
    *                     process to exit when in the stopped state.
    */
-  //TODO test when isExitOnStop has different values
   protected AbstractAppService(C appContext, boolean isExitOnStop) {
     // Construct logger here so that logging can be re-initialised statically by concrete class
     logger = LogManager.getLogger(AbstractAppService.class);
