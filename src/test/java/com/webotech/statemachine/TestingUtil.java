@@ -49,7 +49,7 @@ public class TestingUtil {
           "Timed out while waiting for all events to process, took longer than "
               + stateEventQueueTimeoutMills + " millis");
     }
-    sleep(200);
+    sleep(100);
   }
 
   public static void waitForMachineToEnd(StateMachine<?, ?> stateMachine) {
