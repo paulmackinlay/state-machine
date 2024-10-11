@@ -5,6 +5,7 @@
 package com.webotech.statemachine.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -70,6 +71,12 @@ class AbstractAppServiceTest {
     assertTransition(LifecycleStateMachineUtil.STATE_STOPPED,
         LifecycleStateMachineUtil.evtStop.getName(),
         GenericStateMachine.RESERVED_STATE_NAME_END, listener, 5);
+  }
+
+  @Test
+  void shouldGetAppContext() {
+    assertInstanceOf(TestContext.class, testService.getAppContext());
+    assertEquals("TestService", testService.getAppContext().getAppName());
   }
 
   private static void assertTransition(String from, String event, String to,
