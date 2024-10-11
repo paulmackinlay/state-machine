@@ -39,15 +39,15 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
   }
 
   /**
-   * The app can be in one of two modes. In the first process exits when the app has been stopped
-   * (isExitOnStop is true). In the second (isExitOnStop is false) the process won't exit until the
-   * app has been stopped and it receives an exit event. In this second mode an app can be stopped
-   * and started again (when it has been stopped and it receives a start event).
+   * The app can be in one of two modes. In the first, the process exits when the app has been
+   * stopped (isExitOnStop is true). In the second (isExitOnStop is false), the process won't exit
+   * until the app has been stopped and it receives a stop event. In this second mode an app can be
+   * stopped and started again; when it has been stopped and it receives a start event.
    *
    * @param appContext   the application context
    * @param isExitOnStop when true the app process will exit immediately when the app is in the
-   *                     <i>stopped</i> state otherwise it an <i>exit</i> event will cause the
-   *                     process to exit when in the stopped state.
+   *                     <i>stopped</i> state otherwise a <i>stop</i> event will cause the process
+   *                     to exit when in the stopped state.
    */
   protected AbstractAppService(C appContext, boolean isExitOnStop) {
     // Construct logger here so that logging can be re-initialised statically by concrete class
