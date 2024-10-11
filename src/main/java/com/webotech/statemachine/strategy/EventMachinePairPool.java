@@ -8,7 +8,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * Simple (and naive) object pool - stores objects in a unbound thread-safe {@link Queue}
+ * Simple (and naive) object pool - stores objects in an unbound thread-safe {@link Queue}
  */
 public class EventMachinePairPool<T, S> {
 

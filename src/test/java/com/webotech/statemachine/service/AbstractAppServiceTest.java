@@ -134,7 +134,7 @@ class AbstractAppServiceTest {
     }
   }
 
-  private class TestContext extends AbstractAppContext<TestContext> {
+  private static class TestContext extends AbstractAppContext<TestContext> {
 
     TestContext() {
       super("TestService", new String[0]);

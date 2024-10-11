@@ -13,7 +13,7 @@ import java.util.List;
 public interface AppContext<C extends AppContext<?>> {
 
   /**
-   * @return initialisation arguments - analagous to the args parameter in a main method.
+   * @return initialisation arguments - analogous to the args parameter in a main method.
    */
   String[] getInitArgs();
 

@@ -31,7 +31,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
   private final Map<State<T, S>, Map<StateEvent<S>, State<T, S>>> states;
   private final T context;
   private final EventProcessingStrategy<T, S> eventProcessingStrategy;
-  private final UnexpectedFlowListener<T, S> unexpectFlowListener;
+  private final UnexpectedFlowListener<T, S> unexpectedFlowListener;
   private StateMachineListener<T, S> stateMachineListener;
   private State<T, S> initState;
   private State<T, S> markedState;
@@ -49,7 +49,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     this.context = context;
     this.stateMachineListener = stateMachineListener;
     this.eventProcessingStrategy = eventProcessingStrategy;
-    this.unexpectFlowListener = eventProcessingStrategy.getUnexpectedFlowListener();
+    this.unexpectedFlowListener = eventProcessingStrategy.getUnexpectedFlowListener();
     this.eventProcessingStrategy.setStates(this.states);
   }
 
@@ -266,9 +266,9 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
   @Override
   public void fire(StateEvent<S> stateEvent) {
     if (!isStarted()) {
-      unexpectFlowListener.onEventBeforeMachineStart(stateEvent, this);
+      unexpectedFlowListener.onEventBeforeMachineStart(stateEvent, this);
     } else if (isStarted() && isEnded()) {
-      unexpectFlowListener.onEventAfterMachineEnd(stateEvent, this);
+      unexpectedFlowListener.onEventAfterMachineEnd(stateEvent, this);
     } else {
       eventProcessingStrategy.processEvent(stateEvent, this);
     }
