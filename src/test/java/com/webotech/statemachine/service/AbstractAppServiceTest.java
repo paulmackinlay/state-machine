@@ -14,6 +14,8 @@ import com.webotech.statemachine.TestingUtil;
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
 import com.webotech.statemachine.api.StateMachineListener;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -77,6 +79,42 @@ class AbstractAppServiceTest {
   void shouldGetAppContext() {
     assertInstanceOf(TestContext.class, testService.getAppContext());
     assertEquals("TestService", testService.getAppContext().getAppName());
+  }
+
+  @Test
+  void shouldHandleError() throws IOException {
+    try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
+      testService.start();
+      boolean success = TestingUtil.awaitCondition(TIMEOUT, TimeUnit.MILLISECONDS,
+          () -> testService.getLifecycleState().getName()
+              .equals(LifecycleStateMachineUtil.STATE_STARTED));
+      if (!success) {
+        fail("App did not start in time");
+      }
+      testService.error(new IllegalStateException("test induced"));
+      success = TestingUtil.awaitCondition(TIMEOUT, TimeUnit.MILLISECONDS,
+          () -> testService.getLifecycleState().getName()
+              .equals(GenericStateMachine.RESERVED_STATE_NAME_END));
+      if (!success) {
+        fail("App did not end in time");
+      }
+      String log = logStream.toString();
+      assertTrue(log.startsWith(
+          "Begin TestService transition: _UNINITIALISED_ + _immediate_ = UNINITIALISED\n"
+              + "TestService transitioned to UNINITIALISED\n"
+              + "Begin TestService transition: UNINITIALISED + start = STARTING\n"
+              + "Starting TestService with args []\n"
+              + "TestService transitioned to STARTING\n"
+              + "Begin TestService transition: STARTING + complete = STARTED\n"
+              + "TestService transitioned to STARTED\n"
+              + "TestService has an error\n"
+              + "java.lang.IllegalStateException: test induced"));
+      assertTrue(log.endsWith("Begin TestService transition: STARTED + error = STOPPED\n"
+          + "Stopped TestService\n"
+          + "TestService transitioned to STOPPED\n"
+          + "Begin TestService transition: STOPPED + stop = _END_\n"
+          + "TestService transitioned to _END_\n"));
+    }
   }
 
   private static void assertTransition(String from, String event, String to,

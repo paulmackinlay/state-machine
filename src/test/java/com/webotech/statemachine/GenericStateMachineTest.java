@@ -120,7 +120,7 @@ class GenericStateMachineTest {
       stateMachine.fire(event1);
       TestingUtil.waitForAllEventsToProcess(stateMachine);
       assertEquals(state1, stateMachine.getCurrentState());
-      assertEquals("Starting transition: STATE-2 + event-1 = STATE-1\n"
+      assertEquals("Begin transition: STATE-2 + event-1 = STATE-1\n"
           + "Transitioned to STATE-1\n", logStream.toString());
     }
   }
