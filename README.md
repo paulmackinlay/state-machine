@@ -6,7 +6,7 @@ java that is thread safe.
 
 - State machine API with comprehensive javadoc
 - Generic implementation
-- Service API & app starter implementation for state machine backed microservice
+- Service API & app starter implementation for a state machine backed microservice
 - Core java: no dependencies (other than a logging API)
 - Thread safe
 - Extensively tested
@@ -31,7 +31,7 @@ it just add this dependency to your POM
 <dependency>
     <groupId>com.webotech</groupId>
     <artifactId>state-machine</artifactId>
-    <version>0.12.1</version>
+    <version>0.13.0</version>
 </dependency>
 ```
 
@@ -85,3 +85,56 @@ NamedStateEvent[continue] caused transition to NamedState[SECOND-STATE]
 The state diagram for this example is:
 
 ![](docs/media/Quick_start_diagram.png)
+
+## Quick start microservice
+
+The app:
+
+```java
+public class ExampleApp extends AbstractAppService<ExampleAppContext> {
+
+  private ExampleApp(ExampleAppContext appContext) {
+    super(appContext);
+  }
+
+  public static void main(String[] args) {
+    ExampleApp app = new ExampleApp(
+        new ExampleAppContext().withSubsystems(List.of(new ExampleSubsystem())));
+    try {
+      app.start();
+    } catch (Exception e) {
+      app.error(e);
+    }
+  }
+}
+```
+
+The app's context:
+
+```java
+public class ExampleAppContext extends AbstractAppContext<ExampleAppContext> {
+
+  ExampleAppContext() {
+    super("ExampleApp", new String[0]);
+  }
+}
+```
+
+An example Subsystem:
+
+```java
+public class ExampleSubsystem implements Subsystem<ExampleAppContext> {
+
+  private String exampleState;
+
+  @Override
+  public void start(ExampleAppContext appContext) {
+    exampleState = "subsystem is go!";
+  }
+
+  @Override
+  public void stop(ExampleAppContext appContext) {
+    exampleState = null;
+  }
+}
+```

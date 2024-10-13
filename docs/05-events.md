@@ -15,7 +15,7 @@ of
 
 - quickly freeing I/O threads which avoids blocking
 - avoid thread contention when events originate on the current thread
-- guarantees events to be processed in the same order they were received
+- guarantees events are processed in the same order they were received
 - being thread-safe
 
 `GenericStateMachine` is thread safe, so when events are received on multiple threads there will be
@@ -26,18 +26,18 @@ subsequent state).
 When constructing a `GenericStateMachine`, flexibility has been built in so if you need finer
 control of how events are processed there are these options:
 
-- use the builder that constructs the `EventProcessingStrategy` to pass in your
-  own `ExecutorService`
+- use the builder that constructs the `EventProcessingStrategy` to pass in your own
+  `ExecutorService`
 - choose a different implementation of `EventProcessingStrategy`
 - implement your own `EventProcessingStrategy`
 
 ### Unmapped events
 
-While using the `StateMachine` you may come across situations where a `State` receives
-a `StateEvent` that has not been mapped during configuration. By default `GenericStateMachine`
+While using the `StateMachine` you may come across situations where a `State` receives a
+`StateEvent` that has not been mapped during configuration. By default `GenericStateMachine`
 simply logs the details and ignores it, in messaging terms this is equivalent to dropping a message.
-However, you may want bespoke behaviour for unmapped events in which case you can build
-the `GenericStateMachine` with an unmapped event handler:
+However, you may want bespoke behaviour for unmapped events in which case you can build the
+`GenericStateMachine` with an unmapped event handler:
 
 ```java
 BiConsumer<StateEvent<>, StateMachine<>> unmappedHandler = ...;
@@ -50,12 +50,12 @@ and the `StateMachine`.
 ### Event payloads
 
 When events are driven by rich data messages, like FIX messages during electronic trading, it can be
-convenient for the data to be available in the `StateAction`. This allows you, for example, to
-extract values from a FIX message in the `StateAction`s processing logic. To facilitate this
-approach, you can set a generic payload on a `StateEvent` which can then be accessed by
-a `StateAction` when it is being executed.
+convenient for that data to be available in the `StateAction`. This allows you, for example, to
+extract values from a FIX message in the `StateAction`'s processing logic. To facilitate this
+approach, you can set a generic payload on a `StateEvent` which can then be accessed by a
+`StateAction` when it is being executed.
 
-In many cases the payload of a `StateEvent` is not needed, in which case you can define it
-as `Void`.
+In many cases the payload of a `StateEvent` is not needed, in which case you can define it as
+`Void`.
 
 [previous page](04-configure.md) --- [next page](06-exceptions.md)

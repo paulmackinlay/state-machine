@@ -29,7 +29,7 @@ will cause it to gracefully wind down.
 
 During wind down, the app transitions to a **STOPPING** state and all subsystems are stopped in
 reverse order to how they were started. When subsystems are stopped they return to their constructed
-state and when all are stopped, the app transitions to a **STOPPED** state.
+(idle) state and when all are stopped, the app transitions to a **STOPPED** state.
 
 As mentioned earler an app can be constructed with _isExitOnStop_ set to true or false, this
 dictates it's mode of operation. In the 'exit on stop' mode, the app will exit immediately once it
@@ -69,7 +69,7 @@ The framework consists of 2 classes that should be extended
 
 There are no implementations
 of [Subsystem](../src/main/java/com/webotech/statemachine/service/api/Subsystem.java) since each app
-will need bespoke implementations that house start and stop logic. It is up to app developers to
+will need bespoke implementations that contain start and stop logic. It is up to app developers to
 ensure that the stop logic is the inverse of the start logic, the intention being that the stop
 logic will re-establish the subystem's state to what it was before the start logic was called.
 
@@ -89,9 +89,9 @@ These are the typical steps needed to create an app.
    does it.
 3. Create as many implementations
    of [Subsystem](../src/main/java/com/webotech/statemachine/service/api/Subsystem.java) as
-   required. It is a good idea for each subsytem to have a single responsibility for example 'setup
-   application properties' or 'connect to a database'. Ensure that the stop method re-establishes
-   the state of the subsystem to what it was after construction.
+   required. It is a good idea for each subsytem to have a narrow focus (single responsibility) for
+   example 'setup application properties' or 'connect to a database'. Ensure that the stop method
+   re-establishes the state of the subsystem to what it was after construction.
 
 As you can see in [ExampleApp](../src/test/java/com/webotech/statemachine/service/ExampleApp.java),
 bootstrapping an application requires you to construct it like

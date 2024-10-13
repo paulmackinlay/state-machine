@@ -53,9 +53,9 @@ when the state machine transitions **away** from the state.
 
 In this case you need to add the logic for the actions outlined above in
 individual [StateAction](../src/main/java/com/webotech/statemachine/api/StateAction.java)s and then
-append them to the `State` as entry actions. When the `starting` state is entered the actions will
-execute in the order that they were appended. It is important for them to be executed in a
-predictable order, in this case reading the config from property files (action 1) has to happen
+append them to the `starting` state as entry actions. When the `starting` state is entered the
+actions will execute in the order that they were appended. It is important for them to be executed
+in a predictable order, in this case reading the config from property files (action 1) has to happen
 before the config is used to connect to a database (action 2).
 
 Finally, the `completeEvt` is fired (action 3) which causes the state machine to transition. Here is
@@ -86,8 +86,8 @@ purposes:
 1. allow data to be exchanged between `StateAction`s
 2. act as a service locator that provides objects needed by the state machine
 
-Once the `StateMachine` is configured and all the `StateAction`s have been appended to the
-various `State`s you have to start it. This is simply done:
+Once the `StateMachine` is configured and all the `StateAction`s have been appended to the various
+`State`s you have to start it. This is simply done:
 
 ```java
 StateMachine sm = ....
@@ -103,15 +103,15 @@ left off in another. You can do that but using:
 ```java
 StateMachine sm = ....
 State anIntermediateState = ....
-sm.startInState(State<T, S> anIntermediateState);
+sm.startInState(anIntermediateState);
 ```
 
-In this case the `StateMachine` will be initialised in `anIntermediateState` but no
-entry `SateAction`s will be executed as no transition is taking place.
+In this case the `StateMachine` will be initialised in `anIntermediateState` but no entry
+`SateAction`s will be executed as no transition is taking place.
 
 When the `StateMachine` ends no transition takes place. You can configure a `StateMachine` to
-transition to a `State` and then it ends in which case entry actions are executed for the
-configured `State` but no exit actions. Alternatively you can configure a `StateMachine` to end when
-it receives a `StateEvent` which would cause it to immediately stop with no actions executing.
+transition to a `State` and then it ends in which case entry actions are executed for the configured
+`State` but no exit actions. Alternatively you can configure a `StateMachine` to end when it
+receives a `StateEvent` which would cause it to immediately stop with no actions executing.
 
 [previous page](03-api.md) --- [next page](05-events.md)

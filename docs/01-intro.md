@@ -58,13 +58,17 @@ transition to the **Stopped** state completes, the application could exit or cou
 transition back to the **Starting** state. In this case the **Stopped** state would be used to put
 an application into a warm stand-by mode which can be a very useful feature.
 
+This project includes a service API and a starter implementation for an app that is backed by a
+state machine. It is an ideal starting point if you wish to create your own microservice, you can
+find out more in the [starter implementation docs for an app](08-service.md).
+
 ### State Driven Protocol Example
 
-In a state driven protocol, distinct systems communicate asynchronously with each other, often
-using messaging. One system sends a message to the other and then waits to receive a response
-message before continuing with the execution of its business logic. The messages form part of the
-events of the state machine. This is a very common real world scenario, for example in e-commerce
-order flows, electronic trading and e-government processes to mention a few.
+In a state driven protocol, distinct systems communicate asynchronously with each other, often using
+messaging. One system sends a message to the other and then waits to receive a response message
+before continuing with the execution of its business logic. The messages form part of the events of
+the state machine. This is a very common real world scenario, for example in e-commerce order flows,
+electronic trading and e-government processes to mention a few.
 
 Here is a basic example based on negotiating the price of a product. Imagine an organisation,
 Seller, that sells products with an indicative price tag. Since the price is indicative, they allow
@@ -91,3 +95,5 @@ technical risk.
 This page covers the basics at a high level; what a state machine is, how it works and what it is
 used for. In the next section I cover the details of how one works in code. Specifically, I talk
 about the [state-machine implementation](02-implementation.md) in this repo.
+
+[next page](02-implementation.md)
