@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.webotech</groupId>
   <artifactId>state-machine</artifactId>
-  <version>0.13.5-SNAPSHOT</version>
+  <version>0.13.5</version>
   <packaging>jar</packaging>
   <name>${project.groupId}:${project.artifactId}</name>
   <description>A thread safe, general purpose state machine and microservice API written in core
@@ -32,7 +32,7 @@
       scm:git:https://github.com/paulmackinlay/state-machine.git
     </developerConnection>
     <url>https://github.com/paulmackinlay/state-machine</url>
-    <tag>HEAD</tag>
+    <tag>state-machine-0.13.5</tag>
   </scm>
 
   <properties>
