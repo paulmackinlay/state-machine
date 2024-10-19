@@ -24,7 +24,9 @@ public class TransitionTask<T, S> {
   }
 
   void execute(StateEvent<S> event, GenericStateMachine<T, S> machine) {
-    State<T, S> toState = states.get(machine.getCurrentState()).get(event);
+    //TODO work out how stateEventStateMap can be null
+    Map<StateEvent<S>, State<T, S>> stateEventStateMap = states.get(machine.getCurrentState());
+    State<T, S> toState = stateEventStateMap == null ? null : stateEventStateMap.get(event);
     if (toState == null) {
       unmappedEventHandler.accept(event, machine);
       return;

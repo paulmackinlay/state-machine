@@ -45,6 +45,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
@@ -82,6 +83,12 @@ class StateMachineIntegrationTest {
         endUpdates.add(List.of(fromState, event, toState));
       }
     };
+  }
+
+  @AfterEach
+  void tearDown() {
+    // Let threads settle
+    TestingUtil.sleep(200);
   }
 
   @Test
