@@ -313,7 +313,6 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
         .toString();
   }
 
-  //TODO is this causing random failures?
   public static class Builder<T, S> {
 
     private T context;
