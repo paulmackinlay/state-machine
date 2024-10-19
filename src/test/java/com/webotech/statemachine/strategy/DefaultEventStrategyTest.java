@@ -29,6 +29,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -36,12 +37,12 @@ import org.mockito.Mockito;
 class DefaultEventStrategyTest {
 
   private static final int MAX_SIZE = 1;
-  private final static ExecutorService executor = Executors.newSingleThreadExecutor();
   private static final StateEvent<Void> event1 = new NamedStateEvent<>("event1");
   private static final State<Void, Void> state1 = new NamedState<>("STATE-1");
   private static final State<Void, Void> state2 = new NamedState<>("STATE-2");
   private static final State<Void, Void> noopState = new NamedState<>(
       GenericStateMachine.RESERVED_STATE_NAME_NOOP);
+  private ExecutorService executor;
   private GenericStateMachine<Void, Void> stateMachine;
   private DefaultEventStrategy<Void, Void> strategy;
   private DefaultEventStrategy<Void, Void> boundStrategy;
@@ -50,6 +51,7 @@ class DefaultEventStrategyTest {
 
   @BeforeEach
   void setup() {
+    executor = Executors.newSingleThreadExecutor();
     stateMachine = mock(GenericStateMachine.class, Mockito.RETURNS_DEEP_STUBS);
     BiConsumer<StateEvent<Void>, StateMachine<Void, Void>> unmappedEventHandler = mock(
         BiConsumer.class);
@@ -67,6 +69,11 @@ class DefaultEventStrategyTest {
     when(stateMachine.getNoopState()).thenReturn(noopState);
     when(stateMachine.getCurrentState()).thenReturn(state1);
     when(eventMachinePairPool.take()).thenReturn(new EventMachinePair<>());
+  }
+
+  @AfterEach
+  void tearDown() {
+    executor.shutdownNow();
   }
 
   @Test

@@ -60,6 +60,7 @@ public class TestingUtil {
           "Timed out while waiting for state machine to end, took longer than "
               + machineEndTimeoutMills + " millis");
     }
+    waitForAllEventsToProcess(stateMachine);
   }
 
   public static OutputStream initStdOutStream() {

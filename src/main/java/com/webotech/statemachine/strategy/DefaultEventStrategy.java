@@ -90,7 +90,9 @@ public class DefaultEventStrategy<T, S> implements EventProcessingStrategy<T, S>
         StateEvent<S> event = consumedPair.getStateEvent();
         GenericStateMachine<T, S> machine = consumedPair.getStateMachine();
         try {
-          transitionTask.execute(event, machine);
+          if (!stateMachine.isEnded()) {
+            transitionTask.execute(event, machine);
+          }
         } catch (Exception e) {
           unexpectedFlowListener.onExceptionDuringEventProcessing(event, machine,
               Thread.currentThread(), e);
