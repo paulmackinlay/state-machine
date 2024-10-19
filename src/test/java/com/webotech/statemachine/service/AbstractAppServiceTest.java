@@ -18,14 +18,29 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class AbstractAppServiceTest {
 
   private static final int TIMEOUT = 2000;
+  private static ExecutorService testExecutor;
   private TestService testService;
+
+  @BeforeAll
+  static void init() {
+    testExecutor = Executors.newSingleThreadExecutor();
+  }
+
+  @AfterAll
+  static void shutdown() {
+    testExecutor.shutdownNow();
+  }
 
   @BeforeEach
   void setup() {
@@ -38,9 +53,9 @@ class AbstractAppServiceTest {
     testService.setStateMachineListener(listener);
     assertTrue(listener.changeBegins.isEmpty());
     assertTrue(listener.changeEnds.isEmpty());
-    testService.start();
+    testExecutor.execute(() -> testService.start());
     boolean success = TestingUtil.awaitCondition(TIMEOUT, TimeUnit.MILLISECONDS,
-        () -> testService.getLifecycleState().getName()
+        () -> testService.getLifecycleState() != null && testService.getLifecycleState().getName()
             .equals(LifecycleStateMachineUtil.STATE_STARTED));
     if (!success) {
       fail("App did not start in time");
@@ -84,9 +99,9 @@ class AbstractAppServiceTest {
   @Test
   void shouldHandleError() throws IOException {
     try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
-      testService.start();
+      testExecutor.execute(() -> testService.start());
       boolean success = TestingUtil.awaitCondition(TIMEOUT, TimeUnit.MILLISECONDS,
-          () -> testService.getLifecycleState().getName()
+          () -> testService.getLifecycleState() != null && testService.getLifecycleState().getName()
               .equals(LifecycleStateMachineUtil.STATE_STARTED));
       if (!success) {
         fail("App did not start in time");
