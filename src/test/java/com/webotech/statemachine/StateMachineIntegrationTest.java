@@ -176,7 +176,7 @@ class StateMachineIntegrationTest {
       // Start it
       stateMachine.start();
 
-      TestingUtil.waitForAllEventsToProcess(stateMachine);
+      TestingUtil.waitForMachineToEnd(stateMachine);
       String stdOut = stdOutStream.toString();
       assertEquals("Start in NamedState[FIRST-STATE]\n"
           + "NamedStateEvent[continue] caused transition away from NamedState[FIRST-STATE]\n"
