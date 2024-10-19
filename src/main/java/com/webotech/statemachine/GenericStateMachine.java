@@ -10,6 +10,7 @@ import com.webotech.statemachine.api.StateMachine;
 import com.webotech.statemachine.api.StateMachineListener;
 import com.webotech.statemachine.strategy.EventProcessingStrategy;
 import com.webotech.statemachine.strategy.EventProcessingStrategyFactory;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
   public static final String RESERVED_STATE_EVENT_NAME_IMMEDIATE = "_immediate_";
   static final List<String> reservedStateNames = List.of(RESERVED_STATE_NAME_UNINITIALISED,
       RESERVED_STATE_NAME_END, RESERVED_STATE_NAME_NOOP);
+  private final Map<StateEvent<S>, State<T, S>> noTransitionMap;
   private final StateEvent<S> immediateEvent;
   private final State<T, S> noState;
   private final State<T, S> endState;
@@ -46,6 +48,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     this.endState = new NamedState<>(RESERVED_STATE_NAME_END);
     this.noState = new NamedState<>(RESERVED_STATE_NAME_UNINITIALISED);
     this.noopState = new NamedState<>(RESERVED_STATE_NAME_NOOP);
+    this.noTransitionMap = Collections.emptyMap();
     this.context = context;
     this.stateMachineListener = stateMachineListener;
     this.eventProcessingStrategy = eventProcessingStrategy;
@@ -59,7 +62,10 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     assertNotReservedState(initState);
     assertInitStateDefined(false);
     this.initState = initState;
-    this.states.put(this.initState, new HashMap<>());
+    states.put(initState, new HashMap<>());
+    states.put(endState, noTransitionMap);
+    states.put(noState, noTransitionMap);
+    states.put(noopState, noTransitionMap);
     when(initState);
     return this;
   }

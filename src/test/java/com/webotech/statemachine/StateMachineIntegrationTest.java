@@ -88,7 +88,7 @@ class StateMachineIntegrationTest {
   @AfterEach
   void tearDown() {
     // Let threads settle
-    TestingUtil.sleep(200);
+    TestingUtil.sleep(100);
   }
 
   @Test
