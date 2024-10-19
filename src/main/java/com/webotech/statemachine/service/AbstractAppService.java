@@ -106,13 +106,18 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
     return appContext;
   }
 
+  /**
+   * This will block the first time it is called
+   *
+   * @throws IllegalStateException if the app state does not permit it to be started
+   */
   @Override
   public void start() {
+    String currentAppState = stateName(getLifecycleState());
     if (!appStateMachine.isStarted()) {
+      // start the state machine and the app then wait indefinitely
       appStateMachine.start();
-    }
-    appStateMachine.fire(LifecycleStateMachineUtil.evtStart);
-    if (!appStateMachine.isStarted()) {
+      appStateMachine.fire(LifecycleStateMachineUtil.evtStart);
       try {
         appLatch.await();
       } catch (InterruptedException e) {
@@ -123,12 +128,28 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
           stop();
         }
       }
+    } else if (!isExitOnStop && LifecycleStateMachineUtil.STATE_STOPPED.equals(currentAppState)) {
+      //re-start the app
+      appStateMachine.fire(LifecycleStateMachineUtil.evtStart);
+    } else {
+      throw new IllegalStateException(
+          "Cannot start the app when it's in [" + currentAppState + "] state");
     }
   }
 
+  /**
+   * @throws IllegalStateException if the app state does not permit it to be stopped
+   */
   @Override
   public void stop() {
-    appStateMachine.fire(LifecycleStateMachineUtil.evtStop);
+    String currentAppState = stateName(getLifecycleState());
+    if (LifecycleStateMachineUtil.STATE_STARTED.equals(currentAppState)
+        || !isExitOnStop && LifecycleStateMachineUtil.STATE_STOPPED.equals(currentAppState)) {
+      appStateMachine.fire(LifecycleStateMachineUtil.evtStop);
+    } else {
+      throw new IllegalStateException(
+          "Cannot stop the app when it's in [" + currentAppState + "] state");
+    }
   }
 
   @Override
@@ -144,5 +165,9 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
 
   public final void setStateMachineListener(StateMachineListener<C, Void> stateMachineListener) {
     appStateMachine.setStateMachineListener(stateMachineListener);
+  }
+
+  private String stateName(State<C, Void> state) {
+    return state != null ? state.getName() : null;
   }
 }

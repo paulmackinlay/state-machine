@@ -53,7 +53,7 @@ public class TestingUtil {
   }
 
   public static void waitForMachineToEnd(StateMachine<?, ?> stateMachine) {
-    boolean success = awaitCondition(stateEventQueueTimeoutMills, TimeUnit.MILLISECONDS,
+    boolean success = awaitCondition(machineEndTimeoutMills, TimeUnit.MILLISECONDS,
         () -> stateMachine.isEnded());
     if (!success) {
       throw new IllegalStateException(

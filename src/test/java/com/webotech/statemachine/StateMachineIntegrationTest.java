@@ -7,6 +7,7 @@ package com.webotech.statemachine;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.inOrder;
@@ -184,6 +185,25 @@ class StateMachineIntegrationTest {
   }
 
   @Test
+  void shouldStartAppOnlyInValidState() {
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    TestApp testApp = new TestApp(new String[0]);
+    executor.execute(() -> testApp.start());
+    if (!TestingUtil.awaitCondition(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS,
+        () -> testApp.getLifecycleState() != null && testApp.getLifecycleState().getName()
+            .equals(LifecycleStateMachineUtil.STATE_STARTED))) {
+      fail("Test app didn't start in time");
+    }
+    assertThrows(IllegalStateException.class, () -> testApp.start());
+  }
+
+  @Test
+  void shouldStopAppOnlyInValidState() {
+    TestApp testApp = new TestApp(new String[0]);
+    assertThrows(IllegalStateException.class, () -> testApp.stop());
+  }
+
+  @Test
   void shouldTestStateMachineBackedApp() throws InterruptedException, IOException {
     try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
       ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -219,11 +239,8 @@ class StateMachineIntegrationTest {
       }
       state = testApp.getLifecycleState();
       assertEquals(LifecycleStateMachineUtil.STATE_STARTED, state.getName());
-      testApp.start();
-      TestingUtil.sleep(200); // wait for logs to flush
       String log = logStream.toString();
-      assertEquals("Starting TestApp with args [an-arg]\n"
-          + "StateEvent [start] not mapped for state [STARTED], ignoring\n", log);
+      assertEquals("Starting TestApp with args [an-arg]\n", log);
       TestAppContext appContext = testApp.getAppContext();
       assertEquals("TestApp", appContext.getAppName());
       assertEquals(2, appContext.getSubsystems().size());
@@ -250,7 +267,6 @@ class StateMachineIntegrationTest {
 
       log = logStream.toString();
       assertEquals("Starting TestApp with args [an-arg]\n"
-          + "StateEvent [start] not mapped for state [STARTED], ignoring\n"
           + "Stopping TestApp\n"
           + "Stopped TestApp\n", log);
     }
