@@ -38,7 +38,7 @@ public class TransitionTask<T, S> {
     State<T, S> fromState = machine.getCurrentState();
     machine.notifyStateMachineListener(false, fromState, event, toState);
     machine.getCurrentState().onExit(event, machine);
-    machine.setCurrentState(toState);
+    machine.updateCurrentState(toState);
     machine.getCurrentState().onEntry(event, machine);
     machine.notifyStateMachineListener(true, fromState, event, toState);
     if (states.get(toState) == null || machine.getEndState()

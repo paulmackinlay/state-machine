@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.StringJoiner;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
@@ -25,6 +26,8 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
   public static final String RESERVED_STATE_EVENT_NAME_IMMEDIATE = "_immediate_";
   static final List<String> reservedStateNames = List.of(RESERVED_STATE_NAME_UNINITIALISED,
       RESERVED_STATE_NAME_END, RESERVED_STATE_NAME_NOOP);
+  private final AtomicBoolean isStarted;
+  private final AtomicBoolean isEnded;
   private final Map<StateEvent<S>, State<T, S>> noTransitionMap;
   private final StateEvent<S> immediateEvent;
   private final State<T, S> noState;
@@ -54,6 +57,8 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     this.eventProcessingStrategy = eventProcessingStrategy;
     this.unexpectedFlowListener = eventProcessingStrategy.getUnexpectedFlowListener();
     this.eventProcessingStrategy.setStates(this.states);
+    isStarted = new AtomicBoolean(false);
+    isEnded = new AtomicBoolean(false);
   }
 
   @SuppressWarnings("hiding")
@@ -224,13 +229,15 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
         }
       }
     }
-    if (isStarted()) {
-      throw new IllegalStateException("The state machine is already started");
+    if (isStarted.compareAndSet(false, true)) {
+      currentState = initState;
+      notifyStateMachineListener(false, noState, immediateEvent, initState);
+      initState.onEntry(immediateEvent, this);
+      notifyStateMachineListener(true, noState, immediateEvent, initState);
+      isEnded.set(false);
+    } else {
+      throw new IllegalStateException("The state machine has already been started");
     }
-    currentState = initState;
-    notifyStateMachineListener(false, noState, immediateEvent, initState);
-    initState.onEntry(immediateEvent, this);
-    notifyStateMachineListener(true, noState, immediateEvent, initState);
   }
 
   /**
@@ -243,25 +250,30 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
    */
   @Override
   public void stop() {
-    setCurrentState(this.endState);
+    updateCurrentState(this.endState);
   }
 
   @Override
   public void startInState(State<T, S> state) {
-    if (!this.states.containsKey(state)) {
+    if (!states.containsKey(state)) {
       throw new IllegalStateException("State [" + state + "] has not been configured");
     }
-    this.currentState = state;
+    if (isStarted.compareAndSet(false, true)) {
+      this.currentState = state;
+      isEnded.set(false);
+    } else {
+      throw new IllegalStateException("The state machine has already been started");
+    }
   }
 
   @Override
   public boolean isStarted() {
-    return this.currentState != null && !this.currentState.equals(noState);
+    return isStarted.get();
   }
 
   @Override
   public boolean isEnded() {
-    return this.currentState != null && this.currentState.equals(endState);
+    return isEnded.get();
   }
 
   @Override
@@ -303,8 +315,10 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
     this.stateMachineListener = stateMachineListener;
   }
 
-  public void setCurrentState(State<T, S> state) {
-    this.currentState = state;
+  public void updateCurrentState(State<T, S> state) {
+    if (isEnded.compareAndSet(false, state.equals(endState))) {
+      currentState = state;
+    }
   }
 
   public State<T, S> getNoopState() {

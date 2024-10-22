@@ -72,7 +72,7 @@ class TransitionTaskTest {
         event1, noopState);
 
     // ensure no state change
-    verify(stateMachine, times(0)).setCurrentState(any());
+    verify(stateMachine, times(0)).updateCurrentState(any());
   }
 
   @Test
@@ -87,7 +87,7 @@ class TransitionTaskTest {
     verify(stateMachine, times(1)).notifyStateMachineListener(false, state1, event1, state2);
 
     // transition
-    verify(stateMachine, times(1)).setCurrentState(state2);
+    verify(stateMachine, times(1)).updateCurrentState(state2);
 
     // entry/exit actions
     verify(mockState, times(1)).onExit(event1, stateMachine);

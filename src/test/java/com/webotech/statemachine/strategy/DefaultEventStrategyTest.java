@@ -89,7 +89,7 @@ class DefaultEventStrategyTest {
     strategy.processEvent(event1, stateMachine);
     latch.countDown();
     waitForEventsToProcess(strategy);
-    verify(stateMachine, times(2)).setCurrentState(any(State.class));
+    verify(stateMachine, times(2)).updateCurrentState(any(State.class));
   }
 
   private void waitForEventsToProcess(DefaultEventStrategy<Void, Void> strategy) {
