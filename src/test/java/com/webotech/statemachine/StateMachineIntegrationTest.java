@@ -6,6 +6,7 @@ package com.webotech.statemachine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -662,6 +663,21 @@ class StateMachineIntegrationTest {
     stateMachine.fire(event2);
     stateMachine.fire(event2);
     TestingUtil.waitForMachineToEnd(stateMachine);
+  }
+
+  @Test
+  void shouldNotBeAbleToStartStateMachineMoreThanOnce() {
+    final StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().build();
+    stateMachine.initialSate(state1).receives(event1).itEnds();
+    stateMachine.start();
+    assertThrows(IllegalStateException.class, () -> stateMachine.start());
+    assertThrows(IllegalStateException.class, () -> stateMachine.startInState(state1));
+
+    final StateMachine<Void, Void> stateMachine1 = new GenericStateMachine.Builder<Void, Void>().build();
+    stateMachine1.initialSate(state1).receives(event1).itEnds();
+    stateMachine1.startInState(state1);
+    assertThrows(IllegalStateException.class, () -> stateMachine1.startInState(state1));
+    assertThrows(IllegalStateException.class, () -> stateMachine1.start());
   }
 
   private void assertNotifiedRow(List<Object> row, String fromStateName, String eventName,
