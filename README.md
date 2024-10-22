@@ -31,7 +31,7 @@ it just add this dependency to your POM
 <dependency>
     <groupId>com.webotech</groupId>
     <artifactId>state-machine</artifactId>
-    <version>0.13.2</version>
+    <version>0.13.6</version>
 </dependency>
 ```
 
