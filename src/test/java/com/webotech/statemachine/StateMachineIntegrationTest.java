@@ -494,9 +494,8 @@ class StateMachineIntegrationTest {
       }
       stateMachine.start();
       latch.countDown();
-      while (count.get() < noEvents) {
-        TestingUtil.sleep(50);
-      }
+      assertTrue(TestingUtil.awaitCondition(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS,
+          () -> count.get() >= noEvents));
       stateMachine.fire(event2);
       TestingUtil.waitForMachineToEnd(stateMachine);
 
@@ -544,7 +543,7 @@ class StateMachineIntegrationTest {
       executor.execute(() -> {
         try {
           latch.await(5, TimeUnit.SECONDS);
-          TimeUnit.MILLISECONDS.sleep(randomMillis.remove(0));
+          TestingUtil.sleep(randomMillis.remove(0));
           if (random.nextBoolean()) {
             stateMachine.fire(event1);
           } else {
@@ -560,9 +559,8 @@ class StateMachineIntegrationTest {
     try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
       stateMachine.start();
       latch.countDown();
-      while (count.get() < noEvents) {
-        TestingUtil.sleep(50);
-      }
+      assertTrue(TestingUtil.awaitCondition(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS,
+          () -> count.get() >= noEvents));
       TestingUtil.waitForAllEventsToProcess(stateMachine);
       stateMachine.stop();
       TestingUtil.waitForMachineToEnd(stateMachine);
