@@ -26,10 +26,26 @@ subsequent state).
 When constructing a `GenericStateMachine`, flexibility has been built in so if you need finer
 control of how events are processed there are these options:
 
-- use the builder that constructs the `EventProcessingStrategy` to pass in your own
-  `ExecutorService`
+- use
+  the [EventProcessingStrategyFactory](../src/main/java/com/webotech/statemachine/strategy/EventProcessingStrategyFactory.java)
+  to construct the `EventProcessingStrategy` with your own `ExecutorService`
 - choose a different implementation of `EventProcessingStrategy`
 - implement your own `EventProcessingStrategy`
+
+#### Using EventProcessingStrategyFactory
+
+[EventProcessingStrategyFactory](../src/main/java/com/webotech/statemachine/strategy/EventProcessingStrategyFactory.java)
+can be used to configure the `EventProcessingStrategy` implementations so that it is customised for
+your needs. To do this you prepare a `Config` object with your customisation and then use it to
+construct your `EventProcessingStragegy`. A non-exhaustive example is shown below.
+
+```java
+EventProcessingStrategyFactory factory = new EventProcessingStrategyFactory();
+Config<> config = new Config<>().withThreadName("bound-state-machine").withMaxQueueSize(5);
+EventProcessingStrategy<> customStrategy = factory.createDefaultStrategy(config);
+
+StateMachine<> sm = new GenericStateMachine.Builder<>().setEventProcessingStrategy(customStrategy).build();
+```
 
 ### Unmapped events
 
@@ -41,7 +57,7 @@ However, you may want bespoke behaviour for unmapped events in which case you ca
 
 ```java
 BiConsumer<StateEvent<>, StateMachine<>> unmappedHandler = ...;
-StateMachine<> sm = new GenericStateMachine.Builder<>().setUnmappedEventHander(unmappedHandler);
+StateMachine<> sm = new GenericStateMachine.Builder<>().setUnmappedEventHander(unmappedHandler).build();
 ```
 
 The handler is a `BiConsumer` that calls back with a reference to the `StateEvent` that was received
