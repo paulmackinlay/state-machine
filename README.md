@@ -1,15 +1,17 @@
 # state-machine
 
-This repo contains a [state machine API](src/main/java/com/webotech/statemachine/api) with a generic
-[implementation](src/main/java/com/webotech/statemachine/GenericStateMachine.java) written in core
-java that is thread safe.
+This repo contains a [state machine API](src/main/java/com/webotech/statemachine/api)
+and a [microservice API](src/main/java/com/webotech/statemachine/service/api) that have generic,
+thread safe implementations written in core java. It also has a
 
 - State machine API with comprehensive javadoc
-- Generic implementation
-- Service API & app starter implementation for a state machine backed microservice
-- Core java: no dependencies (other than a logging API)
+- Generic state machine implementation
+- Microservice API with comprehensive javadoc
+- Microsevice starter implementation that is backed by a state machine
+- Core java: no dependencies other than a logging API
 - Thread safe
 - Extensively tested
+- [Extensively documented](docs/01-intro.md)
 
 You can find how core [concepts of a state machine](docs/01-intro.md) are implemented in the
 [documentation](docs/02-implementation.md) or you can dive directly into the code.
@@ -17,28 +19,24 @@ You can find how core [concepts of a state machine](docs/01-intro.md) are implem
 The integration tests are useful to show various usecases for `state-machine`. Please note that
 tests are designed to run on systems with UNIX style line endings.
 
-**Note** although the current version is being used in production on a number of projects, the logic
-is still undergoing significant changes. You may want to wait for a major release version (1.0.0)
-when it will become more stable.
-
 ## Use state-machine with maven or gradle
 
 This project is
 in [maven central](https://central.sonatype.com/artifact/com.webotech/state-machine), to start using
-it just add this dependency to your POM
+it just add this dependency to your POM.
 
 ```xml
 <dependency>
     <groupId>com.webotech</groupId>
     <artifactId>state-machine</artifactId>
-    <version>0.13.6</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
 or this dependency in gradle
 
 ```groovy
-implementation 'com.webotech:state-machine:0.12.1'
+implementation 'com.webotech:state-machine:1.0.0'
 ```
 
 **Please use the latest version available in maven central - the version in this page may be old.**
