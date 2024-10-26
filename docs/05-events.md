@@ -3,7 +3,7 @@
 ### Event processing
 
 In `GenericStateMachine` events are processed by
-an [EventProcessingStrategy](../src/main/java/com/webotech/statemachine/EventProcessingStrategy.java).
+an [EventProcessingStrategy](../src/main/java/com/webotech/statemachine/strategy/EventProcessingStrategy.java).
 There are a couple of implementations and the default implementation is discussed here.
 
 When it comes to processing events, understanding the thread interaction in a `StateMachine` is
@@ -13,7 +13,7 @@ In order to handle programatic flow originating from different threads in a cons
 default `GenericStateMachine` hands off processing to a single thread executor. This has the effect
 of
 
-- quickly freeing I/O threads which avoids blocking
+- quickly freeing I/O threads and therefore avoid blocking
 - avoid thread contention when events originate on the current thread
 - guarantees events are processed in the same order they were received
 - being thread-safe
@@ -24,7 +24,7 @@ in an atomic way, so that the next event will be processed once the transition i
 subsequent state).
 
 When constructing a `GenericStateMachine`, flexibility has been built in so if you need finer
-control of how events are processed there are these options:
+control over how events are processed there are these options:
 
 - use
   the [EventProcessingStrategyFactory](../src/main/java/com/webotech/statemachine/strategy/EventProcessingStrategyFactory.java)
@@ -35,9 +35,9 @@ control of how events are processed there are these options:
 #### Using EventProcessingStrategyFactory
 
 [EventProcessingStrategyFactory](../src/main/java/com/webotech/statemachine/strategy/EventProcessingStrategyFactory.java)
-can be used to configure the `EventProcessingStrategy` implementations so that it is customised for
-your needs. To do this you prepare a `Config` object with your customisation and then use it to
-construct your `EventProcessingStragegy`. A non-exhaustive example is shown below.
+can be used to configure the built in `EventProcessingStrategy` implementations so that it is
+customised for your needs. To do this you prepare a `Config` object with your customisation and then
+use it to construct your `EventProcessingStragegy`. A non-exhaustive example is shown below.
 
 ```java
 EventProcessingStrategyFactory factory = new EventProcessingStrategyFactory();
