@@ -78,7 +78,7 @@ public class TestingUtil {
   }
 
   /**
-   * @return true if the condition becames true before the timeout
+   * @return true if the condition becomes true before the timeout
    */
   public static boolean awaitCondition(long timeout, TimeUnit timeUnit,
       Supplier<Boolean> condition) {
