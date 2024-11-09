@@ -33,6 +33,7 @@ public class TestApp extends AbstractAppService<TestAppContext> {
     }
   }
 
+  @Override
   public TestAppContext getAppContext() {
     return super.getAppContext();
   }

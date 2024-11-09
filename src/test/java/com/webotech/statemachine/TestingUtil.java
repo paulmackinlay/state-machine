@@ -26,8 +26,8 @@ import org.junit.jupiter.api.Test;
 
 public class TestingUtil {
 
-  private static final long stateEventQueueTimeoutMills = 5000;
-  private static final long machineEndTimeoutMills = 10000;
+  private static final long STATE_EVENT_QUEUE_TIMEOUT_MILLS = 5000;
+  private static final long MACHINE_END_TIMEOUT_MILLS = 10000;
   private static final AtomicInteger streamCount = new AtomicInteger();
 
   private TestingUtil() {
@@ -42,23 +42,23 @@ public class TestingUtil {
   }
 
   public static void waitForAllEventsToProcess(StateMachine<?, ?> stateMachine) {
-    boolean success = awaitCondition(stateEventQueueTimeoutMills, TimeUnit.MILLISECONDS,
+    boolean success = awaitCondition(STATE_EVENT_QUEUE_TIMEOUT_MILLS, TimeUnit.MILLISECONDS,
         () -> stateMachine.getEventQueueSize() == 0);
     if (!success) {
       throw new IllegalStateException(
           "Timed out while waiting for all events to process, took longer than "
-              + stateEventQueueTimeoutMills + " millis");
+              + STATE_EVENT_QUEUE_TIMEOUT_MILLS + " millis");
     }
     sleep(100);
   }
 
   public static void waitForMachineToEnd(StateMachine<?, ?> stateMachine) {
-    boolean success = awaitCondition(machineEndTimeoutMills, TimeUnit.MILLISECONDS,
+    boolean success = awaitCondition(MACHINE_END_TIMEOUT_MILLS, TimeUnit.MILLISECONDS,
         () -> stateMachine.isEnded());
     if (!success) {
       throw new IllegalStateException(
           "Timed out while waiting for state machine to end, took longer than "
-              + machineEndTimeoutMills + " millis");
+              + MACHINE_END_TIMEOUT_MILLS + " millis");
     }
     waitForAllEventsToProcess(stateMachine);
   }

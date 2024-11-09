@@ -21,7 +21,6 @@ import com.webotech.statemachine.service.TestAppContext;
 import com.webotech.statemachine.service.api.Subsystem;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -107,8 +106,6 @@ public class AppServiceIntegrationTest {
         fail("Did not end in time");
       }
       state = testApp.getLifecycleState();
-      List<String> stopedStates = List.of(GenericStateMachine.RESERVED_STATE_NAME_END,
-          LifecycleStateMachineUtil.STATE_STOPPED);
       assertEquals(GenericStateMachine.RESERVED_STATE_NAME_END, state.getName());
       //Stops in reverse order from how is started
       inOrder.verify(subsystem2, times(1)).stop(appContext);
