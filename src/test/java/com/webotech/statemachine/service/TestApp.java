@@ -32,9 +32,4 @@ public class TestApp extends AbstractAppService<TestAppContext> {
       scheduledExecutorService.shutdownNow();
     }
   }
-
-  @Override
-  public TestAppContext getAppContext() {
-    return super.getAppContext();
-  }
 }
