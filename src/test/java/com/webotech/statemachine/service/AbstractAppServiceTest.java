@@ -142,7 +142,7 @@ class AbstractAppServiceTest {
     assertEquals(to, listener.changeEnds.get(idx).get(2));
   }
 
-  private class TestService extends AbstractAppService<TestContext> {
+  private static class TestService extends AbstractAppService<TestContext> {
 
     TestService() {
       super(new TestContext());
@@ -156,7 +156,7 @@ class AbstractAppServiceTest {
     }
   }
 
-  private class TestStateMachineListener implements StateMachineListener<TestContext, Void> {
+  private static class TestStateMachineListener implements StateMachineListener<TestContext, Void> {
 
     final List<List<String>> changeBegins = new ArrayList<>();
     final List<List<String>> changeEnds = new ArrayList<>();
