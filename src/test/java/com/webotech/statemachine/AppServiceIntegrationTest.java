@@ -87,7 +87,7 @@ public class AppServiceIntegrationTest {
       }
       state = testApp.getLifecycleState();
       assertEquals(LifecycleStateMachineUtil.STATE_STARTED, state.getName());
-      String log = logStream.toString();
+      String log = TestingUtil.asNormalisedTxt(logStream);
       assertEquals("Starting TestApp with args [an-arg]\n", log);
       TestAppContext appContext = testApp.getAppContext();
       assertEquals("TestApp", appContext.getAppName());
@@ -111,7 +111,7 @@ public class AppServiceIntegrationTest {
       inOrder.verify(subsystem2, times(1)).stop(appContext);
       inOrder.verify(subsystem1, times(1)).stop(appContext);
 
-      log = logStream.toString();
+      log = TestingUtil.asNormalisedTxt(logStream);
       assertEquals("Starting TestApp with args [an-arg]\n"
           + "Stopping TestApp\n"
           + "Stopped TestApp\n", log);
@@ -204,7 +204,7 @@ public class AppServiceIntegrationTest {
       inOrder.verify(subsystem2, times(1)).stop(appContext);
       inOrder.verify(subsystem1, times(1)).stop(appContext);
 
-      String log = logStream.toString();
+      String log = TestingUtil.asNormalisedTxt(logStream);
       assertEquals("Starting TestApp with args []\n"
           + "Stopping TestApp\n"
           + "Stopped TestApp\n"

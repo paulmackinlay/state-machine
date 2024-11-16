@@ -43,7 +43,7 @@ class DropDuplicateEventStrategyTest {
     try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
       this.strategy.processEvent(event1, stateMachine);
       assertEquals("Event [NamedStateEvent[event1]] already in queue, will drop it\n",
-          logStream.toString());
+          TestingUtil.asNormalisedTxt(logStream));
     }
   }
 }

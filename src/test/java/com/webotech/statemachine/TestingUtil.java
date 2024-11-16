@@ -96,6 +96,20 @@ public class TestingUtil {
     return epochEval <= epochNow + timeoutMillis;
   }
 
+  /**
+   * Converts outputStream to be text with Windows EOLs replaced for Unix EOLs
+   */
+  public static String asNormalisedTxt(OutputStream outputStream) {
+    return normaliseEol(outputStream.toString());
+  }
+
+  /**
+   * Replaces Windows EOL with Unix EOL
+   */
+  public static String normaliseEol(String txt) {
+    return txt.replaceAll("\\r\\n?", "\n");
+  }
+
   @Test
   void shouldAwaitCondition() {
     assertTrue(awaitCondition(200, TimeUnit.MILLISECONDS, () -> 1 > 0));

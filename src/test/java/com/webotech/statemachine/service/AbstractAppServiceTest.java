@@ -113,7 +113,7 @@ class AbstractAppServiceTest {
       if (!success) {
         fail("App did not end in time");
       }
-      String log = logStream.toString();
+      String log = TestingUtil.asNormalisedTxt(logStream);
       assertTrue(log.startsWith(
           "Begin TestService transition: _UNINITIALISED_ + _immediate_ = UNINITIALISED\n"
               + "TestService transitioned to UNINITIALISED\n"

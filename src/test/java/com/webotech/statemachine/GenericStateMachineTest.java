@@ -57,7 +57,7 @@ class GenericStateMachineTest {
       stateMachine.fire(event2);
       TestingUtil.waitForAllEventsToProcess(stateMachine);
       assertEquals("StateEvent [event-2] not mapped for state [STATE-1], ignoring\n",
-          logStream.toString());
+          TestingUtil.asNormalisedTxt(logStream));
     }
   }
 
@@ -121,7 +121,7 @@ class GenericStateMachineTest {
       TestingUtil.waitForAllEventsToProcess(stateMachine);
       assertEquals(state1, stateMachine.getCurrentState());
       assertEquals("Begin transition: STATE-2 + event-1 = STATE-1\n"
-          + "Transitioned to STATE-1\n", logStream.toString());
+          + "Transitioned to STATE-1\n", TestingUtil.asNormalisedTxt(logStream));
     }
   }
 

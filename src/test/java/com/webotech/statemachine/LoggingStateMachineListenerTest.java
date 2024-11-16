@@ -33,7 +33,7 @@ class LoggingStateMachineListenerTest {
     try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
       loggingListener.onStateChangeBegin(fromState, event, toState);
       loggingListener.onStateChangeEnd(fromState, event, toState);
-      String log = logStream.toString();
+      String log = TestingUtil.asNormalisedTxt(logStream);
       assertEquals(
           "Begin transition: " + fromState.getName() + " + " + event.getName() + " = "
               + toState.getName()
@@ -47,11 +47,10 @@ class LoggingStateMachineListenerTest {
     try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
       namedLoggingListener.onStateChangeBegin(fromState, event, toState);
       namedLoggingListener.onStateChangeEnd(fromState, event, toState);
-      String log = logStream.toString();
-      assertEquals(
-          "Begin " + NAME + " transition: " + fromState.getName() + " + " + event.getName()
-              + " = " + toState.getName() + "\n"
-              + NAME + " transitioned to " + toState.getName() + "\n", log);
+      String log = TestingUtil.asNormalisedTxt(logStream);
+      assertEquals("Begin " + NAME + " transition: " + fromState.getName() + " + " + event.getName()
+          + " = " + toState.getName() + "\n" + NAME + " transitioned to " + toState.getName()
+          + "\n", log);
     }
   }
 }

@@ -91,7 +91,7 @@ class StateMachineIntegrationTest {
       stateMachine.fire(event1);
       stateMachine.fire(event1);
       TestingUtil.waitForAllEventsToProcess(stateMachine);
-      String log = logStream.toString();
+      String log = TestingUtil.asNormalisedTxt(logStream);
       assertEquals("Begin transition: _UNINITIALISED_ + _immediate_ = STATE-1\n"
           + "Transitioned to STATE-1\n"
           + "Begin transition: STATE-1 + event-1 = STATE-2\n"
@@ -123,7 +123,7 @@ class StateMachineIntegrationTest {
       stateMachine.fire(event1);
       stateMachine.fire(event1);
       TestingUtil.waitForAllEventsToProcess(stateMachine);
-      String log = logStream.toString();
+      String log = TestingUtil.asNormalisedTxt(logStream);
       assertEquals(
           "Begin a-test-state-machine transition: _UNINITIALISED_ + _immediate_ = STATE-1\n"
               + "a-test-state-machine transitioned to STATE-1\n"
@@ -323,7 +323,7 @@ class StateMachineIntegrationTest {
           + "test-context 14\n"
           + "test-context 16\n"
           + "test-context 18\n"
-          + "test-context 20\n", logStream.toString());
+          + "test-context 20\n", TestingUtil.asNormalisedTxt(logStream));
     }
   }
 
@@ -370,7 +370,7 @@ class StateMachineIntegrationTest {
       assertEquals("Begin transition: _UNINITIALISED_ + _immediate_ = STATE-1\n"
           + "Transitioned to STATE-1\n"
           + "Begin transition: STATE-1 + event-1 = STATE-2\n"
-          + "Transitioned to STATE-2\n", logStream.toString());
+          + "Transitioned to STATE-2\n", TestingUtil.asNormalisedTxt(logStream));
       assertTrue(stateMachine.isEnded());
       assertTrue(stateMachine.isStarted());
     }
@@ -389,7 +389,7 @@ class StateMachineIntegrationTest {
       stateMachine.start();
       stateMachine.fire(event1);
       TestingUtil.waitForMachineToEnd(stateMachine);
-      log = logStream.toString();
+      log = TestingUtil.asNormalisedTxt(logStream);
     }
 
     assertEquals(2, beginUpdates.size());
@@ -565,7 +565,7 @@ class StateMachineIntegrationTest {
       TestingUtil.waitForAllEventsToProcess(stateMachine);
       stateMachine.stop();
       TestingUtil.waitForMachineToEnd(stateMachine);
-      String log = logStream.toString();
+      String log = TestingUtil.asNormalisedTxt(logStream);
       assertTrue(log.contains("not mapped for state"));
       assertTrue(log.contains("Begin transition:"));
       assertTrue(stateMachine.isEnded());

@@ -36,7 +36,7 @@ class DefaultUnexpectedFlowListenerTest {
     Thread thread = new Thread("test-thread");
     try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
       unexpectedFlowListener.onExceptionDuringEventProcessing(event, stateMachine, thread, e);
-      assertTrue(logStream.toString().startsWith(
+      assertTrue(TestingUtil.asNormalisedTxt(logStream).startsWith(
           "Unhandled exception while processing event NamedStateEvent[event] while in state null on thread [test-thread]\n"
               + "java.lang.IllegalStateException: test induced"));
     }
@@ -47,7 +47,7 @@ class DefaultUnexpectedFlowListenerTest {
     try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
       unexpectedFlowListener.onEventAfterMachineEnd(event, stateMachine);
       assertEquals("Event NamedStateEvent[event] received after state machine has ended\n",
-          logStream.toString());
+          TestingUtil.asNormalisedTxt(logStream));
     }
   }
 
@@ -56,7 +56,7 @@ class DefaultUnexpectedFlowListenerTest {
     try (OutputStream logStream = TestingUtil.initLogCaptureStream()) {
       unexpectedFlowListener.onEventBeforeMachineStart(event, stateMachine);
       assertEquals("Event NamedStateEvent[event] received before state machine has started\n",
-          logStream.toString());
+          TestingUtil.asNormalisedTxt(logStream));
     }
   }
 }
