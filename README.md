@@ -19,6 +19,11 @@ You can find how core [concepts of a state machine](docs/01-intro.md) are implem
 The integration tests are useful to show various usecases for `state-machine`. Please note that
 tests are designed to run on systems with UNIX style line endings.
 
+## Minimum Java Version
+
+This project uses a Java language specification version 17, it is compatible with Java 17 and
+higher.
+
 ## Use state-machine with maven or gradle
 
 This project is
