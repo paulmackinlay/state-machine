@@ -1,13 +1,13 @@
 # state-machine
 
 This repo contains a [state machine API](src/main/java/com/webotech/statemachine/api)
-and a [microservice API](src/main/java/com/webotech/statemachine/service/api) that have generic,
-thread safe implementations written in core java. It also has a
+and a [service API](src/main/java/com/webotech/statemachine/service/api) that have generic, thread
+safe implementations written in core java. It also has a
 
 - State machine API with comprehensive javadoc
 - Generic state machine implementation
-- Microservice API with comprehensive javadoc
-- Microsevice starter implementation that is backed by a state machine
+- Service API for building apps/microservices with comprehensive javadoc
+- Sevice starter implementation that is backed by a state machine
 - Core java: no dependencies other than a logging API
 - Thread safe
 - Extensively tested
@@ -84,7 +84,7 @@ The state diagram for this example is:
 
 ![](docs/media/Quick_start_diagram.png)
 
-## Quick start microservice
+## Quick start service/app
 
 The app:
 
