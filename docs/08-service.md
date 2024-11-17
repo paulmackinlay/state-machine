@@ -7,7 +7,8 @@ the basics of an application (or service). Abstract classes located in the
 form a starter implementation that will run as a stand-alone app. The app is backed by a state
 machine.
 
-The API and implementation are the blueprint for a generic microservice.
+The API and implementation are the blueprint for a generic service, a starting point for an app or
+microservice.
 
 ## App design
 

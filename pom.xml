@@ -7,8 +7,8 @@
   <version>1.0.2-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>${project.groupId}:${project.artifactId}</name>
-  <description>A thread safe, general purpose state machine and microservice API written in core
-    java.
+  <description>A thread safe, general purpose state machine and service API for building
+    microservices/apps written in core java.
   </description>
   <url>https://github.com/paulmackinlay/state-machine</url>
 

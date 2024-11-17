@@ -59,8 +59,8 @@ transition back to the **Starting** state. In this case the **Stopped** state wo
 an application into a warm stand-by mode which can be a very useful feature.
 
 This project includes a service API and a starter implementation for an app that is backed by a
-state machine. It is an ideal starting point if you wish to create your own microservice, you can
-find out more in the [starter implementation docs for an app](08-service.md).
+state machine. It is an ideal starting point if you wish to create your own app or microservice, you
+can find out more in the [starter implementation docs for an app](08-service.md).
 
 ### State Driven Protocol Example
 
