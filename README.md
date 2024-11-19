@@ -34,14 +34,14 @@ it just add this dependency to your POM.
 <dependency>
     <groupId>com.webotech</groupId>
     <artifactId>state-machine</artifactId>
-    <version>1.0.2</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
 or this dependency in gradle
 
 ```groovy
-implementation 'com.webotech:state-machine:1.0.2'
+implementation 'com.webotech:state-machine:1.1.0'
 ```
 
 **Please use the latest version available in maven central - the version in this page may be old.**
