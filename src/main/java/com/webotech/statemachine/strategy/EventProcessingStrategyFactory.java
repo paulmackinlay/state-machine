@@ -22,25 +22,30 @@ public class EventProcessingStrategyFactory {
   @SuppressWarnings("rawtypes")
   private static final Config basicConfig = new Config<>();
 
+  private EventProcessingStrategyFactory() {
+    // Not for instanciation outside this class
+  }
+
   @SuppressWarnings("unchecked")
-  public <T, S> EventProcessingStrategy<T, S> createDefaultStrategy() {
+  public static <T, S> EventProcessingStrategy<T, S> createDefaultStrategy() {
     return createDefaultStrategy(basicConfig);
   }
 
-  public <T, S> EventProcessingStrategy<T, S> createDefaultStrategy(Config<T, S> config) {
+  public static <T, S> EventProcessingStrategy<T, S> createDefaultStrategy(Config<T, S> config) {
     return newDefaultStrategy(config);
   }
 
   @SuppressWarnings("unchecked")
-  public <T, S> EventProcessingStrategy<T, S> createDropDuplicateStrategy() {
+  public static <T, S> EventProcessingStrategy<T, S> createDropDuplicateStrategy() {
     return createDropDuplicateStrategy(basicConfig);
   }
 
-  public <T, S> EventProcessingStrategy<T, S> createDropDuplicateStrategy(Config<T, S> config) {
+  public static <T, S> EventProcessingStrategy<T, S> createDropDuplicateStrategy(
+      Config<T, S> config) {
     return new DropDuplicateEventStrategy<>(newDefaultStrategy(config));
   }
 
-  private <T, S> DefaultEventStrategy<T, S> newDefaultStrategy(Config<T, S> config) {
+  private static <T, S> DefaultEventStrategy<T, S> newDefaultStrategy(Config<T, S> config) {
     return new DefaultEventStrategy<>(config.getUnmappedEventHandler(), config.getExecutor(),
         config.getUnexpectedFlowListener(), config.getMaxQueueSize(), config.getEventQueue());
   }

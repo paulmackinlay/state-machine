@@ -18,17 +18,9 @@ import com.webotech.statemachine.strategy.EventProcessingStrategyFactory.Config;
 import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class EventProcessingStrategyFactoryTest {
-
-  private EventProcessingStrategyFactory strategyFactory;
-
-  @BeforeEach
-  void setup() {
-    strategyFactory = new EventProcessingStrategyFactory();
-  }
 
   @Test
   void shouldBuildWithExecutorService() {
@@ -77,8 +69,8 @@ class EventProcessingStrategyFactoryTest {
 
   @Test
   void shouldCreateIndependentStrategies() {
-    EventProcessingStrategy<Void, Void> strategy1 = strategyFactory.createDefaultStrategy();
-    EventProcessingStrategy<Void, Void> strategy2 = strategyFactory.createDefaultStrategy();
+    EventProcessingStrategy<Void, Void> strategy1 = EventProcessingStrategyFactory.createDefaultStrategy();
+    EventProcessingStrategy<Void, Void> strategy2 = EventProcessingStrategyFactory.createDefaultStrategy();
 
     assertEquals(0, strategy1.getEventQueueSize());
     assertNotNull(strategy1.getUnexpectedFlowListener());
@@ -89,8 +81,8 @@ class EventProcessingStrategyFactoryTest {
 
   @Test
   void shouldCreateDropDuplicateEventIndependentStrategies() {
-    EventProcessingStrategy<Void, Void> strategy1 = strategyFactory.createDropDuplicateStrategy();
-    EventProcessingStrategy<Void, Void> strategy2 = strategyFactory.createDropDuplicateStrategy();
+    EventProcessingStrategy<Void, Void> strategy1 = EventProcessingStrategyFactory.createDropDuplicateStrategy();
+    EventProcessingStrategy<Void, Void> strategy2 = EventProcessingStrategyFactory.createDropDuplicateStrategy();
 
     assertEquals(0, strategy1.getEventQueueSize());
     assertNotNull(strategy1.getUnexpectedFlowListener());
@@ -110,7 +102,8 @@ class EventProcessingStrategyFactoryTest {
         .withThreadName(threadName).withEventQueue(eventQueue).withMaxQueueSize(10)
         .withUnmappedEventHandler(unmappedEventHandler)
         .withUnexpectedFlowListener(unexpectedFlowListener);
-    EventProcessingStrategy<Void, Void> strategy = strategyFactory.createDefaultStrategy(config);
+    EventProcessingStrategy<Void, Void> strategy = EventProcessingStrategyFactory.createDefaultStrategy(
+        config);
     DefaultEventStrategy<Void, Void> defaultEventStrategy = (DefaultEventStrategy) strategy;
 
     assertSame(eventQueue, defaultEventStrategy.getEventQueue());
@@ -130,7 +123,7 @@ class EventProcessingStrategyFactoryTest {
         .withThreadName(threadName).withEventQueue(eventQueue).withMaxQueueSize(10)
         .withUnmappedEventHandler(unmappedEventHandler)
         .withUnexpectedFlowListener(unexpectedFlowListener);
-    EventProcessingStrategy<Void, Void> strategy = strategyFactory.createDropDuplicateStrategy(
+    EventProcessingStrategy<Void, Void> strategy = EventProcessingStrategyFactory.createDropDuplicateStrategy(
         config);
     DropDuplicateEventStrategy<Void, Void> dropDuplicateEventStrategy = (DropDuplicateEventStrategy) strategy;
 

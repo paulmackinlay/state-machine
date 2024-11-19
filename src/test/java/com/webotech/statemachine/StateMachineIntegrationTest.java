@@ -108,7 +108,7 @@ class StateMachineIntegrationTest {
     String name = "a-test-state-machine";
     StateMachineListener<Void, Void> loggingStateMachineListener = new LoggingStateMachineListener<>(
         name);
-    EventProcessingStrategy<Void, Void> strategy = new EventProcessingStrategyFactory().createDefaultStrategy(
+    EventProcessingStrategy<Void, Void> strategy = EventProcessingStrategyFactory.createDefaultStrategy(
         new Config<Void, Void>().withThreadName(name));
     StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().setStateMachineListener(
         loggingStateMachineListener).setEventProcessingStrategy(strategy).build();
@@ -524,7 +524,7 @@ class StateMachineIntegrationTest {
     for (int i = 0; i < noEvents; i++) {
       randomMillis.add(random.nextInt(50));
     }
-    EventProcessingStrategy<Void, Void> strategy = new EventProcessingStrategyFactory().createDefaultStrategy(
+    EventProcessingStrategy<Void, Void> strategy = EventProcessingStrategyFactory.createDefaultStrategy(
         new Config<Void, Void>().withExecutor(
             Executors.newSingleThreadExecutor(Threads.newNamedDaemonThreadFactory("sm", (t, e) -> {
               System.err.print(t.getName() + ": ");

@@ -365,7 +365,7 @@ public class GenericStateMachine<T, S> implements StateMachine<T, S> {
 
     public GenericStateMachine<T, S> build() {
       if (eventProcessingStrategy == null) {
-        eventProcessingStrategy = new EventProcessingStrategyFactory().createDefaultStrategy();
+        eventProcessingStrategy = EventProcessingStrategyFactory.createDefaultStrategy();
       }
       return new GenericStateMachine<>(context, new HashMap<>(), stateMachineListener,
           eventProcessingStrategy);
