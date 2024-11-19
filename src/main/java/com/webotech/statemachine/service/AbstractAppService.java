@@ -15,6 +15,7 @@ import com.webotech.statemachine.api.StateMachineListener;
 import com.webotech.statemachine.service.api.AppContext;
 import com.webotech.statemachine.service.api.AppService;
 import com.webotech.statemachine.service.api.Subsystem;
+import com.webotech.statemachine.strategy.EventProcessingStrategyFactory;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.CountDownLatch;
@@ -53,7 +54,11 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
     // Construct logger here so that logging can be re-initialised statically by concrete class
     logger = LogManager.getLogger(AbstractAppService.class);
     appLatch = new CountDownLatch(1);
-    appStateMachine = new GenericStateMachine.Builder<C, Void>().setContext(appContext).build();
+    EventProcessingStrategyFactory.Config<C, Void> strategyConfg = new EventProcessingStrategyFactory.Config<C, Void>()
+        .withThreadName(appContext.getAppThreadName());
+    appStateMachine = new GenericStateMachine.Builder<C, Void>().setContext(appContext)
+        .setEventProcessingStrategy(
+            EventProcessingStrategyFactory.createDefaultStrategy(strategyConfg)).build();
     this.appContext = appContext;
     this.isExitOnStop = isExitOnStop;
     configureAppStateMachine();

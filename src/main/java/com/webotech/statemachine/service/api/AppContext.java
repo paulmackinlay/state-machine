@@ -23,6 +23,11 @@ public interface AppContext<C extends AppContext<?>> {
   String getAppName();
 
   /**
+   * @return the thread name that will be used for the app's state machine.
+   */
+  String getAppThreadName();
+
+  /**
    * @return the {@link Subsystem}s for the {@link AppService}
    */
   List<Subsystem<C>> getSubsystems();

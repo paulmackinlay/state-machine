@@ -94,6 +94,9 @@ class AbstractAppServiceTest {
   void shouldGetAppContext() {
     assertInstanceOf(TestContext.class, testService.getAppContext());
     assertEquals("TestService", testService.getAppContext().getAppName());
+    assertEquals("my-app", testService.getAppContext().getAppThreadName());
+    assertEquals(0, testService.getAppContext().getInitArgs().length);
+    assertEquals(List.of(), testService.getAppContext().getSubsystems());
   }
 
   @Test
@@ -145,14 +148,14 @@ class AbstractAppServiceTest {
   private static class TestService extends AbstractAppService<TestContext> {
 
     TestService() {
-      super(new TestContext());
+      super(new TestContext().withAppThreadName("my-app"));
     }
   }
 
   private static class TestContext extends AbstractAppContext<TestContext> {
 
     TestContext() {
-      super("TestService", new String[0]);
+      super("TestService");
     }
   }
 
