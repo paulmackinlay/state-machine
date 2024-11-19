@@ -19,6 +19,10 @@ public final class Threads {
     return new NamedDaemonThreadFactory(threadName, uncaughtExceptionHandler);
   }
 
+  public static ThreadFactory newNamedDaemonThreadFactory(final String threadName) {
+    return new NamedDaemonThreadFactory(threadName);
+  }
+
   private static class NamedDaemonThreadFactory implements ThreadFactory {
 
     private static final String DASH_FORMAT = "%s-%s";
