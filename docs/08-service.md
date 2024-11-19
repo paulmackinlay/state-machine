@@ -48,8 +48,9 @@ that are used to drive the predictable starting and stopping of the app. The API
 _getAppContext_ method that provides access to the context of the app.
 
 The [AppContext](../src/main/java/com/webotech/statemachine/service/api/AppContext.java) is used to
-store the app level state, it has the app name, the arguments used to start the app (analogous to
-the args in a main method) and the list of
+store the app level state. It has the app name, the thead name of the app state machine (useful to
+identify the thead in logs), the arguments used to start the app (analogous to the args in a main
+method) and the list of
 [Subsystems](../src/main/java/com/webotech/statemachine/service/api/Subsystem.java) that are used to
 build the app's business logic.
 
