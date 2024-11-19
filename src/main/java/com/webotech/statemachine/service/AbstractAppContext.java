@@ -42,8 +42,9 @@ public abstract class AbstractAppContext<C extends AbstractAppContext<C>> implem
   /**
    * The app's default thread name is 'app', it can be overridden here at construction time.
    */
-  public final C withAppThreadName(String appThreaName) {
-    appThreadNameRef.set(appThreaName);
+  @SuppressWarnings("unchecked")
+  public final C withAppThreadName(String appThreadName) {
+    appThreadNameRef.set(appThreadName);
     return (C) this;
   }
 

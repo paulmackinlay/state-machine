@@ -65,7 +65,7 @@ public interface StateMachine<T, S> {
   void start();
 
   /**
-   * Starts the {@link StateMachine} in a given {@link State}. This is useful for initialising a
+   * Starts the {@link StateMachine} in a given {@link State}. This is useful for initializing a
    * {@link StateMachine} from a persisted state.
    */
   void startInState(State<T, S> state);
