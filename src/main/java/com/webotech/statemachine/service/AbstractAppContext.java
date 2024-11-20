@@ -33,6 +33,10 @@ public abstract class AbstractAppContext<C extends AbstractAppContext<C>> implem
     this.subsystemsRef = new AtomicReference<>(List.of());
   }
 
+  /**
+   * The app's {@link Subsystem}s that will be started in order, they should be defined at
+   * construction time.
+   */
   @SuppressWarnings("unchecked")
   public final C withSubsystems(List<Subsystem<C>> subsystems) {
     subsystemsRef.set(subsystems);
