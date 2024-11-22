@@ -1,4 +1,6 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.webotech</groupId>
   <artifactId>state-machine</artifactId>
@@ -50,7 +52,7 @@
     <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
     <central-publishing-maven-plugin.version>0.6.0</central-publishing-maven-plugin.version>
     <maven-release-plugin.version>3.1.1</maven-release-plugin.version>
-    <log4j2.version>2.24.1</log4j2.version>
+    <log4j2.version>2.24.2</log4j2.version>
   </properties>
 
   <dependencies>
