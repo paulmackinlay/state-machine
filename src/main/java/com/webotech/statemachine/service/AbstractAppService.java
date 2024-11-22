@@ -152,8 +152,10 @@ public abstract class AbstractAppService<C extends AppContext<C>> implements App
         || !isExitOnStop && LifecycleStateMachineUtil.STATE_STOPPED.equals(currentAppState)) {
       appStateMachine.fire(LifecycleStateMachineUtil.evtStop);
     } else {
-      throw new IllegalStateException(
-          "Cannot stop the app when it's in [" + currentAppState + "] state");
+      if (!(isExitOnStop && LifecycleStateMachineUtil.STATE_STOPPED.equals(currentAppState))) {
+        throw new IllegalStateException(
+            "Cannot stop the app when it's in [" + currentAppState + "] state");
+      }
     }
   }
 
