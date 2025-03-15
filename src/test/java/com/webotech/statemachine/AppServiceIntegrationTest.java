@@ -1,15 +1,8 @@
 /*
- * Copyright (c) 2024 Paul Mackinlay <paul.mackinlay@gmail.com>
+ * Copyright (c) 2024-2025 Paul Mackinlay <paul.mackinlay@gmail.com>
  */
 
 package com.webotech.statemachine;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.times;
 
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateEvent;
@@ -25,8 +18,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 
 public class AppServiceIntegrationTest {
 
@@ -36,19 +35,19 @@ public class AppServiceIntegrationTest {
   void shouldStartAppOnlyInValidState() {
     ExecutorService executor = Executors.newSingleThreadExecutor();
     TestApp testApp = new TestApp(new String[0]);
-    executor.execute(() -> testApp.start());
+    executor.execute(testApp::start);
     if (!TestingUtil.awaitCondition(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS,
         () -> testApp.getLifecycleState() != null && testApp.getLifecycleState().getName()
             .equals(LifecycleStateMachineUtil.STATE_STARTED))) {
       fail("Test app didn't start in time");
     }
-    assertThrows(IllegalStateException.class, () -> testApp.start());
+    assertThrows(IllegalStateException.class, testApp::start);
   }
 
   @Test
   void shouldStopAppOnlyInValidState() {
     TestApp testApp = new TestApp(new String[0]);
-    assertThrows(IllegalStateException.class, () -> testApp.stop());
+    assertThrows(IllegalStateException.class, testApp::stop);
   }
 
   @Test
@@ -80,7 +79,7 @@ public class AppServiceIntegrationTest {
 
       State<TestAppContext, Void> state = testApp.getLifecycleState();
       assertNull(state);
-      executor.execute(() -> testApp.start());
+      executor.execute(testApp::start);
       boolean success = startLatch.await(2, TimeUnit.SECONDS);
       if (!success) {
         fail("Did not start in time");
@@ -151,7 +150,7 @@ public class AppServiceIntegrationTest {
 
       State<TestAppContext, Void> state = restartableApp.getLifecycleState();
       assertNull(state);
-      executor.execute(() -> restartableApp.start());
+      executor.execute(restartableApp::start);
       long epochStart = System.currentTimeMillis();
       while (startLatch.getCount() > 1) {
         TestingUtil.sleep(50);

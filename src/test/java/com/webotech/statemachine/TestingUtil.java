@@ -1,11 +1,8 @@
 /*
- * Copyright (c) 2024 Paul Mackinlay <paul.mackinlay@gmail.com>
+ * Copyright (c) 2024-2025 Paul Mackinlay <paul.mackinlay@gmail.com>
  */
 
 package com.webotech.statemachine;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.webotech.statemachine.api.StateMachine;
 import java.io.ByteArrayOutputStream;
@@ -22,6 +19,8 @@ import org.apache.logging.log4j.core.appender.OutputStreamAppender;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.layout.PatternLayout;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 public class TestingUtil {
@@ -54,7 +53,7 @@ public class TestingUtil {
 
   public static void waitForMachineToEnd(StateMachine<?, ?> stateMachine) {
     boolean success = awaitCondition(MACHINE_END_TIMEOUT_MILLS, TimeUnit.MILLISECONDS,
-        () -> stateMachine.isEnded());
+        stateMachine::isEnded);
     if (!success) {
       throw new IllegalStateException(
           "Timed out while waiting for state machine to end, took longer than "

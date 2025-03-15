@@ -1,14 +1,8 @@
 /*
- * Copyright (c) 2024 Paul Mackinlay <paul.mackinlay@gmail.com>
+ * Copyright (c) 2024-2025 Paul Mackinlay <paul.mackinlay@gmail.com>
  */
 
 package com.webotech.statemachine;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import com.webotech.statemachine.api.State;
 import com.webotech.statemachine.api.StateAction;
@@ -37,6 +31,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -670,14 +669,14 @@ class StateMachineIntegrationTest {
     final StateMachine<Void, Void> stateMachine = new GenericStateMachine.Builder<Void, Void>().build();
     stateMachine.initialSate(state1).receives(event1).itEnds();
     stateMachine.start();
-    assertThrows(IllegalStateException.class, () -> stateMachine.start());
+    assertThrows(IllegalStateException.class, stateMachine::start);
     assertThrows(IllegalStateException.class, () -> stateMachine.startInState(state1));
 
     final StateMachine<Void, Void> stateMachine1 = new GenericStateMachine.Builder<Void, Void>().build();
     stateMachine1.initialSate(state1).receives(event1).itEnds();
     stateMachine1.startInState(state1);
     assertThrows(IllegalStateException.class, () -> stateMachine1.startInState(state1));
-    assertThrows(IllegalStateException.class, () -> stateMachine1.start());
+    assertThrows(IllegalStateException.class, stateMachine1::start);
   }
 
   private void assertNotifiedRow(List<Object> row, String fromStateName, String eventName,
